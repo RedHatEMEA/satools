@@ -122,13 +122,13 @@ def save(args):
             xmlargs[i + 1].text = "file://" + config["elluminate-base"] + "/" + vcrfile
             break
 
+    fetchjars(xml)
+
     xml.set("codebase", "file://" + config["elluminate-base"] + "/" + JARS)
 
     f = open(jnlpfile, "w")
     f.write(lxml.etree.tostring(xml, xml_declaration = True))
     f.close()
-
-    fetchjars(xml)
 
     print jnlpfile
 
