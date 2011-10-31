@@ -2,9 +2,14 @@
 
 import os
 import sys
+import time
 import urllib2
 
 configfile = os.environ["HOME"] + "/.satools"
+
+class HeadRequest(urllib2.Request):
+    def get_method(self):
+        return "HEAD"
 
 def load_config():
     config = { "product-docs-base": os.environ["HOME"] + "/content/product-docs",
@@ -32,7 +37,15 @@ def progress(current, total):
         ("*" * (percent / 2), " " * (50 - (percent / 2)), percent, current),
 
 def retrieve(url, path, force = False):
-    if os.path.exists(path) and not force: return
+    if os.path.exists(path) and not force:
+        src = urllib2.urlopen(HeadRequest(url))
+        mtime = time.mktime(time.strptime(src.info()["Last-Modified"],
+                                          "%a, %d %b %Y %H:%M:%S %Z"))
+
+        st = os.stat(path)
+
+        if mtime == st.st_mtime and int(src.info()["Content-Length"]) == st.st_size:
+            return
 
     if os.path.exists(path):
         os.unlink(path)
@@ -56,6 +69,10 @@ def retrieve(url, path, force = False):
 
     src.close()
     dst.close()
+
+    mtime = time.mktime(time.strptime(src.info()["Last-Modified"],
+                                      "%a, %d %b %Y %H:%M:%S %Z"))
+    os.utime(temppath, (mtime, mtime))
 
     os.rename(temppath, path)
         

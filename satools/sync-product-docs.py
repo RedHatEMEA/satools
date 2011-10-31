@@ -29,7 +29,7 @@ def main():
     os.chdir(config["product-docs-base"])
 
     urlbase = "http://docs.redhat.com/docs/%(locale)s/" % args
-    common.retrieve(urlbase + "toc.html", "toc.html", force = True)
+    common.retrieve(urlbase + "toc.html", "toc.html")
 
     toc = lxml.etree.parse("toc.html").getroot()
     for url in xpath(toc, "//xhtml:a[@class='type' and text()='%(type)s']/@href" % args):
