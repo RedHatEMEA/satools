@@ -14,7 +14,8 @@ class HeadRequest(urllib2.Request):
 def load_config():
     config = { "product-docs-base": os.environ["HOME"] + "/content/product-docs",
                "product-docs-locale": "en-US",
-               "product-docs-type": "pdf" }
+               "product-docs-type": "pdf",
+               "elluminate-base": os.environ["HOME"] + "/content/elluminate" }
 
     if os.path.exists(configfile):
         with open(configfile) as f:
@@ -70,9 +71,10 @@ def retrieve(url, path, force = False):
     src.close()
     dst.close()
 
-    mtime = time.mktime(time.strptime(src.info()["Last-Modified"],
-                                      "%a, %d %b %Y %H:%M:%S %Z"))
-    os.utime(temppath, (mtime, mtime))
+    if "Last-Modified" in src.info():
+        mtime = time.mktime(time.strptime(src.info()["Last-Modified"],
+                                          "%a, %d %b %Y %H:%M:%S %Z"))
+        os.utime(temppath, (mtime, mtime))
 
     os.rename(temppath, path)
         

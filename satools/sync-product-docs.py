@@ -20,7 +20,7 @@ def xpath(elem, path):
     return elem.xpath(path, namespaces = 
                       { "xhtml" : "http://www.w3.org/1999/xhtml" })
 
-def main():
+if __name__ == "__main__":
     global config
     config = common.load_config()
     args = parse_args()
@@ -38,6 +38,3 @@ def main():
         common.mkdirs(path)
         path = path + "/" + url.split("/")[-1]
         common.retrieve(urlbase + url, path)
-
-if __name__ == "__main__":
-    main()

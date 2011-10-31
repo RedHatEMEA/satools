@@ -6,7 +6,7 @@ License:	GPL
 URL:		https://github.com/RedHatUKI/satools
 Source:		satools.tar.gz
 BuildArch:	noarch
-Requires:	python-lxml
+Requires:	python-lxml, mimehandler(application/x-java-jnlp-file)
 
 %define _srcdefattr (-,root,root)
 
@@ -25,9 +25,10 @@ rm -rf %{buildroot}
 
 %post
 ln -sf %{python_sitelib}/satools/sync-product-docs.py %{_bindir}/sync-product-docs
+ln -sf %{python_sitelib}/satools/elluminate.py %{_bindir}/elluminate
 
 %postun
-rm -f %{buildroot}/%{_bindir}/sync-product-docs
+rm -f %{buildroot}/%{_bindir}/sync-product-docs %{buildroot}/%{_bindir}/elluminate
 
 %files
 %defattr(-,root,root,-)
