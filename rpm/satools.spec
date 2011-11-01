@@ -24,11 +24,16 @@ cp -a satools %{buildroot}/%{python_sitelib}
 rm -rf %{buildroot}
 
 %post
-ln -sf %{python_sitelib}/satools/sync-product-docs.py %{_bindir}/sync-product-docs
-ln -sf %{python_sitelib}/satools/elluminate.py %{_bindir}/elluminate
+for i in elluminate lgrep mailindex sync-lists sync-product-docs
+do
+  ln -sf %{python_sitelib}/satools/$i.py %{_bindir}/$i
+done
 
 %postun
-rm -f %{buildroot}/%{_bindir}/sync-product-docs %{buildroot}/%{_bindir}/elluminate
+for i in elluminate lgrep mailindex sync-lists sync-product-docs
+do
+  rm -f %{_bindir}/$i
+done
 
 %files
 %defattr(-,root,root,-)

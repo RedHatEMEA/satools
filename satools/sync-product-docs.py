@@ -28,8 +28,11 @@ if __name__ == "__main__":
     common.mkdirs(config["product-docs-base"])
     os.chdir(config["product-docs-base"])
 
+    lock = common.Lock(".lock")
+
     urlbase = "http://docs.redhat.com/docs/%(locale)s/" % args
     common.retrieve(urlbase + "toc.html", "toc.html")
+    common.mkro("toc.html")
 
     toc = lxml.etree.parse("toc.html").getroot()
     for url in xpath(toc, "//xhtml:a[@class='type' and text()='%(type)s']/@href" % args):
@@ -38,3 +41,4 @@ if __name__ == "__main__":
         common.mkdirs(path)
         path = path + "/" + url.split("/")[-1]
         common.retrieve(urlbase + url, path)
+        common.mkro(path)

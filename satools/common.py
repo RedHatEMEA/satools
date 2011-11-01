@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
+import calendar
+import fcntl
 import os
+import shutil
 import sys
 import time
 import urllib2
@@ -11,22 +14,69 @@ class HeadRequest(urllib2.Request):
     def get_method(self):
         return "HEAD"
 
+class Lock(object):
+    def __init__(self, path):
+        self.path = path
+        self.lock()
+
+    def lock(self):
+        self.f = open(self.path, "a")
+        fcntl.lockf(self.f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+    def unlock(self):
+        fcntl.lockf(self.f, fcntl.LOCK_UN)
+        self.f.close()
+
 def load_config():
     config = { "product-docs-base": os.environ["HOME"] + "/content/product-docs",
                "product-docs-locale": "en-US",
                "product-docs-type": "pdf",
-               "elluminate-base": os.environ["HOME"] + "/content/elluminate" }
+               "elluminate-base": os.environ["HOME"] + "/content/elluminate",
+               "lists-base": os.environ["HOME"] + "/content/lists",
+               "lists-start-year": "2007",
+               "lists-sync": [],
+               "lgrep-mailbox": os.environ["HOME"] + "/.mail/results",
+               "lgrep-exec": None,
+               "thunderbird-base": None,
+               "thunderbird-folder": "lists" }
 
-    if os.path.exists(configfile):
-        with open(configfile) as f:
-            for line in f:
-                config.update([map(str.strip, line.split("=", 1))])
+    if not os.path.exists(configfile):
+        with open(configfile, "w") as f:
+            print >>f, \
+"""# Specify the lists to synchronise here by adding multiple lines of the
+#   format lists-sync=URL.  If the list archives are password protected, use
+#   format lists-sync=URL USERNAME PASSWORD
+# lists-sync=http://lists.fedoraproject.org/pipermail/announce
+# lists-sync=http://lists.fedoraproject.org/pipermail/test
+# lists-sync=http://my.private.list/mailman/private/announce joebloggs secret
+
+# For lgrep to run mutt on its results mbox, uncomment the following line:
+# lgrep-exec=mutt -f %path
+# For lgrep to run alpine on its results mbox, uncomment the following line:
+# lgrep-exec=alpine -f %filename -n 1 -i
+# N.B. your MUA may also need additional configuration."""
+        os.chmod(configfile, 0600)
+
+    with open(configfile) as f:
+        for line in f:
+            line = line.strip()
+            if line == "" or line[0] == "#": continue
+
+            (k, v) = map(str.strip, line.split("=", 1))
+            if k in config and type(config[k]) == list:
+                config[k].append(v)
+            else:
+                config[k] = v
 
     return config
 
 def mkdirs(path):
     if not os.path.isdir(path):
         os.makedirs(path)
+
+def mkro(path):
+    st = os.stat(path)
+    os.chmod(path, st.st_mode & ~0222)
 
 def mktemppath(path):
     parts = os.path.split(path)
@@ -37,49 +87,81 @@ def progress(current, total):
     print >>sys.stderr, "\r  [%s%s] %u%% (%u) " % \
         ("*" * (percent / 2), " " * (50 - (percent / 2)), percent, current),
 
-def retrieve(url, path, force = False):
+def rename(srcpath, dstpath):
+    unlink(dstpath)
+    os.rename(srcpath, dstpath)
+
+def rmtree(path):
+    if os.path.exists(path):
+        shutil.rmtree(path)
+
+def sendfile(srcf, dstf):
+    total = 0
+
+    try:
+        total = int(srcf.info().getheader("Content-Length"))
+        current = 0
+    except (AttributeError, TypeError):
+        pass
+
+    while True:
+        data = srcf.read(4096)
+
+        if total:
+            current += len(data)
+            progress(current, total)
+
+        if not data: break
+        
+        dstf.write(data)
+
+    if total:
+        print >>sys.stderr
+
+def sendfile_disk(srcf, path):
+    temppath = mktemppath(path)
+
+    dstf = open(temppath, "w")
+    sendfile(srcf, dstf)
+    dstf.close()
+
+    rename(temppath, path)
+
+def retrieve_m(url, data = None):
+    print >>sys.stderr, "Retrieving %s..." % url
+    return urllib2.urlopen(url, data)
+
+def retrieve(url, path, data = None, force = False):
     if os.path.exists(path) and not force:
         src = urllib2.urlopen(HeadRequest(url))
-        mtime = time.mktime(time.strptime(src.info()["Last-Modified"],
-                                          "%a, %d %b %Y %H:%M:%S %Z"))
+        mtime = calendar.timegm(time.strptime(src.info()["Last-Modified"],
+                                              "%a, %d %b %Y %H:%M:%S %Z"))
 
         st = os.stat(path)
 
         if mtime == st.st_mtime and int(src.info()["Content-Length"]) == st.st_size:
             return
 
-    if os.path.exists(path):
-        os.unlink(path)
-
-    temppath = mktemppath(path)
-
-    src = retrieve_m(url)
-    dst = open(temppath, "w")
-
-    current = 0
-    total = int(src.info().getheader("Content-Length"))
-    while True:
-        data = src.read(4096)
-
-        current += len(data)
-        progress(current, total)
-
-        if not data: break
-        
-        dst.write(data)
-
-    src.close()
-    dst.close()
+    srcf = retrieve_m(url, data)
+    sendfile_disk(srcf, path)
+    srcf.close()
 
     if "Last-Modified" in src.info():
-        mtime = time.mktime(time.strptime(src.info()["Last-Modified"],
-                                          "%a, %d %b %Y %H:%M:%S %Z"))
+        mtime = calendar.timegm(time.strptime(src.info()["Last-Modified"],
+                                              "%a, %d %b %Y %H:%M:%S %Z"))
         os.utime(temppath, (mtime, mtime))
 
-    os.rename(temppath, path)
-        
-    print >>sys.stderr
+def retrieve_tmpfile(url, data = None):
+    dstf = os.tmpfile()
 
-def retrieve_m(url):
-    print >>sys.stderr, "Retrieving %s..." % url
-    return urllib2.urlopen(url)
+    srcf = retrieve_m(url, data)
+    sendfile(srcf, dstf)
+    srcf.close()
+
+    dstf.seek(0)
+
+    return dstf
+
+def unlink(path):
+    if os.path.exists(path):
+        os.unlink(path)
