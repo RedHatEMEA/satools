@@ -31,6 +31,7 @@ def load_config():
     config = { "product-docs-base": os.environ["HOME"] + "/content/product-docs",
                "product-docs-locale": "en-US",
                "product-docs-type": "pdf",
+               "references-base": os.environ["HOME"] + "/content/references",
                "elluminate-base": os.environ["HOME"] + "/content/elluminate",
                "lists-base": os.environ["HOME"] + "/content/lists",
                "lists-start-year": "2007",
@@ -133,23 +134,24 @@ def retrieve_m(url, data = None):
 
 def retrieve(url, path, data = None, force = False):
     if os.path.exists(path) and not force:
-        src = urllib2.urlopen(HeadRequest(url))
-        mtime = calendar.timegm(time.strptime(src.info()["Last-Modified"],
-                                              "%a, %d %b %Y %H:%M:%S %Z"))
+        srcf = urllib2.urlopen(HeadRequest(url))
+        if "Last-Modified" in srcf.info() and "Content-Length" in srcf.info():
+            mtime = calendar.timegm(time.strptime(srcf.info()["Last-Modified"],
+                                                  "%a, %d %b %Y %H:%M:%S %Z"))
 
-        st = os.stat(path)
+            st = os.stat(path)
 
-        if mtime == st.st_mtime and int(src.info()["Content-Length"]) == st.st_size:
-            return
+            if mtime == st.st_mtime and int(srcf.info()["Content-Length"]) == st.st_size:
+                return
 
     srcf = retrieve_m(url, data)
     sendfile_disk(srcf, path)
     srcf.close()
 
-    if "Last-Modified" in src.info():
-        mtime = calendar.timegm(time.strptime(src.info()["Last-Modified"],
+    if "Last-Modified" in srcf.info():
+        mtime = calendar.timegm(time.strptime(srcf.info()["Last-Modified"],
                                               "%a, %d %b %Y %H:%M:%S %Z"))
-        os.utime(temppath, (mtime, mtime))
+        os.utime(path, (mtime, mtime))
 
 def retrieve_tmpfile(url, data = None):
     dstf = os.tmpfile()

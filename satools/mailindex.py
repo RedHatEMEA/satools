@@ -52,12 +52,21 @@ class MailDB:
                         "'subject', 'body') VALUES(?, ?, ?, ?, ?)",
                         (rowid, _list.replace("-", ""), _from, subject, body))
 
-    def search(self, string):
-        return self.db.execute("SELECT path, offset, length "
+    def count(self, string):
+        c = self.db.execute("SELECT COUNT(*) "
+                            "FROM messages, messages_fts "
+                            "WHERE messages.rowid = messages_fts.rowid AND "
+                            "messages_fts.messages_fts MATCH ?", (string, ))
+        return c.fetchone()[0]
+
+    def search(self, string, offset = 0, limit = 1000):
+        return self.db.execute("SELECT subject, messages_fts.'from' AS 'from', "
+                               "date, path, offset, length "
                                "FROM messages, messages_fts "
                                "WHERE messages.rowid = messages_fts.rowid AND "
                                "messages_fts.messages_fts MATCH ? "
-                               "ORDER BY date DESC LIMIT 1000", (string, ))
+                               "ORDER BY date DESC LIMIT ?, ?",
+                               (string, offset, limit))
 
 def parse_args():
     ap = argparse.ArgumentParser()
@@ -74,6 +83,13 @@ def parse_args():
 def _decode(a):
     if a[1] is None: return a[0]
     else: return a[0].decode(a[1])
+
+def decode(data):
+    try:
+        data = " ".join(map(_decode, email.header.decode_header(data)))
+    except (LookupError, UnicodeDecodeError):
+        pass
+    return data
 
 def index(base, _list, path):
     print >>sys.stderr, "Indexing %s..." % path
@@ -99,14 +115,10 @@ def index(base, _list, path):
         offset = mbox._toc[msg][0]
         length = 1 + mbox._toc[msg][1] - offset
 
-        subject = mbox[msg]["Subject"]
-        try:
-            subject = " ".join(map(_decode, email.header.decode_header(subject)))
-            maildb.insert_record(path, date, offset, length, _list,
-                                 mbox[msg]["From"], subject, body)
-
-        except (LookupError, UnicodeDecodeError):
-            pass
+        subject = decode(mbox[msg]["Subject"])
+        _from = decode(mbox[msg]["From"])
+        maildb.insert_record(path, date, offset, length, _list,
+                             _from, subject, body)
 
     maildb.close()
 
@@ -118,11 +130,11 @@ if __name__ == "__main__":
     if args["all"]:
         os.nice(10)
 
-        for dirpath, dirnames, filenames in sorted(os.walk(base)):
+        for dirpath, dirnames, filenames in sorted(os.walk(args["base"])):
             for f in sorted(filenames):
-                if f[:1] == '.': continue
+                if f[:1] == ".": continue
                 
-                path = os.path.relpath(dirpath, base) + "/" + f
+                path = os.path.relpath(dirpath, args["base"]) + "/" + f
                 index(args["base"], path.split("/")[0], path)
 
     else:
