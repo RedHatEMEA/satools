@@ -5,6 +5,7 @@ from satools import mailindex
 import cgi
 import email
 import json
+import os
 import time
 import urlparse
 import web
@@ -35,6 +36,28 @@ class Message(object):
         q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
         data = escape(message(q["path"], int(q["offset"]), int(q["length"])))
         return json.dumps(data)
+
+class Help(object):
+    def GET(self):
+        mtime = os.stat(config["lists-base"] + "/.sync-db").st_mtime
+
+        keys = {}
+        keys["mtime"] = time.strftime("%d/%m/%Y", time.gmtime(mtime))
+        keys["lists"] = \
+            "<br/>".join(sorted(filter(lambda x: x[0] != ".",
+                                       os.listdir(config["lists-base"]))))
+        keys["lists-start-year"] = config["lists-start-year"]
+
+        f = open("help.html")
+        data = f.read()
+        f.close()
+
+        for k in keys:
+            print k
+            print keys[k]
+            data = data.replace("$" + k, keys[k])
+
+        return data
 
 def result(row):
     return { "subject": row["subject"].decode("utf-8"),
@@ -79,6 +102,7 @@ def escape(data):
 urls = ("/", "Index",
         "/s", "Search",
         "/m", "Message",
+        "/help", "Help"
         )
 
 def db_load_hook():

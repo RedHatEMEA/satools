@@ -25,7 +25,7 @@ Ext.define("Search.view.Results", {
 	    var pad2 = function(number) {
 		var s = "00" + number;
 		return s.substr(s.length - 2);
-	    }
+	    };
 
 	    var d = new Date(value * 1000);
 	    return pad2(d.getDate()) + "/" + pad2(1 + d.getMonth()) + "/" +

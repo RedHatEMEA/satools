@@ -10,6 +10,6 @@ search:
 
 clean:
 	find -name '*.pyc' -print0 | xargs -i -0 rm -f '{}'
-	rm search/static/app-all.js search/static/all-classes.js
+	rm -f search/static/app-all.js search/static/all-classes.js
 
 .PHONY: clean rpm search

@@ -25,7 +25,7 @@ Ext.define("Search.controller.Results", {
     },
 
     selectionchange: function(_this, selections, options) {
-	if(selections.length == 0) return;
+	if(selections.length === 0) return;
 
 	var pan = this.getPanel();
 	pan.getStore().setProxy({
@@ -35,7 +35,7 @@ Ext.define("Search.controller.Results", {
 		path: selections[0].data.path,
 		offset: selections[0].data.offset,
 		length: selections[0].data.length
-            },
+            }
 	});
 	pan.getStore().load(
 	    function(records, operation, success) {
