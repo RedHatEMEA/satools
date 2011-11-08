@@ -42,5 +42,5 @@ done
 
 %changelog
 
-* Mon Oct 31 2011 Jim Minter <jminter@redhat.com> 0.1
+* Tue Nov 08 2011 Jim Minter <jminter@redhat.com> 0.1
 - First release

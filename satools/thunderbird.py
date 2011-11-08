@@ -9,6 +9,9 @@ def init():
     global config
     config = common.load_config()
 
+    if config["thunderbird-base"] is None:
+        return
+
     if isrunning():
         print >>sys.stderr, \
             "thunderbird.py: thunderbird is running, disabling plugin"
