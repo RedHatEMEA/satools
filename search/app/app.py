@@ -45,10 +45,15 @@ class Help(object):
     def GET(self):
         web.header("Content-Type", "text/html")
 
-        mtime = os.stat(config["lists-base"] + "/.sync-db").st_mtime
-
         keys = {}
-        keys["mtime"] = time.strftime("%d/%m/%Y", time.gmtime(mtime))
+
+        try:
+            mtime = os.stat(config["lists-base"] + "/.sync-done").st_mtime
+            keys["update"] = "The last successful index update completed " + \
+                "on %s." % time.strftime("%d/%m/%Y", time.gmtime(mtime))
+        except OSError:
+            keys["update"] = "The index has not yet been populated."
+
         keys["lists"] = \
             "<br/>".join(sorted(filter(lambda x: x[0] != ".",
                                        os.listdir(config["lists-base"]))))

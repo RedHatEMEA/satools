@@ -103,3 +103,6 @@ if __name__ == "__main__":
 
             if not (tm.tm_year == now.tm_year and tm.tm_mon == now.tm_mon):
                 db.add(path)
+
+    with open(".sync-done", "w") as f:
+        pass
