@@ -58,8 +58,12 @@ Ext.define("Search.controller.Search", {
 	    }, 
 
 	    callback: function(records, operation, success) {
-		if(results.getStore().getTotalCount() !== 0)
-		    results.getSelectionModel().select(0);
+		if(success) {
+		    if(results.getStore().getTotalCount() !== 0)
+			results.getSelectionModel().select(0);
+		} else {
+		    Ext.Msg.alert('An error occurred...', results.getStore().getProxy().getReader().rawData.error);
+		}
 	    }
 	});
     }

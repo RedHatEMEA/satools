@@ -6,6 +6,7 @@ import cgi
 import email
 import json
 import os
+import re
 import time
 import urlparse
 import web
@@ -15,30 +16,53 @@ class Index(object):
         raise web.seeother("/static/")
 
 class Search(object):
+    validator = { "q": re.compile("^[a-zA-Z@.-]+$"),
+                  "start": re.compile("^[0-9]*$"),
+                  "limit": re.compile("^[0-9]*$") }
+
     def GET(self):
         web.header("Content-Type", "application/json")
 
         q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
 
-        if "start" not in q: q["start"] = 0
-        q["limit"] = min(q.get("limit", 50), 50)
-        total = min(web.ctx.maildb.count(q["q"]), 1000)
+        data = { "success": "true",
+                 "total": 0,
+                 "rows": [],
+                 "error": "" }
 
-        data = []
-        for row in web.ctx.maildb.search(q["q"], offset = q["start"],
-                                         limit = q["limit"]):
-            data.append(escape(result(row)))
+        if validate(q, self.validator):
+            q["start"] = min(int(q.get("start", 0)), 1000)
+            q["limit"] = min(int(q.get("limit", 50)), 1000 - q["start"])
+            total = min(web.ctx.maildb.count(q["q"]), 1000)
 
-        return json.dumps({ "success": "true",
-                            "total": total,
-                            "rows": data })
+            for row in web.ctx.maildb.search(q["q"], offset = q["start"],
+                                             limit = q["limit"]):
+                data["rows"].append(escape(result(row)))
+
+        else:
+            if not self.validator["q"].match(q["q"]):
+                data["error"] = "Invalid character(s) in search string."
+                data["success"] = "false"
+            else:
+                raise Exception("invalid input")
+
+        return json.dumps(data)
 
 class Message(object):
+    validator = { "path": re.compile("^[a-zA-Z-]+/[0-9]{4}/[0-9]{2}$"),
+                  "offset": re.compile("^[0-9]+$"),
+                  "length": re.compile("^[0-9]+$") }
+
     def GET(self):
         web.header("Content-Type", "application/json")
-
+       
         q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
+
+        if not validate(q, self.validator):
+            raise Exception("invalid input")
+ 
         data = escape(message(q["path"], int(q["offset"]), int(q["length"])))
+
         return json.dumps(data)
 
 class Help(object):
@@ -59,6 +83,7 @@ class Help(object):
                                        os.listdir(config["lists-base"]))))
         keys["lists-start-year"] = config["lists-start-year"]
 
+        # TODO: hacky, can mod_wsgi run app.py as satools to inherit $HOME?
         if "HOME" in os.environ:
             f = open("templates/help.html")
         else:
@@ -68,8 +93,6 @@ class Help(object):
         f.close()
 
         for k in keys:
-            print k
-            print keys[k]
             data = data.replace("$" + k, keys[k])
 
         return data
@@ -113,6 +136,12 @@ def escape(data):
         data[key] = cgi.escape(unicode(data[key]))
         
     return data
+
+def validate(q, regexps):
+    for key in regexps:
+        if not regexps[key].match(q.get(key, "")):
+            return False
+    return True
 
 urls = ("/?", "Index",
         "/s", "Search",
