@@ -58,7 +58,8 @@ Ext.define("Search.controller.Search", {
 	    }, 
 
 	    callback: function(records, operation, success) {
-		results.getSelectionModel().select(0);
+		if(results.getStore().getTotalCount() !== 0)
+		    results.getSelectionModel().select(0);
 	    }
 	});
     }
