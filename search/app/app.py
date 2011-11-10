@@ -16,8 +16,7 @@ class Index(object):
         raise web.seeother("/static/")
 
 class Search(object):
-    validator = { "q": re.compile("^[a-zA-Z@.-]+$"),
-                  "start": re.compile("^[0-9]*$"),
+    validator = { "start": re.compile("^[0-9]*$"),
                   "limit": re.compile("^[0-9]*$") }
 
     def GET(self):
@@ -30,21 +29,19 @@ class Search(object):
                  "rows": [],
                  "error": "" }
 
-        if validate(q, self.validator):
-            q["start"] = min(int(q.get("start", 0)), 1000)
-            q["limit"] = min(int(q.get("limit", 50)), 1000 - q["start"])
-            total = min(web.ctx.maildb.count(q["q"]), 1000)
+        if not validate(q, self.validator):
+            raise Exception("invalid input")
 
-            for row in web.ctx.maildb.search(q["q"], offset = q["start"],
-                                             limit = q["limit"]):
-                data["rows"].append(escape(result(row)))
+        q["start"] = min(int(q.get("start", 0)), 1000)
+        q["limit"] = min(int(q.get("limit", 50)), 1000 - q["start"])
+        q["q"] = q.get("q", "")
 
-        else:
-            if not self.validator["q"].match(q["q"]):
-                data["error"] = "Invalid character(s) in search string."
-                data["success"] = "false"
-            else:
-                raise Exception("invalid input")
+        # TODO: we're currently running 2 SQL queries here...
+        data["total"] = min(web.ctx.maildb.count(q["q"]), 1000)
+        
+        for row in web.ctx.maildb.search(q["q"], offset = q["start"],
+                                         limit = q["limit"]):
+            data["rows"].append(escape(result(row)))
 
         return json.dumps(data)
 

@@ -7,6 +7,7 @@ Ext.define("Search.view.Results", {
         xtype: "pagingtoolbar",
         store: "Results",
         dock: "bottom",
+	itemId: "mypagingtoolbar",
         displayInfo: true
     }],
 

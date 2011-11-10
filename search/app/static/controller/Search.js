@@ -12,6 +12,9 @@ Ext.define("Search.controller.Search", {
 	}, {
 	    ref: "results",
 	    selector: "#myresults"
+	}, {
+	    ref: "pagingtoolbar",
+	    selector: "#mypagingtoolbar"
 	}
     ],
 
@@ -40,6 +43,7 @@ Ext.define("Search.controller.Search", {
 
     click: function(_this, e, options) {
 	var results = this.getResults();
+	var pagingtoolbar = this.getPagingtoolbar();
 
 	results.getStore().setProxy({
 	    type: "ajax",
@@ -60,9 +64,10 @@ Ext.define("Search.controller.Search", {
 	    callback: function(records, operation, success) {
 		if(success) {
 		    if(results.getStore().getTotalCount() !== 0)
+			pagingtoolbar.moveFirst();
 			results.getSelectionModel().select(0);
 		} else {
-		    Ext.Msg.alert('An error occurred...', results.getStore().getProxy().getReader().rawData.error);
+		    Ext.Msg.alert("An error occurred...", results.getStore().getProxy().getReader().rawData.error);
 		}
 	    }
 	});
