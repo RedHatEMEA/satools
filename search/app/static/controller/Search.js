@@ -44,8 +44,9 @@ Ext.define("Search.controller.Search", {
     click: function(_this, e, options) {
 	var results = this.getResults();
 	var pagingtoolbar = this.getPagingtoolbar();
+	var store = results.getStore();
 
-	results.getStore().setProxy({
+	store.setProxy({
 	    type: "ajax",
 	    url: "../s",
 	    extraParams: { "q": this.getSearchfield().getSubmitValue() },
@@ -55,19 +56,23 @@ Ext.define("Search.controller.Search", {
 		totalProperty: "total"
             }
 	});
-	results.getStore().load({
+
+	store.currentPage = 1;
+
+	store.load({
 	    params: {
-		start:0,    
+		start: 0,    
 		limit: 50
 	    }, 
 
 	    callback: function(records, operation, success) {
 		if(success) {
-		    if(results.getStore().getTotalCount() !== 0)
-			pagingtoolbar.moveFirst();
+		    if(store.getTotalCount() !== 0)
 			results.getSelectionModel().select(0);
+
 		} else {
-		    Ext.Msg.alert("An error occurred...", results.getStore().getProxy().getReader().rawData.error);
+		    Ext.Msg.alert("An error occurred...",
+				  store.getProxy().getReader().rawData.error);
 		}
 	    }
 	});
