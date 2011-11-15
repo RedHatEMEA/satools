@@ -20,7 +20,7 @@ Ext.define("Search.view.Results", {
     }, {
         header: "Date",
 	dataIndex: "date",
-	width: 150,
+	width: 120,
 	sortable: false,
 	renderer: function(value) {
 	    var pad2 = function(number) {
@@ -32,6 +32,34 @@ Ext.define("Search.view.Results", {
 	    return pad2(d.getDate()) + "/" + pad2(1 + d.getMonth()) + "/" +
 		(1900 + d.getYear()) + " " + pad2(d.getHours()) + ":" +
 		pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+	}
+    }, {
+	header: "Size",
+	dataIndex: "len",
+	width: 50,
+	sortable: false,
+	renderer: function(value) {
+	    var fmt = function(number) {
+		if(number < 10) {
+		    number = Math.floor(number * 10) / 10;
+		    if(Math.floor(number) == number) {
+			return number + ".0";
+		    } else {
+			return number;
+		    }
+		} else {
+		    return Math.floor(number);
+		}
+	    };
+
+	    if(value < 1000) {
+		return value + "B";
+	    } else if(value < 1000000) {
+		return fmt(value / 1000) + "KB";
+	    } else if(value < 1000000000) {
+		return fmt(value / 1000000) + "MB";
+	    }
+	    return value;
 	}
     }]
 });
