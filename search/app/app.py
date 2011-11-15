@@ -45,22 +45,25 @@ class Search(object):
 
         return json.dumps(data)
 
-class Message(object):
+class Attachment(object):
     validator = { "path": re.compile("^[a-zA-Z-]+/[0-9]{4}/[0-9]{2}$"),
                   "offset": re.compile("^[0-9]+$"),
-                  "length": re.compile("^[0-9]+$") }
+                  "len": re.compile("^[0-9]+$"),
+                  "index": re.compile("^[0-9]+$") }
 
     def GET(self):
-        web.header("Content-Type", "application/json")
-       
         q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
 
         if not validate(q, self.validator):
             raise Exception("invalid input")
  
-        data = escape(message(q["path"], int(q["offset"]), int(q["length"])))
+        (content_type, filename, payload) = \
+            attachment(q["path"], int(q["offset"]),
+                       int(q["len"]), int(q["index"]))
 
-        return json.dumps(data)
+        web.header("Content-Type", content_type)
+        web.header("Content-disposition", "attachment; filename=" + filename)
+        return payload
 
 class Help(object):
     def GET(self):
@@ -94,45 +97,97 @@ class Help(object):
 
         return data
 
+class Message(object):
+    validator = { "path": re.compile("^[a-zA-Z-]+/[0-9]{4}/[0-9]{2}$"),
+                  "offset": re.compile("^[0-9]+$"),
+                  "len": re.compile("^[0-9]+$") }
+
+    def GET(self):
+        web.header("Content-Type", "application/json")
+       
+        q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
+
+        if not validate(q, self.validator):
+            raise Exception("invalid input")
+ 
+        data = escape(message(q["path"], int(q["offset"]), int(q["len"])))
+
+        return json.dumps(data)
+
+def attachment(path, offset, _len, index):
+    f = open(config["lists-base"] + "/" + path)
+    f.seek(offset)
+    em = email.message_from_string(f.read(_len))
+    f.close()
+
+    gen = em.walk()
+    part = gen.next()
+    while index:
+        part = gen.next()
+        index -= 1
+
+    return (part.get_content_type(), part.get_filename(),
+            part.get_payload(decode = True))
+
 def result(row):
     return { "subject": row["subject"].decode("utf-8"),
              "from": row["from"].decode("utf-8"),
              "date": row["date"],
              "path": row["path"],
              "offset": row["offset"],
-             "length": row["length"] }
+             "len": row["length"] }
 
-def message(path, offset, length):
+def message(path, offset, _len):
     f = open(config["lists-base"] + "/" + path)
     f.seek(offset)
-    em = email.message_from_string(f.read(length))
+    em = email.message_from_string(f.read(_len))
     f.close()
 
+    index = 0
+    attachments = []
     body = []
     for part in em.walk():
-        if part.get_content_type() == "text/plain" and \
-                part.get("Content-Disposition", "inline").startswith("inline"):
+        if is_body(part):
             payload = part.get_payload(decode = True)
             charset = part.get_content_charset()
             payload = mailindex._decode([payload, charset])
             body.append(payload)
 
+        elif is_attachment(part):
+            attachments.append({ "index": index,
+                                 "filename": part.get_filename(),
+                                 "content-type": part.get_content_type() })
+
+        index += 1
+
     date = email.utils.parsedate_tz(em["Date"])
     date = int(email.utils.mktime_tz(date))
 
-    return { "list": path.split("/", 1)[0], 
+    return { "path": path,
+             "offset": offset,
+             "len": _len,
+             "list": path.split("/", 1)[0], 
              "body": "".join(body),
              "date": date,
              "from": mailindex.decode(em["From"]),
              "to": mailindex.decode(em["To"]),
-             "subject": mailindex.decode(em["Subject"]) }
+             "subject": mailindex.decode(em["Subject"]),
+             "attachments": attachments }
 
 def escape(data):
     data = dict(data)
     for key in data:
-        data[key] = cgi.escape(unicode(data[key]))
+        if not isinstance(data[key], list):
+            data[key] = cgi.escape(unicode(data[key]))
         
     return data
+
+def is_attachment(part):
+    return part.get_filename() != None
+
+def is_body(part):
+    return part.get_content_type() == "text/plain" and \
+        part.get("Content-Disposition", "inline").startswith("inline")
 
 def validate(q, regexps):
     for key in regexps:
@@ -142,6 +197,7 @@ def validate(q, regexps):
 
 urls = ("/?", "Index",
         "/s", "Search",
+        "/a", "Attachment",
         "/m", "Message",
         "/help", "Help"
         )

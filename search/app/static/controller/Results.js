@@ -36,7 +36,7 @@ Ext.define("Search.controller.Results", {
 		extraParams: {
 		    path: selections[0].data.path,
 		    offset: selections[0].data.offset,
-		    length: selections[0].data.length
+		    len: selections[0].data.len
 		}
 	    });
 	    panel.getStore().load(
