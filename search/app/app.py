@@ -62,7 +62,7 @@ class Attachment(object):
                        int(q["len"]), int(q["index"]))
 
         web.header("Content-Type", content_type)
-        web.header("Content-disposition", "attachment; filename=" + filename)
+        web.header("Content-disposition", "attachment; filename=\"%s\"" % filename)
         return payload
 
 class Help(object):
