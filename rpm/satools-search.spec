@@ -1,5 +1,5 @@
 Name:		satools-search
-Version:	0.1
+Version:	0.2
 Release:	1%{?dist}
 Summary:	Red Hat UK&I SA tools list search engine
 License:	GPL
@@ -49,6 +49,8 @@ service httpd reload
 %doc README
 
 %changelog
+
+* Wed Nov 16 2011 Jim Minter <jminter@redhat.com> 0.2
 
 * Tue Nov 08 2011 Jim Minter <jminter@redhat.com> 0.1
 - First release

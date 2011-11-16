@@ -6,6 +6,7 @@ import common
 import mailbox
 import os
 import os.path
+import re
 import sqlite3
 import sys
 
@@ -68,6 +69,8 @@ class MailDB:
                                "ORDER BY date DESC LIMIT ?, ?",
                                (string, offset, limit))
 
+decoderegex = re.compile("=\?.*?\?=", flags = re.S)
+
 def parse_args():
     ap = argparse.ArgumentParser()
     grp = ap.add_mutually_exclusive_group(required = True)
@@ -81,15 +84,27 @@ def parse_args():
     return vars(ap.parse_args())
 
 def _decode(a):
+    a = list(a)
     if a[1] is None: return a[0]
-    else: return a[0].decode(a[1])
+    # It appears that Chinese e-mails commonly erroneously mark their charset as
+    # gb2312, when in fact they are in gb18030.  The former is a strict subset
+    # of the latter.
+    if a[1] == "gb2312": a[1] = "gb18030"
+    return a[0].decode(a[1])
+
+def __decode(data):
+    # According to RFC2047, whitespace is not permitted within =?...?= clauses.
+    data = data.group(0)
+    data = data.replace("\r", "")
+    data = data.replace("\n", "")
+    data = data.replace("\t", "")
+    data = data.replace(" ", "")
+    return data
 
 def decode(data):
-    try:
-        data = " ".join(map(_decode, email.header.decode_header(data)))
-    except (LookupError, UnicodeDecodeError):
-        pass
-    return data
+    if data is None: return data
+    data = decoderegex.sub(__decode, data)
+    return " ".join(map(_decode, email.header.decode_header(data)))
 
 def index(base, _list, path):
     print >>sys.stderr, "Indexing %s..." % path
@@ -115,10 +130,14 @@ def index(base, _list, path):
         offset = mbox._toc[msg][0]
         length = 1 + mbox._toc[msg][1] - offset
 
-        subject = decode(mbox[msg]["Subject"])
-        _from = decode(mbox[msg]["From"])
-        maildb.insert_record(path, date, offset, length, _list,
-                             _from, subject, body)
+        try:
+            subject = decode(mbox[msg]["Subject"])
+            _from = decode(mbox[msg]["From"])
+            maildb.insert_record(path, date, offset, length, _list, _from,
+                                 subject, body)
+        except LookupError:
+            # We found a charset Python doesn't know about.  Too bad.
+            pass
 
     maildb.close()
 

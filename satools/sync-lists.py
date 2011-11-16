@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import attachments
 import common
 import gzip
 import lxml.html
@@ -98,6 +99,7 @@ if __name__ == "__main__":
                 
                 common.mkro(path)
                 mailindex.index(".", _list, path)
+                attachments.extract(path)
 
             thunderbird.link(path)
 

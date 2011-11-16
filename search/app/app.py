@@ -178,7 +178,8 @@ def escape(data):
     return data
 
 def is_attachment(part):
-    return part.get_filename() != None
+    return part.get_filename() is not None and \
+        not part.get("Content-Disposition", "inline").startswith("inline")
 
 def is_body(part):
     return part.get_content_type() == "text/plain" and \

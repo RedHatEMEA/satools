@@ -39,7 +39,10 @@ def load_config():
                "lgrep-mailbox": os.environ["HOME"] + "/.mail/results",
                "lgrep-exec": None,
                "thunderbird-base": None,
-               "thunderbird-folder": "lists" }
+               "thunderbird-folder": "lists",
+               "attachments-base": os.environ["HOME"] + "/content/attachments",
+               "attachments-enabled": "0",
+               "attachments-odponly": "1" }
 
     if not os.path.exists(configfile):
         with open(configfile, "w") as f:
