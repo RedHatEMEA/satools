@@ -9,6 +9,14 @@
             },
             "files": [
                 {
+                    "path": "extjs/src/data/",
+                    "name": "Association.js"
+                },
+                {
+                    "path": "extjs/src/util/",
+                    "name": "Inflector.js"
+                },
+                {
                     "path": "extjs/src/util/",
                     "name": "Floating.js"
                 },
@@ -19,10 +27,6 @@
                 {
                     "path": "extjs/src/util/",
                     "name": "Observable.js"
-                },
-                {
-                    "path": "extjs/src/data/",
-                    "name": "Association.js"
                 },
                 {
                     "path": "extjs/src/data/",
@@ -159,6 +163,10 @@
                 {
                     "path": "extjs/src/draw/",
                     "name": "Color.js"
+                },
+                {
+                    "path": "extjs/src/data/",
+                    "name": "HasManyAssociation.js"
                 },
                 {
                     "path": "extjs/src/",

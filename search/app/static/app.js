@@ -1,4 +1,5 @@
 Ext.require("Ext.container.Viewport");
+Ext.require("Ext.data.HasManyAssociation");
 Ext.require("Ext.form.Label");
 Ext.require("Ext.grid.column.Template");
 Ext.require("Ext.toolbar.Paging");
