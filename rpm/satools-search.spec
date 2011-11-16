@@ -33,12 +33,18 @@ cp search/httpd-conf/* %{buildroot}/etc/httpd/conf.d
 %clean
 rm -rf %{buildroot}
 
+%pre
+/usr/sbin/groupadd -f -r satools
+/usr/bin/id satools &>/dev/null || /usr/sbin/useradd -r -s /sbin/nologin -d /opt/satools -g satools satools
+
 %post
+service httpd reload
 
 %postun
+service httpd reload
 
 %files
-%defattr(-,root,root,-)
+%defattr(-,satools,satools,-)
 /
 %doc README
 

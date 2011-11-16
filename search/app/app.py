@@ -83,12 +83,7 @@ class Help(object):
                                        os.listdir(config["lists-base"]))))
         keys["lists-start-year"] = config["lists-start-year"]
 
-        # TODO: hacky, can mod_wsgi run app.py as satools to inherit $HOME?
-        if "HOME" in os.environ:
-            f = open("templates/help.html")
-        else:
-            f = open("/opt/satools/search/templates/help.html")
-
+        f = open("templates/help.html")
         data = f.read()
         f.close()
 

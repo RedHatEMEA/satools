@@ -8,13 +8,7 @@ import sys
 import time
 import urllib2
 
-def home():
-    if "HOME" in os.environ:
-        return os.environ["HOME"]
-    else:
-        return "/opt/satools"
-
-configfile = home() + "/.satools"
+configfile = os.environ["HOME"] + "/.satools"
 
 class HeadRequest(urllib2.Request):
     def get_method(self):
@@ -34,15 +28,15 @@ class Lock(object):
         self.f.close()
 
 def load_config():
-    config = { "product-docs-base": home() + "/content/product-docs",
+    config = { "product-docs-base": os.environ["HOME"] + "/content/product-docs",
                "product-docs-locale": "en-US",
                "product-docs-type": "pdf",
-               "references-base": home() + "/content/references",
-               "elluminate-base": home() + "/content/elluminate",
-               "lists-base": home() + "/content/lists",
+               "references-base": os.environ["HOME"] + "/content/references",
+               "elluminate-base": os.environ["HOME"] + "/content/elluminate",
+               "lists-base": os.environ["HOME"] + "/content/lists",
                "lists-start-year": "2007",
                "lists-sync": [],
-               "lgrep-mailbox": home() + "/.mail/results",
+               "lgrep-mailbox": os.environ["HOME"] + "/.mail/results",
                "lgrep-exec": None,
                "thunderbird-base": None,
                "thunderbird-folder": "lists" }
