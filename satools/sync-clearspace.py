@@ -56,6 +56,7 @@ if __name__ == "__main__":
     opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(pm))
     urllib2.install_opener(opener)
 
+    pathsfound = set()
     step = 50
     for i in itertools.count(step = step):
         f = common.retrieve_m(config["clearspace-root"] + "/view-documents.jspa?start=%u&numResults=%u&filter=presentations" % (i, step))
@@ -68,6 +69,8 @@ if __name__ == "__main__":
             f.close()
 
             path = doc.path + "/" + doc.filename
+            pathsfound.add(path)
+
             try:
                 st = os.stat(path)
                 if st.st_mtime == doc.mtime:
@@ -83,3 +86,14 @@ if __name__ == "__main__":
 
         if len(index.items) != step:
             break
+
+    for dirpath, dirnames, filenames in os.walk(".", topdown = False):
+        # remove local files which are no longer found in clearspace
+        for f in filenames:
+            path = os.path.relpath(dirpath, ".") + "/" + f
+            if path not in pathsfound:
+                os.unlink(path)
+
+        # prune empty local directories
+        if not os.listdir(dirpath):
+            os.rmdir(dirpath)
