@@ -1,8 +1,9 @@
 ==============
 SATOOLS README
 ==============
-
-Initial stab at a README for Jim Minter's satools scripts, this first cut only covers the mailing list search tool.
+:Info: See <https://github.com/RedHatUKI/satools> for the github repository.
+:Author: Jim Minter <jminter@redhat.com>
+:Description: Initial stab at a README for Jim Minter's satools scripts, this first cut only covers the mailing list search tool.
 
 Config files
 ------------
