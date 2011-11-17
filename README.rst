@@ -39,6 +39,7 @@ lgrep.py
 ~~~~~~~~
 
 usage::
+
     lgrep.py [-h] [-b BASE] querystring [querystring ...]
 
     positional arguments:
