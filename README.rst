@@ -5,6 +5,9 @@ SATOOLS README
 :Author: Jim Minter <jminter@redhat.com>
 :Description: Initial stab at a README for Jim Minter's satools scripts, this first cut only covers the mailing list search tool.
 
+Mailing List Search Tool
+========================
+
 Config files
 ------------
 
