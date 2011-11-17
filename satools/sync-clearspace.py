@@ -68,6 +68,10 @@ if __name__ == "__main__":
             doc = WikiDoc(f.read())
             f.close()
 
+            if config["clearspace-odponly"] == "1" and \
+                    not doc.filename.lower().endswith(".odp"):
+                continue
+
             path = doc.path + "/" + doc.filename
             pathsfound.add(path)
 
@@ -91,7 +95,7 @@ if __name__ == "__main__":
         # remove local files which are no longer found in clearspace
         for f in filenames:
             path = os.path.relpath(dirpath, ".") + "/" + f
-            if path not in pathsfound:
+            if not path.startswith("./.") and path not in pathsfound:
                 os.unlink(path)
 
         # prune empty local directories

@@ -46,7 +46,8 @@ def load_config():
                "clearspace-base": os.environ["HOME"] + "/content/clearspace",
                "clearspace-root": None,
                "clearspace-username": None,
-               "clearspace-password": None }
+               "clearspace-password": None,
+               "clearspace-odponly": "1" }
 
     if not os.path.exists(configfile):
         with open(configfile, "w") as f:
