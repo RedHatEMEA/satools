@@ -42,7 +42,11 @@ def load_config():
                "thunderbird-folder": "lists",
                "attachments-base": os.environ["HOME"] + "/content/attachments",
                "attachments-enabled": "0",
-               "attachments-odponly": "1" }
+               "attachments-odponly": "1",
+               "clearspace-base": os.environ["HOME"] + "/content/clearspace",
+               "clearspace-root": None,
+               "clearspace-username": None,
+               "clearspace-password": None }
 
     if not os.path.exists(configfile):
         with open(configfile, "w") as f:
