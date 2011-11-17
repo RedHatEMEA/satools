@@ -1,0 +1,15 @@
+# Specify the lists to synchronise here by adding multiple lines of the
+#   format lists-sync=URL.  If the list archives are password protected, use
+#   format lists-sync=URL USERNAME PASSWORD
+# lists-sync=http://lists.fedoraproject.org/pipermail/announce
+# lists-sync=http://lists.fedoraproject.org/pipermail/test
+# lists-sync=http://post-office.corp.redhat.com/archives/se-jboss/ 
+# lists-sync=http://my.private.list/mailman/private/announce joebloggs secret
+
+
+# For lgrep to run mutt on its results mbox, uncomment the following line:
+# lgrep-exec=mutt -f %path
+# For lgrep to run alpine on its results mbox, uncomment the following line:
+# lgrep-exec=alpine -f %filename -n 1 -i
+# N.B. your MUA may also need additional configuration.
+# lgrep-exec=open -f Mail.app %filename
