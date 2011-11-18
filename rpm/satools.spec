@@ -7,6 +7,7 @@ URL:		https://github.com/RedHatUKI/satools
 Source:		satools.tar.gz
 BuildArch:	noarch
 Requires:	python-lxml, mimehandler(application/x-java-jnlp-file)
+BuildRequires:	redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
 

@@ -7,6 +7,7 @@ URL:		https://github.com/RedHatUKI/satools
 Source:		satools.tar.gz
 BuildArch:	noarch
 Requires:	satools, python-webpy, httpd, mod_wsgi
+BuildRequires:	redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
 
