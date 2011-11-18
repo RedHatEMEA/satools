@@ -22,7 +22,7 @@ class Search(object):
     def GET(self):
         web.header("Content-Type", "application/json")
 
-        q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
+        q = dict(urlparse.parse_qsl(str(web.ctx.query[1:])))
 
         data = { "success": "true",
                  "total": 0,
@@ -173,7 +173,10 @@ def escape(data):
     data = dict(data)
     for key in data:
         if not isinstance(data[key], list):
-            data[key] = cgi.escape(unicode(data[key]))
+            try:
+                data[key] = cgi.escape(unicode(data[key]))
+            except UnicodeDecodeError:
+                data[key] = cgi.escape(data[key].decode("utf-8"))
         
     return data
 
