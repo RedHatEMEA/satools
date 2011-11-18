@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import calendar
+import codecs
 import fcntl
 import os
 import shutil
@@ -18,10 +19,10 @@ class DB:
         self.entries = {}
         self.path = path
 
-        with open(self.path, "a+") as f:
+        with codecs.open(self.path, "a+", "utf-8") as f:
             for line in f:
                 if "=" in line:
-                    (key, value) = map(str.strip, line.split("=", 1))
+                    (key, value) = map(unicode.strip, line.split("=", 1))
                     self.entries[key] = value
                 else:
                     self.entries[line.strip()] = None
@@ -29,7 +30,7 @@ class DB:
     def writedb(self):
         temppath = mktemppath(self.path)
     
-        with open(temppath, "w") as f:
+        with codecs.open(temppath, "w", "utf-8") as f:
             for key in sorted(self.entries.keys()):
                 if self.entries[key]:
                     print >>f, "%s=%s" % (key, self.get(key))
