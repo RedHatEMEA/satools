@@ -50,8 +50,8 @@ def parse_args():
     return vars(ap.parse_args())
 
 def want(path):
-    return (config["clearspace-odponly"] == "1" and
-            not path.lower().endswith(".odp"))
+    return not (config["clearspace-odponly"] == "1" and not
+                path.lower().endswith(".odp"))
 
 def updatedbs(db, keep, href, path):
     db.add(href, path)
