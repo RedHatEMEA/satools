@@ -13,35 +13,6 @@ import urllib
 
 # TODO: single list update
 
-class DB:
-    def __init__(self, path):
-        self.entries = set()
-        self.readdb(path)
-
-    def readdb(self, path):
-        self.entries.clear()
-        self.path = path
-
-        with open(self.path, "a+") as f:
-            for line in f:
-                self.entries.add(line.strip())
-
-    def writedb(self):
-        temppath = common.mktemppath(self.path)
-    
-        with open(temppath, "w") as f:
-            for line in sorted(self.entries):
-                print >>f, line
-
-        common.rename(temppath, self.path)
-
-    def add(self, entry):
-        self.entries.add(entry)
-        self.writedb()
-
-    def __contains__(self, entry):
-        return entry in self.entries
-
 def isgzip(f):
     bytes = f.read(2)
     f.seek(0)
@@ -60,7 +31,7 @@ if __name__ == "__main__":
     os.chdir(config["lists-base"])
 
     lock = common.Lock(".lock")
-    db = DB(".sync-db")
+    db = common.DB(".sync-db")
 
     now = time.gmtime()
 

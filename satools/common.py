@@ -10,6 +10,35 @@ import urllib2
 
 configfile = os.environ["HOME"] + "/.satools"
 
+class DB:
+    def __init__(self, path):
+        self.entries = set()
+        self.readdb(path)
+
+    def readdb(self, path):
+        self.entries.clear()
+        self.path = path
+
+        with open(self.path, "a+") as f:
+            for line in f:
+                self.entries.add(line.strip())
+
+    def writedb(self):
+        temppath = mktemppath(self.path)
+    
+        with open(temppath, "w") as f:
+            for line in sorted(self.entries):
+                print >>f, line
+
+        rename(temppath, self.path)
+
+    def add(self, entry):
+        self.entries.add(entry)
+        self.writedb()
+
+    def __contains__(self, entry):
+        return entry in self.entries
+
 class HeadRequest(urllib2.Request):
     def get_method(self):
         return "HEAD"
