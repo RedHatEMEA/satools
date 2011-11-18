@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import calendar
+import codecs
 import fcntl
 import os
 import shutil
@@ -9,6 +10,45 @@ import time
 import urllib2
 
 configfile = os.environ["HOME"] + "/.satools"
+
+class DB:
+    def __init__(self, path):
+        self.readdb(path)
+
+    def readdb(self, path):
+        self.entries = {}
+        self.path = path
+
+        with codecs.open(self.path, "a+", "utf-8") as f:
+            for line in f:
+                if "=" in line:
+                    (key, value) = map(unicode.strip, line.split("=", 1))
+                    self.entries[key] = value
+                else:
+                    self.entries[line.strip()] = None
+
+    def writedb(self):
+        temppath = mktemppath(self.path)
+    
+        with codecs.open(temppath, "w", "utf-8") as f:
+            for key in sorted(self.entries.keys()):
+                if self.entries[key]:
+                    print >>f, "%s=%s" % (key, self.get(key))
+                else:
+                    print >>f, key
+
+        rename(temppath, self.path)
+
+    def add(self, key, value = None):
+        if key in self.entries and self.entries[key] == value: return
+        self.entries[key] = value
+        self.writedb()
+
+    def get(self, key):
+        return self.entries[key]
+
+    def __contains__(self, key):
+        return key in self.entries
 
 class HeadRequest(urllib2.Request):
     def get_method(self):

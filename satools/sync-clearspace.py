@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import argparse
 import common
 import itertools
 import lxml.etree
@@ -26,7 +27,7 @@ class WikiDoc(HTML):
         r = re.search("Last Modified:.*?\n(.*?)\nby", text, re.S)
         self.mtime = time.mktime(time.strptime(r.group(1), "%b %d, %Y %I:%M %p"))
         xp = self.xml.xpath("//div[@id='jive-breadcrumb']/span/a")
-        xp = map(lambda x: x.text.strip(), xp)
+        xp = map(lambda x: x.text.strip().replace("/", "_"), xp)
         self.path = "/".join(xp[:-1])
 
         xp = self.xml.xpath("//div[@class='jive-content-header-version']/text()")[0]
@@ -41,22 +42,41 @@ class DocIndex(HTML):
         self.items = map(lambda x: { "href": x.get("href"),
                                      "title": x.text.strip() }, xp)
 
+def parse_args():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-a", action="store_true", dest = "all",
+                    help = "check all downloads for updates")
+
+    return vars(ap.parse_args())
+
+def want(path):
+    return not (config["clearspace-odponly"] == "1" and not
+                path.lower().endswith(".odp"))
+
+def updatedbs(db, keep, href, path):
+    db.add(href, path)
+    if want(path):
+        keep.add(path)
+
 if __name__ == "__main__":
     global config
     config = common.load_config()
+    args = parse_args()
 
     common.mkdirs(config["clearspace-base"])
     os.chdir(config["clearspace-base"])
 
     lock = common.Lock(".lock")
+    db = common.DB(".sync-db")
 
     pm = urllib2.HTTPPasswordMgrWithDefaultRealm()
-    pm.add_password(None, config["clearspace-root"], config["clearspace-username"],
+    pm.add_password(None, config["clearspace-root"],
+                    config["clearspace-username"],
                     config["clearspace-password"])
     opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(pm))
     urllib2.install_opener(opener)
 
-    pathsfound = set()
+    keep = set()
     step = 50
     for i in itertools.count(step = step):
         f = common.retrieve_m(config["clearspace-root"] + "/view-documents.jspa?start=%u&numResults=%u&filter=presentations" % (i, step))
@@ -64,29 +84,31 @@ if __name__ == "__main__":
         f.close()
 
         for item in index.items:
-            f = common.retrieve_m(config["clearspace-root"] + item["href"])
-            doc = WikiDoc(f.read())
-            f.close()
+            if item["href"] in db and not args["all"]:
+                path = db.get(item["href"])
 
-            if config["clearspace-odponly"] == "1" and \
-                    not doc.filename.lower().endswith(".odp"):
-                continue
+            else:
+                f = common.retrieve_m(config["clearspace-root"] + item["href"])
+                doc = WikiDoc(f.read())
+                f.close()
 
-            path = doc.path + "/" + doc.filename
-            pathsfound.add(path)
+                path = doc.path + "/" + doc.filename
+                
+                if want(path):
+                    skip = False
+                    if os.path.exists(path):
+                        st = os.stat(path)
+                        if st.st_mtime == doc.mtime:
+                            skip = True
 
-            try:
-                st = os.stat(path)
-                if st.st_mtime == doc.mtime:
-                    continue
-            except OSError:
-                pass
+                    if not skip:
+                        common.mkdirs(doc.path)
+                        common.retrieve(config["clearspace-root"] + doc.filehref,
+                                        path, force = True)
+                        common.mkro(path)
+                        os.utime(path, (doc.mtime, doc.mtime))
 
-            common.mkdirs(doc.path)
-            common.retrieve(config["clearspace-root"] + doc.filehref,
-                            path, force = True)
-            common.mkro(path)
-            os.utime(path, (doc.mtime, doc.mtime))
+            updatedbs(db, keep, item["href"], path)
 
         if len(index.items) != step:
             break
@@ -95,7 +117,7 @@ if __name__ == "__main__":
         # remove local files which are no longer found in clearspace
         for f in filenames:
             path = os.path.relpath(dirpath, ".") + "/" + f
-            if not path.startswith("./.") and path not in pathsfound:
+            if not path.startswith("./.") and path not in keep:
                 os.unlink(path)
 
         # prune empty local directories

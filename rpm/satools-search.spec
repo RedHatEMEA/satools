@@ -1,5 +1,5 @@
 Name:		satools-search
-Version:	0.2
+Version:	0.3
 Release:	1%{?dist}
 Summary:	Red Hat UK&I SA tools list search engine
 License:	GPL
@@ -7,6 +7,7 @@ URL:		https://github.com/RedHatUKI/satools
 Source:		satools.tar.gz
 BuildArch:	noarch
 Requires:	satools, python-webpy, httpd, mod_wsgi
+BuildRequires:	redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
 
@@ -35,7 +36,7 @@ rm -rf %{buildroot}
 
 %pre
 /usr/sbin/groupadd -f -r satools
-/usr/bin/id satools &>/dev/null || /usr/sbin/useradd -r -s /sbin/nologin -d /opt/satools -g satools satools
+/usr/bin/id satools &>/dev/null || /usr/sbin/useradd -r -s /sbin/nologin -m -k /dev/null -g satools satools
 
 %post
 service httpd reload
@@ -44,13 +45,13 @@ service httpd reload
 service httpd reload
 
 %files
-%defattr(-,satools,satools,-)
+%defattr(-,root,root,-)
 /
-%doc README
+%doc README.rst
 
 %changelog
 
-* Wed Nov 16 2011 Jim Minter <jminter@redhat.com> 0.2
+* Fri Nov 18 2011 Jim Minter <jminter@redhat.com> 0.2
 
-* Tue Nov 08 2011 Jim Minter <jminter@redhat.com> 0.1
+* Mon Nov 14 2011 Jim Minter <jminter@redhat.com> 0.1
 - First release

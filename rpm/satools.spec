@@ -1,5 +1,5 @@
 Name:		satools
-Version:	0.2
+Version:	0.3
 Release:	1%{?dist}
 Summary:	Red Hat UK&I SA tools
 License:	GPL
@@ -7,6 +7,7 @@ URL:		https://github.com/RedHatUKI/satools
 Source:		satools.tar.gz
 BuildArch:	noarch
 Requires:	python-lxml, mimehandler(application/x-java-jnlp-file)
+BuildRequires:	redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
 
@@ -38,11 +39,11 @@ done
 %files
 %defattr(-,root,root,-)
 %{python_sitelib}
-%doc README
+%doc README.rst
 
 %changelog
 
-* Wed Nov 16 2011 Jim Minter <jminter@redhat.com> 0.2
+* Fri Nov 18 2011 Jim Minter <jminter@redhat.com> 0.2
 
-* Tue Nov 08 2011 Jim Minter <jminter@redhat.com> 0.1
+* Mon Nov 14 2011 Jim Minter <jminter@redhat.com> 0.1
 - First release
