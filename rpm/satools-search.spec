@@ -50,7 +50,7 @@ service httpd reload
 
 %changelog
 
-* Wed Nov 16 2011 Jim Minter <jminter@redhat.com> 0.2
+* Fri Nov 18 2011 Jim Minter <jminter@redhat.com> 0.2
 
-* Tue Nov 08 2011 Jim Minter <jminter@redhat.com> 0.1
+* Mon Nov 14 2011 Jim Minter <jminter@redhat.com> 0.1
 - First release
