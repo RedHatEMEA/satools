@@ -45,6 +45,7 @@ service httpd reload
 
 %files
 %defattr(-,satools,satools,-)
+%attr(-,root,root) /opt
 /
 %doc README
 
