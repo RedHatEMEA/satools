@@ -35,7 +35,7 @@ rm -rf %{buildroot}
 
 %pre
 /usr/sbin/groupadd -f -r satools
-/usr/bin/id satools &>/dev/null || /usr/sbin/useradd -r -s /sbin/nologin -d /opt/satools -g satools satools
+/usr/bin/id satools &>/dev/null || /usr/sbin/useradd -r -s /sbin/nologin -m -k /dev/null -g satools satools
 
 %post
 service httpd reload
@@ -44,10 +44,9 @@ service httpd reload
 service httpd reload
 
 %files
-%defattr(-,satools,satools,-)
-%attr(-,root,root) /opt
+%defattr(-,root,root,-)
 /
-%doc README
+%doc README.rst
 
 %changelog
 

@@ -38,7 +38,7 @@ done
 %files
 %defattr(-,root,root,-)
 %{python_sitelib}
-%doc README
+%doc README.rst
 
 %changelog
 
