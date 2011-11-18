@@ -12,32 +12,42 @@ configfile = os.environ["HOME"] + "/.satools"
 
 class DB:
     def __init__(self, path):
-        self.entries = set()
         self.readdb(path)
 
     def readdb(self, path):
-        self.entries.clear()
+        self.entries = {}
         self.path = path
 
         with open(self.path, "a+") as f:
             for line in f:
-                self.entries.add(line.strip())
+                if "=" in line:
+                    (key, value) = map(str.strip, line.split("=", 1))
+                    self.entries[key] = value
+                else:
+                    self.entries[line.strip()] = None
 
     def writedb(self):
         temppath = mktemppath(self.path)
     
         with open(temppath, "w") as f:
-            for line in sorted(self.entries):
-                print >>f, line
+            for key in sorted(self.entries.keys()):
+                if self.entries[key]:
+                    print >>f, "%s=%s" % (key, self.get(key))
+                else:
+                    print >>f, key
 
         rename(temppath, self.path)
 
-    def add(self, entry):
-        self.entries.add(entry)
+    def add(self, key, value = None):
+        if key in self.entries and self.entries[key] == value: return
+        self.entries[key] = value
         self.writedb()
 
-    def __contains__(self, entry):
-        return entry in self.entries
+    def get(self, key):
+        return self.entries[key]
+
+    def __contains__(self, key):
+        return key in self.entries
 
 class HeadRequest(urllib2.Request):
     def get_method(self):
