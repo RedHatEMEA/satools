@@ -10,6 +10,7 @@ import thunderbird
 import time
 import os
 import urllib
+import urllib2
 
 # TODO: single list update
 
@@ -20,6 +21,7 @@ def isgzip(f):
     return bytes == "\x1F\x8B"
 
 if __name__ == "__main__":
+    warnings = 0
     global config
     config = common.load_config()
 
@@ -59,7 +61,15 @@ if __name__ == "__main__":
 
             if not path in db or not os.path.isfile(path):
                 common.mkdirs(os.path.split(path)[0])
-                f = common.retrieve_tmpfile(url + "/" + href, credentials)
+                try:
+                    f = common.retrieve_tmpfile(url + "/" + href, credentials)
+                except urllib2.HTTPError, e:
+                    if e.code == 403:
+                        print >>sys.stderr, "WARNING: %s, continuing..." % e
+                        warnings += 1
+                        continue
+                    raise
+                    
                 if isgzip(f):
                     g = gzip.GzipFile(fileobj = f, mode = "r")
                     common.sendfile_disk(g, path)
@@ -79,3 +89,6 @@ if __name__ == "__main__":
 
     with open(".sync-done", "w") as f:
         pass
+
+    if warnings:
+        print >>sys.stderr, "WARNING: %u warnings occurred."
