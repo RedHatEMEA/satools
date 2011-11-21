@@ -73,14 +73,14 @@ class Help(object):
 
         try:
             mtime = os.stat(config["lists-base"] + "/.sync-done").st_mtime
-            keys["update"] = "The last successful index update completed " + \
+            keys["update"] = "The last successful index update finished " + \
                 "on %s." % time.strftime("%d/%m/%Y", time.gmtime(mtime))
         except OSError:
             keys["update"] = "The index has not yet been populated."
 
+        lists = sorted(map(lambda x: x.split(" ")[0], config["lists-sync"]))
         keys["lists"] = \
-            "<br/>".join(sorted(filter(lambda x: x[0] != ".",
-                                       os.listdir(config["lists-base"]))))
+            "<br/>".join(map(lambda x: "<a href=\"%s\">%s</a>" % (x, x), lists))
         keys["lists-start-year"] = config["lists-start-year"]
 
         f = open("templates/help.html")
