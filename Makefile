@@ -1,22 +1,31 @@
 TOPDIR:=$(shell rpm --eval %{_topdir})
 
-rpm: rpm-base
-	rpmbuild -ba rpm/satools.spec
-	rpmbuild -ba rpm/satools-search.spec
+ifneq ($(SIGN),)
+override SIGN=--sign
+endif
 
-rpm-sign: rpm-base
-	rpmbuild -ba --sign rpm/satools.spec
-	rpmbuild -ba --sign rpm/satools-search.spec
+all: satools.rpm satools-search.rpm
+
+all-sign:
+	$(MAKE) all SIGN=1
+
+%.rpm: rpm/%.spec preprep-%
+	rpmbuild -ba $(SIGN) $<
+
+preprep-satools: rpm-base
+	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools.tar.gz" Makefile README.rst rpm/satools.spec satools
+
+preprep-satools-search: rpm-base
+	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools-search.tar.gz" contrib/ext-4.0.2a Makefile README.rst rpm/satools-search.spec search
 
 rpm-base: clean
 	mkdir -p "$(TOPDIR)/SOURCES"
-	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools.tar.gz" .
-
-search:
-	cd search/app/static && sencha build -p app.jsb3 -d .
 
 clean:
 	find -name '*.pyc' -print0 | xargs -i -0 rm -f '{}'
 	rm -f search/app/static/app-all.js search/app/static/all-classes.js
 
-.PHONY: clean rpm rpm-base rpm-sign search
+search:
+	cd search/app/static && sencha build -p app.jsb3 -d .
+
+.PHONY: %.rpm all clean preprep-satools preprep-satools-search rpm-base search
