@@ -19,7 +19,10 @@ class DB:
         self.entries = {}
         self.path = path
 
-        with codecs.open(self.path, "a+", "utf-8") as f:
+        if not os.path.exists(self.path):
+            return
+
+        with codecs.open(self.path, "r", "utf-8") as f:
             for line in f:
                 if "=" in line:
                     (key, value) = map(unicode.strip, line.split("=", 1))
