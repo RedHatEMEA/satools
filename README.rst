@@ -60,91 +60,98 @@ See the section below **How To Search** for more detailed information on the for
 How To Search
 -------------
 
-List Search uses SQLite full-text searching (http://www.sqlite.org/fts3.html) to provide its results. The FTS query language is documented in full at http://www.sqlite.org/fts3.html#section_3 and an overview is given below. Note if referring to the SQLite documentation that List Search uses the "standard query syntax", not the "enhanced query syntax".
+SA tools list search queries are formed of one or more of the following three basic query types:
 
-List Search supports three basic query types:
+* **General word or prefix queries.** These return messages where any of the indexed text (i.e., the message body, subject and from fields and mailing list name) contains the given word, or in the case of a prefix query, any word which starts with the given prefix. Matching is case-insensitive only for non-extended latin characters (a-z), otherwise it is case sensitive, and the indexer does not strip accents.
 
-* **Token or token prefix queries.** List Search may be queried for all messages that contain a specified term, or for all messages that contain a term with a specified prefix. The query expression for a specific term is simply the term itself. The query expression used to search for a term prefix is the prefix itself with a '*' character appended to it. For example:
-
-    Query for all messages containing the term "linux":
+    Return messages containing the word *linux*:
 
     ::
 
       linux
 
-    Query for all messages containing a term with the prefix "lin". This will match all messages that contain "linux", but also those that contain terms "linear", "linker", "linguistic" and so on:
+    Return messages containing a word which starts with the prefix *lin*. This will match all messages that contain the word *linux*, but also those that contain the words *linear*, *linker*, *linguistic*, etc.:
 
     ::
 
       lin*
 
-  Normally, a token or token prefix query is matched against the message text body, from and subject fields, and list name. This may be overridden by specifying a column-name ("list", "from", "subject" or "body") followed by a ":" character before a basic term query. There may be space between the ":" and the term to query for, but not between the column-name and the ":" character. For example:
+* **Field queries.** By default, a general query is executed over the message body, subject and from fields, and the mailing list name. You may restrict the search to a specific field by specifying a field name followed by a colon (i.e. **list:**, **from:**, **subject:** or **body:**) followed by a general query.
 
-    Query for all messages where the term "linux" appears in the message subject, and the term "problems" appears in the message text body, from or subject field, or list name:
+    Return messages where the word *linux* appears in the message subject, and the word *problems* appears in the message body, subject or from fields, or mailing list name:
     ::
 
       subject:linux problems
 
-* **Phrase queries.** A phrase query is a query that retrieves all messages that contain a nominated set of terms or term prefixes in a specified order with no intervening tokens. Phrase queries are specified by enclosing a space separated sequence of terms or term prefixes in double quotes ("). For example:
 
-    Query for all messages that contain the phrase "linux applications":
+    Return messages from *jminter@redhat.com* where the word *linux* appears in the message subject:
+    ::
+
+      from:jminter@redhat.com subject:linux
+
+    Return messages sent to list *foo-list* where the word *linux* appears in the message subject:
+    ::
+
+      list:foo-list subject:linux
+
+* **Quoted queries.** These return messages containing the words matching the given general or prefix queries, in the specified order with no intervening words. Phrase queries are specified by enclosing one or more space-separated words or prefixes in double quotes. Field queries may not be included in quoted queries.
+
+    Return messages that contain the phrase *linux applications*:
+
     ::
 
       "linux applications"
 
-    Query for all messages that contain a phrase that matches "lin* app*". As well as "linux applications", this will match common phrases such as "linoleum appliances" or "link apprentice":
+    Return messages that contain a phrase matching lin* app*. As well as *linux applications*, this would match such common phrases as *linoleum appliances* or *link apprentices*, etc.:
+
     ::
 
       "lin* app*"
 
-* **NEAR queries.** A NEAR query is a query that returns messages that contain two or more nominated terms or phrases within a specified proximity of each other (by default with 10 or fewer intervening terms). A NEAR query is specified by putting the keyword "NEAR" between two phrase, term or prefix queries. To specify a proximity other than the default, an operator of the form "NEAR/<N>" may be used, where <N> is the maximum number of intervening terms allowed. For example:
+Basic queries of the above three types may be joined using the following four operators, in order of precedence (strongest first):
 
-    Search for messages that contain the terms "sqlite" and "database" with not more than 10 intervening terms. Note that the order in which the terms appear in the message does not have to be the same as the order in which they appear in the query:
+* **The "-" operator.** This negates the sense of the general query which follows. Note that the "-" operator may not be used with field or phrase queries, and the overall sense of the query submitted must be positive.
 
-    ::
-
-      sqlite NEAR database
-
-    Search for messages that contain the terms "sqlite" and "database" with not more than 6 intervening terms. Note that the order in which the terms appear in the message does not have to be the same as the order in which they appear in the query:
+    Return messages that contain the word *linux* and not the word *windows*:
 
     ::
 
-      database NEAR/6 sqlite
+      linux -windows
 
-    Search for messages that contain the phrase "ACID compliant" and the term "database" with not more than 2 terms separating the two:
+* **The NEAR operator.** Note that **NEAR** must be typed in capitals. This returns messages that contain the two given positive general or positive quoted queries within a certain proximity of eachother. By default the **NEAR** operator matches when there are 10 or fewer intervening words; a different limit N may be specified by specifying an operator of the form **NEAR/N**. The order in which the given words or phrases appear in the message does not have to be the same as the order in which they appear in the query.
+
+    Return messages containing the words *linux* and *kernel* with not more than 10 intervening words:
 
     ::
 
-      database NEAR/2 "ACID compliant"
+      linux NEAR kernel
 
-  More than one NEAR operator may appear in a single query. In this case each pair of terms or phrases separated by a NEAR operator must appear within the specified proximity of each other in the message.
+    Return messages containing the words *linux* and *kernel* with not more than 5 intervening words:
 
-    The following query selects messages that contains an instance of the term "sqlite" separated by two or fewer terms from an instance of the term "acid", which is in turn separated by two or fewer terms from an instance of the term "relational":
-
-      ::
-
-        sqlite NEAR/2 acid NEAR/2 relational
-
-Phrase and NEAR queries may not span multiple columns within a row.
-
-The three basic query types described above may be used to query the full-text index for the set of messages that match the specified criteria. It is possible to perform various set operations on the results of basic queries. There are currently three supported operations:
-
-* Concatenating two basic queries determines the intersection of two sets of messages (this is effectively the AND operator, however note that specifying the string "AND" as part of a standard query syntax query is interpreted as a term query for the set of messages containing the term "AND").
-
-* The OR operator calculates the union of two sets of messages.
-
-* The unary "-" operator (effectively the NOT operator) may be used to compute the relative complement of one set of messages with respect to another. The unary "-" operator may be applied to basic term and term-prefix queries (but not to phrase or NEAR queries). A term or term-prefix that has a unary "-" operator attached to it may not appear as an operand to an OR operator. An FTS query may not consist entirely of terms or term-prefix queries with unary "-" operators attached to them.
-
-    Search for the set of messages that contain the term "sqlite" but do not contain the term "database":
     ::
 
-      sqlite -database
+      linux NEAR/5 kernel
 
-Note that parentheses are not supported. The precedence of operators when using the standard query syntax is: unary "-" operator (tightest grouping), OR, concatenation (AND) (loosest grouping).
+    Return messages contain the phrase *operating system* and word *linux* with not more than 2 words separating the two:
 
-The following example illustrates precedence of operators.
-  Search for messages that contain at least one of the terms "database" and "sqlite", and also contain the term "library":
-  ::
+    ::
 
-    sqlite OR database library
+      linux NEAR/2 "operating system"
 
+* **The OR operator.** Note that **OR** must be typed in capitals. This returns messages that match at least one of the two given positive subqueries.
+
+    Return messages that contain the word *linux* or the word *windows*, or both:
+
+    ::
+
+      linux OR windows
+
+* **The implicit "and" operator.** This returns messages that match both of the given positive subqueries. As may by now be clear, the "and" operator is not actually given, but is implicitly understood when subqueries are concatenated.
+
+    Return messages sent to list *foo-list* where the word *linux* appears in the message subject:
+
+    ::
+
+      list:foo-list subject:linux
+
+Implementation detail: SA tools list search uses SQLite full-text searching to provide its results. The FTS query language is documented in full at http://www.sqlite.org/fts3.html#section_3; only an overview specific to searching mailing lists is given here. Note if referring to the SQLite documentation that SA tools list search uses the SQLite *standard query syntax*, not the *enhanced query syntax*.
