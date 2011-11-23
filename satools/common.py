@@ -100,7 +100,6 @@ def load_config():
 #   format lists-sync=URL USERNAME PASSWORD
 # lists-sync=http://lists.fedoraproject.org/pipermail/announce
 # lists-sync=http://lists.fedoraproject.org/pipermail/test
-# lists-sync=http://post-office.corp.redhat.com/archives/se-jboss/
 # lists-sync=http://my.private.list/mailman/private/announce joebloggs secret
 
 # For lgrep to run mutt on its results mbox, uncomment the following line:
