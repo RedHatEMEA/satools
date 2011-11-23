@@ -15,181 +15,297 @@
   </script>
 </head>
 <body onload="prettyPrint(); highlight();">
-  <pre class="prettyprint lang-js"><span id='Ext-JSON'>/**
-</span> * @class Ext.JSON
- * Modified version of Douglas Crockford&quot;s json.js that doesn&quot;t
- * mess with the Object prototype
- * http://www.json.org/js.html
- * @singleton
+  <pre class="prettyprint lang-js"><span id='Ext-data-reader-Json'>/**
+</span> * @author Ed Spencer
+ * @class Ext.data.reader.Json
+ * @extends Ext.data.reader.Reader
+ * 
+ * &lt;p&gt;The JSON Reader is used by a Proxy to read a server response that is sent back in JSON format. This usually
+ * happens as a result of loading a Store - for example we might create something like this:&lt;/p&gt;
+ * 
+&lt;pre&gt;&lt;code&gt;
+Ext.define('User', {
+    extend: 'Ext.data.Model',
+    fields: ['id', 'name', 'email']
+});
+
+var store = new Ext.data.Store({
+    model: 'User',
+    proxy: {
+        type: 'ajax',
+        url : 'users.json',
+        reader: {
+            type: 'json'
+        }
+    }
+});
+&lt;/code&gt;&lt;/pre&gt;
+ * 
+ * &lt;p&gt;The example above creates a 'User' model. Models are explained in the {@link Ext.data.Model Model} docs if you're
+ * not already familiar with them.&lt;/p&gt;
+ * 
+ * &lt;p&gt;We created the simplest type of JSON Reader possible by simply telling our {@link Ext.data.Store Store}'s 
+ * {@link Ext.data.proxy.Proxy Proxy} that we want a JSON Reader. The Store automatically passes the configured model to the
+ * Store, so it is as if we passed this instead:
+ * 
+&lt;pre&gt;&lt;code&gt;
+reader: {
+    type : 'json',
+    model: 'User'
+}
+&lt;/code&gt;&lt;/pre&gt;
+ * 
+ * &lt;p&gt;The reader we set up is ready to read data from our server - at the moment it will accept a response like this:&lt;/p&gt;
+ * 
+&lt;pre&gt;&lt;code&gt;
+[
+    {
+        &quot;id&quot;: 1,
+        &quot;name&quot;: &quot;Ed Spencer&quot;,
+        &quot;email&quot;: &quot;ed@sencha.com&quot;
+    },
+    {
+        &quot;id&quot;: 2,
+        &quot;name&quot;: &quot;Abe Elias&quot;,
+        &quot;email&quot;: &quot;abe@sencha.com&quot;
+    }
+]
+&lt;/code&gt;&lt;/pre&gt;
+ * 
+ * &lt;p&gt;&lt;u&gt;Reading other JSON formats&lt;/u&gt;&lt;/p&gt;
+ * 
+ * &lt;p&gt;If you already have your JSON format defined and it doesn't look quite like what we have above, you can usually
+ * pass JsonReader a couple of configuration options to make it parse your format. For example, we can use the 
+ * {@link #root} configuration to parse data that comes back like this:&lt;/p&gt;
+ * 
+&lt;pre&gt;&lt;code&gt;
+{
+    &quot;users&quot;: [
+       {
+           &quot;id&quot;: 1,
+           &quot;name&quot;: &quot;Ed Spencer&quot;,
+           &quot;email&quot;: &quot;ed@sencha.com&quot;
+       },
+       {
+           &quot;id&quot;: 2,
+           &quot;name&quot;: &quot;Abe Elias&quot;,
+           &quot;email&quot;: &quot;abe@sencha.com&quot;
+       }
+    ]
+}
+&lt;/code&gt;&lt;/pre&gt;
+ * 
+ * &lt;p&gt;To parse this we just pass in a {@link #root} configuration that matches the 'users' above:&lt;/p&gt;
+ * 
+&lt;pre&gt;&lt;code&gt;
+reader: {
+    type: 'json',
+    root: 'users'
+}
+&lt;/code&gt;&lt;/pre&gt;
+ * 
+ * &lt;p&gt;Sometimes the JSON structure is even more complicated. Document databases like CouchDB often provide metadata
+ * around each record inside a nested structure like this:&lt;/p&gt;
+ * 
+&lt;pre&gt;&lt;code&gt;
+{
+    &quot;total&quot;: 122,
+    &quot;offset&quot;: 0,
+    &quot;users&quot;: [
+        {
+            &quot;id&quot;: &quot;ed-spencer-1&quot;,
+            &quot;value&quot;: 1,
+            &quot;user&quot;: {
+                &quot;id&quot;: 1,
+                &quot;name&quot;: &quot;Ed Spencer&quot;,
+                &quot;email&quot;: &quot;ed@sencha.com&quot;
+            }
+        }
+    ]
+}
+&lt;/code&gt;&lt;/pre&gt;
+ * 
+ * &lt;p&gt;In the case above the record data is nested an additional level inside the &quot;users&quot; array as each &quot;user&quot; item has
+ * additional metadata surrounding it ('id' and 'value' in this case). To parse data out of each &quot;user&quot; item in the 
+ * JSON above we need to specify the {@link #record} configuration like this:&lt;/p&gt;
+ * 
+&lt;pre&gt;&lt;code&gt;
+reader: {
+    type  : 'json',
+    root  : 'users',
+    record: 'user'
+}
+&lt;/code&gt;&lt;/pre&gt;
+ * 
+ * &lt;p&gt;&lt;u&gt;Response metadata&lt;/u&gt;&lt;/p&gt;
+ * 
+ * &lt;p&gt;The server can return additional data in its response, such as the {@link #totalProperty total number of records} 
+ * and the {@link #successProperty success status of the response}. These are typically included in the JSON response
+ * like this:&lt;/p&gt;
+ * 
+&lt;pre&gt;&lt;code&gt;
+{
+    &quot;total&quot;: 100,
+    &quot;success&quot;: true,
+    &quot;users&quot;: [
+        {
+            &quot;id&quot;: 1,
+            &quot;name&quot;: &quot;Ed Spencer&quot;,
+            &quot;email&quot;: &quot;ed@sencha.com&quot;
+        }
+    ]
+}
+&lt;/code&gt;&lt;/pre&gt;
+ * 
+ * &lt;p&gt;If these properties are present in the JSON response they can be parsed out by the JsonReader and used by the
+ * Store that loaded it. We can set up the names of these properties by specifying a final pair of configuration 
+ * options:&lt;/p&gt;
+ * 
+&lt;pre&gt;&lt;code&gt;
+reader: {
+    type : 'json',
+    root : 'users',
+    totalProperty  : 'total',
+    successProperty: 'success'
+}
+&lt;/code&gt;&lt;/pre&gt;
+ * 
+ * &lt;p&gt;These final options are not necessary to make the Reader work, but can be useful when the server needs to report
+ * an error or if it needs to indicate that there is a lot of data available of which only a subset is currently being
+ * returned.&lt;/p&gt;
  */
-Ext.JSON = new(function() {
-    var useHasOwn = !! {}.hasOwnProperty,
-    isNative = function() {
-        var useNative = null;
-
-        return function() {
-            if (useNative === null) {
-                useNative = Ext.USE_NATIVE_JSON &amp;&amp; window.JSON &amp;&amp; JSON.toString() == '[object JSON]';
-            }
-
-            return useNative;
-        };
-    }(),
-    pad = function(n) {
-        return n &lt; 10 ? &quot;0&quot; + n : n;
-    },
-    doDecode = function(json) {
-        return eval(&quot;(&quot; + json + ')');
-    },
-    doEncode = function(o) {
-        if (!Ext.isDefined(o) || o === null) {
-            return &quot;null&quot;;
-        } else if (Ext.isArray(o)) {
-            return encodeArray(o);
-        } else if (Ext.isDate(o)) {
-            return Ext.JSON.encodeDate(o);
-        } else if (Ext.isString(o)) {
-            return encodeString(o);
-        } else if (typeof o == &quot;number&quot;) {
-            //don't use isNumber here, since finite checks happen inside isNumber
-            return isFinite(o) ? String(o) : &quot;null&quot;;
-        } else if (Ext.isBoolean(o)) {
-            return String(o);
-        } else if (Ext.isObject(o)) {
-            return encodeObject(o);
-        } else if (typeof o === &quot;function&quot;) {
-            return &quot;null&quot;;
-        }
-        return 'undefined';
-    },
-    m = {
-        &quot;\b&quot;: '\\b',
-        &quot;\t&quot;: '\\t',
-        &quot;\n&quot;: '\\n',
-        &quot;\f&quot;: '\\f',
-        &quot;\r&quot;: '\\r',
-        '&quot;': '\\&quot;',
-        &quot;\\&quot;: '\\\\',
-        '\x0b': '\\u000b' //ie doesn't handle \v
-    },
-    charToReplace = /[\\\&quot;\x00-\x1f\x7f-\uffff]/g,
-    encodeString = function(s) {
-        return '&quot;' + s.replace(charToReplace, function(a) {
-            var c = m[a];
-            return typeof c === 'string' ? c : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-        }) + '&quot;';
-    },
-    encodeArray = function(o) {
-        var a = [&quot;[&quot;, &quot;&quot;],
-        // Note empty string in case there are no serializable members.
-        len = o.length,
-        i;
-        for (i = 0; i &lt; len; i += 1) {
-            a.push(doEncode(o[i]), ',');
-        }
-        // Overwrite trailing comma (or empty string)
-        a[a.length - 1] = ']';
-        return a.join(&quot;&quot;);
-    },
-    encodeObject = function(o) {
-        var a = [&quot;{&quot;, &quot;&quot;],
-        // Note empty string in case there are no serializable members.
-        i;
-        for (i in o) {
-            if (!useHasOwn || o.hasOwnProperty(i)) {
-                a.push(doEncode(i), &quot;:&quot;, doEncode(o[i]), ',');
-            }
-        }
-        // Overwrite trailing comma (or empty string)
-        a[a.length - 1] = '}';
-        return a.join(&quot;&quot;);
-    };
-
-<span id='Ext-JSON-method-encodeDate'>    /**
-</span>     * &lt;p&gt;Encodes a Date. This returns the actual string which is inserted into the JSON string as the literal expression.
-     * &lt;b&gt;The returned value includes enclosing double quotation marks.&lt;/b&gt;&lt;/p&gt;
-     * &lt;p&gt;The default return format is &quot;yyyy-mm-ddThh:mm:ss&quot;.&lt;/p&gt;
-     * &lt;p&gt;To override this:&lt;/p&gt;&lt;pre&gt;&lt;code&gt;
-     Ext.JSON.encodeDate = function(d) {
-     return d.format('&quot;Y-m-d&quot;');
-     };
-     &lt;/code&gt;&lt;/pre&gt;
-     * @param {Date} d The Date to encode
-     * @return {String} The string literal to use in a JSON string.
+Ext.define('Ext.data.reader.Json', {
+    extend: 'Ext.data.reader.Reader',
+    alternateClassName: 'Ext.data.JsonReader',
+    alias : 'reader.json',
+    
+    root: '',
+    
+<span id='Ext-data-reader-Json-cfg-record'>    /**
+</span>     * @cfg {String} record The optional location within the JSON response that the record data itself can be found at.
+     * See the JsonReader intro docs for more details. This is not often needed and defaults to undefined.
      */
-    this.encodeDate = function(o) {
-        return '&quot;' + o.getFullYear() + &quot;-&quot; 
-        + pad(o.getMonth() + 1) + &quot;-&quot;
-        + pad(o.getDate()) + &quot;T&quot;
-        + pad(o.getHours()) + &quot;:&quot;
-        + pad(o.getMinutes()) + &quot;:&quot;
-        + pad(o.getSeconds()) + '&quot;';
-    };
-
-<span id='Ext-JSON-method-encode'>    /**
-</span>     * Encodes an Object, Array or other value
-     * @param {Mixed} o The variable to encode
-     * @return {String} The JSON string
+    
+<span id='Ext-data-reader-Json-cfg-useSimpleAccessors'>    /**
+</span>     * @cfg {Boolean} useSimpleAccessors True to ensure that field names/mappings are treated as literals when
+     * reading values. Defalts to &lt;tt&gt;false&lt;/tt&gt;.
+     * For example, by default, using the mapping &quot;foo.bar.baz&quot; will try and read a property foo from the root, then a property bar
+     * from foo, then a property baz from bar. Setting the simple accessors to true will read the property with the name 
+     * &quot;foo.bar.baz&quot; direct from the root object.
      */
-    this.encode = function() {
-        var ec;
-        return function(o) {
-            if (!ec) {
-                // setup encoding function on first access
-                ec = isNative() ? JSON.stringify : doEncode;
-            }
-            return ec(o);
-        };
-    }();
-
-
-<span id='Ext-JSON-method-decode'>    /**
-</span>     * Decodes (parses) a JSON string to an object. If the JSON is invalid, this function throws a SyntaxError unless the safe option is set.
-     * @param {String} json The JSON string
-     * @param {Boolean} safe (optional) Whether to return null or throw an exception if the JSON is invalid.
-     * @return {Object} The resulting object
+    useSimpleAccessors: false,
+    
+<span id='Ext-data-reader-Json-method-readRecords'>    /**
+</span>     * Reads a JSON object and returns a ResultSet. Uses the internal getTotal and getSuccess extractors to
+     * retrieve meta data from the response, and extractData to turn the JSON data into model instances.
+     * @param {Object} data The raw JSON data
+     * @return {Ext.data.ResultSet} A ResultSet containing model instances and meta data about the results
      */
-    this.decode = function() {
-        var dc;
-        return function(json, safe) {
-            if (!dc) {
-                // setup decoding function on first access
-                dc = isNative() ? JSON.parse : doDecode;
+    readRecords: function(data) {
+        //this has to be before the call to super because we use the meta data in the superclass readRecords
+        if (data.metaData) {
+            this.onMetaChange(data.metaData);
+        }
+
+<span id='Ext-data-reader-Json-property-jsonData'>        /**
+</span>         * DEPRECATED - will be removed in Ext JS 5.0. This is just a copy of this.rawData - use that instead
+         * @property jsonData
+         * @type Mixed
+         */
+        this.jsonData = data;
+        return this.callParent([data]);
+    },
+
+    //inherit docs
+    getResponseData: function(response) {
+        try {
+            var data = Ext.decode(response.responseText);
+        }
+        catch (ex) {
+            Ext.Error.raise({
+                response: response,
+                json: response.responseText,
+                parseError: ex,
+                msg: 'Unable to parse the JSON returned by the server: ' + ex.toString()
+            });
+        }
+        //&lt;debug&gt;
+        if (!data) {
+            Ext.Error.raise('JSON object not found');
+        }
+        //&lt;/debug&gt;
+
+        return data;
+    },
+
+    //inherit docs
+    buildExtractors : function() {
+        var me = this;
+        
+        me.callParent(arguments);
+
+        if (me.root) {
+            me.getRoot = me.createAccessor(me.root);
+        } else {
+            me.getRoot = function(root) {
+                return root;
+            };
+        }
+    },
+    
+<span id='Ext-data-reader-Json-method-extractData'>    /**
+</span>     * @private
+     * We're just preparing the data for the superclass by pulling out the record objects we want. If a {@link #record}
+     * was specified we have to pull those out of the larger JSON object, which is most of what this function is doing
+     * @param {Object} root The JSON root node
+     * @return {Array} The records
+     */
+    extractData: function(root) {
+        var recordName = this.record,
+            data = [],
+            length, i;
+        
+        if (recordName) {
+            length = root.length;
+            
+            for (i = 0; i &lt; length; i++) {
+                data[i] = root[i][recordName];
             }
-            try {
-                return dc(json);
-            } catch (e) {
-                if (safe === true) {
-                    return null;
+        } else {
+            data = root;
+        }
+        return this.callParent([data]);
+    },
+
+<span id='Ext-data-reader-Json-method-createAccessor'>    /**
+</span>     * @private
+     * Returns an accessor function for the given property string. Gives support for properties such as the following:
+     * 'someProperty'
+     * 'some.property'
+     * 'some[&quot;property&quot;]'
+     * This is used by buildExtractors to create optimized extractor functions when casting raw data into model instances.
+     */
+    createAccessor: function() {
+        var re = /[\[\.]/;
+        
+        return function(expr) {
+            if (Ext.isEmpty(expr)) {
+                return Ext.emptyFn;
+            }
+            if (Ext.isFunction(expr)) {
+                return expr;
+            }
+            if (this.useSimpleAccessors !== true) {
+                var i = String(expr).search(re);
+                if (i &gt;= 0) {
+                    return Ext.functionFactory('obj', 'return obj' + (i &gt; 0 ? '.' : '') + expr);
                 }
-                Ext.Error.raise({
-                    sourceClass: &quot;Ext.JSON&quot;,
-                    sourceMethod: &quot;decode&quot;,
-                    msg: &quot;You're trying to decode an invalid JSON String: &quot; + json
-                });
             }
+            return function(obj) {
+                return obj[expr];
+            };
         };
-    }();
-
-})();
-<span id='Ext-method-encode'>/**
-</span> * Shorthand for {@link Ext.JSON#encode}
- * @param {Mixed} o The variable to encode
- * @return {String} The JSON string
- * @member Ext
- * @method encode
- */
-Ext.encode = Ext.JSON.encode;
-<span id='Ext-method-decode'>/**
-</span> * Shorthand for {@link Ext.JSON#decode}
- * @param {String} json The JSON string
- * @param {Boolean} safe (optional) Whether to return null or throw an exception if the JSON is invalid.
- * @return {Object} The resulting object
- * @member Ext
- * @method decode
- */
-Ext.decode = Ext.JSON.decode;
-
-</pre>
+    }()
+});</pre>
 </body>
 </html>
