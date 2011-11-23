@@ -4,6 +4,10 @@ import argparse
 import common
 import lxml.etree
 import os
+import sys
+import urllib2
+
+# TODO: remove local files which are not present remotely (any more?)
 
 def parse_args():
     ap = argparse.ArgumentParser()
@@ -21,6 +25,7 @@ def xpath(elem, path):
                       { "xhtml" : "http://www.w3.org/1999/xhtml" })
 
 if __name__ == "__main__":
+    warnings = 0
     global config
     config = common.load_config()
     args = parse_args()
@@ -40,5 +45,16 @@ if __name__ == "__main__":
         path = url[:url.index("/%(type)s/" % args)].replace("_", " ")
         common.mkdirs(path)
         path = path + "/" + url.split("/")[-1]
-        common.retrieve(urlbase + url, path)
+
+        try:
+            common.retrieve(urlbase + url, path)
+        except urllib2.HTTPError, e:
+            if e.code == 403:
+                print >>sys.stderr, "WARNING: %s on %s, continuing..." % (e, urlbase + url)
+                warnings += 1
+                continue
+            raise
         common.mkro(path)
+
+    if warnings:
+        print >>sys.stderr, "WARNING: %u warnings occurred." % warnings

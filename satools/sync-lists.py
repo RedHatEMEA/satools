@@ -91,4 +91,4 @@ if __name__ == "__main__":
         pass
 
     if warnings:
-        print >>sys.stderr, "WARNING: %u warnings occurred."
+        print >>sys.stderr, "WARNING: %u warnings occurred." % warnings

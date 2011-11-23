@@ -177,11 +177,20 @@ def sendfile_disk(srcf, path):
 
     rename(temppath, path)
 
-def retrieve_m(url, data = None):
+def retrieve_m(url, data = None, tries = 1):
     print >>sys.stderr, "Retrieving %s..." % url
-    return urllib2.urlopen(url, data)
+    for i in xrange(tries):
+        try:
+            return urllib2.urlopen(url, data)
+            
+        except urllib2.URLError, e:
+            if str(e) == "<urlopen error [Errno -2] Name or service not known>" and i < tries - 1:
+                print >>sys.stderr, "DNS lookup failed, sleeping and retrying..."
+                time.sleep(10)
+            else:
+                raise e
 
-def retrieve(url, path, data = None, force = False):
+def retrieve(url, path, data = None, force = False, tries = 1):
     if os.path.exists(path) and not force:
         srcf = urllib2.urlopen(HeadRequest(url))
         if "Last-Modified" in srcf.info() and "Content-Length" in srcf.info():
@@ -193,7 +202,7 @@ def retrieve(url, path, data = None, force = False):
             if mtime == st.st_mtime and int(srcf.info()["Content-Length"]) == st.st_size:
                 return
 
-    srcf = retrieve_m(url, data)
+    srcf = retrieve_m(url, data, tries)
     sendfile_disk(srcf, path)
     srcf.close()
 

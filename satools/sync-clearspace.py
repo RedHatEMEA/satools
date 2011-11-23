@@ -78,8 +78,9 @@ if __name__ == "__main__":
 
     keep = set()
     step = 50
+    tries = 10
     for i in itertools.count(step = step):
-        f = common.retrieve_m(config["clearspace-root"] + "/view-documents.jspa?start=%u&numResults=%u&filter=presentations" % (i, step))
+        f = common.retrieve_m(config["clearspace-root"] + "/view-documents.jspa?start=%u&numResults=%u&filter=presentations" % (i, step), tries = tries)
         index = DocIndex(f.read())
         f.close()
 
@@ -88,7 +89,8 @@ if __name__ == "__main__":
                 path = db.get(item["href"])
 
             else:
-                f = common.retrieve_m(config["clearspace-root"] + item["href"])
+                f = common.retrieve_m(config["clearspace-root"] + item["href"],
+                                      tries = tries)
                 doc = WikiDoc(f.read())
                 f.close()
 
@@ -104,7 +106,7 @@ if __name__ == "__main__":
                     if not skip:
                         common.mkdirs(doc.path)
                         common.retrieve(config["clearspace-root"] + doc.filehref,
-                                        path, force = True)
+                                        path, force = True, tries = tries)
                         common.mkro(path)
                         os.utime(path, (doc.mtime, doc.mtime))
 

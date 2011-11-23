@@ -1,95 +1,93 @@
 <html>
 <head>
-<title>List Search Help</title>
+<title>SA tools list search &#8211; help</title>
 <style type="text/css">
 * { text-align:justify; font-family: sans-serif; }
 div { background-color: #dfe8f6; }
+div.container { position: absolute; left: 10%; width: 80%; background-color: #ffffff; border: 1px solid #b5b8c8; padding: 5px }
 </style>
 </head>
-<body style="width: 800px">
-<h1>Welcome to List Search!</h1>
+<body>
+<div class="container">
+<h1>Welcome to SA tools list search!</h1>
 <h2>Contents</h2>
 <ul>
-<li><a href="#about">About List Search</a></li>
+<li><a href="#about">About SA tools list search</a></li>
 <li><a href="#how">How to search</a></li>
 <li><a href="#lists">Lists indexed on this server</a></li>
 </ul>
 
-<h2><a name="about">About List Search</a></h2>
-
-<p>This is List Search v0.2, written by Jim Minter. List Search and all its command line tooling are open-sourced at <a href="https://github.com/RedHatUKI/satools">https://github.com/RedHatUKI/satools</a>. I hope it's useful to you. Questions, comments, feature requests, patches (hey, it is open source after all), pull requests and cake are all welcomed at <a href="mailto:jminter@redhat.com">jminter@redhat.com</a>.
+<h2><a name="about">About SA tools list search</a></h2>
+<p>This is the help page for SA tools list search 0.2, written by Jim Minter. SA tools list search and all its command line tooling are open-sourced at <a href="https://github.com/RedHatUKI/satools">https://github.com/RedHatUKI/satools</a>. I hope they are useful to you. Questions, comments, feature requests, patches (hey, it is open source after all), pull requests and cake are all welcomed at <a href="mailto:jminter@redhat.com">jminter@redhat.com</a>.
 
 <h2><a name="how">How to search</a></h2>
-<p>List Search uses <a href="http://www.sqlite.org/fts3.html">SQLite full-text searching</a> to provide its results. The FTS query language is documented in full at <a href="http://www.sqlite.org/fts3.html#section_3">http://www.sqlite.org/fts3.html#section_3</a> and an overview is given below. Note if referring to the SQLite documentation that List Search uses the &quot;standard query syntax&quot;, not the &quot;enhanced query syntax&quot;.</p>
-
-<p>List Search supports three basic query types:</p>
+<p>SA tools list search queries are formed of one or more of the following three basic query types:</p>
 
 <p><ul>
-<li><p><b>Token or token prefix queries</b>. List Search may be queried for all messages that contain a specified term, or for all messages that contain a term with a specified prefix. The query expression for a specific term is simply the term itself. The query expression used to search for a term prefix is the prefix itself with a '*' character appended to it. For example:</p>
+<li><p><b>General word or prefix queries</b>. These return messages where any of the indexed text (i.e., the message body, subject and from fields and mailing list name) contains the given word, or in the case of a prefix query, any word which starts with the given prefix. Matching is case-insensitive only for non-extended latin characters (a-z), otherwise it is case sensitive, and the indexer does not strip accents.</p>
 
-<p><ul><div>Query for all messages containing the term &quot;linux&quot;:</p>
+<p><ul><div>Return messages containing the word <i>linux</i>:</p>
 <p><b>linux</b></div></ul></p>
 
-<p><ul><div>Query for all messages containing a term with the prefix &quot;lin&quot;. This will match all messages that contain &quot;linux&quot;, but also those that contain terms &quot;linear&quot;, &quot;linker&quot;, &quot;linguistic&quot; and so on.</p>
-<p><b>lin*</b></div></ul></p>
+<p><ul><div>Return messages containing a word which starts with the prefix <i>lin</i>. This will match all messages that contain the word <i>linux</i>, but also those that contain the words <i>linear</i>, <i>linker</i>, <i>linguistic</i>, etc.:</p>
+<p><b>lin*</b></div></ul></p></li>
 
-<p>Normally, a token or token prefix query is matched against the message text body, from and subject fields, and list name. This may be overridden by specifying a column-name (&quot;list&quot;, &quot;from&quot;, &quot;subject&quot; or &quot;body&quot;) followed by a &quot;:&quot; character before a basic term query. There may be space between the &quot;:&quot; and the term to query for, but not between the column-name and the &quot;:&quot; character. For example:</p> 
+<li><p><b>Field queries</b>. By default, a general query is executed over the message body, subject and from fields, and the mailing list name. You may restrict the search to a specific field by specifying a field name followed by a colon (i.e. <b>list:</b>, <b>from:</b>, <b>subject:</b> or <b>body:</b>) followed by a general query.</p>
 
-<p><ul><div>Query for all messages where the term &quot;linux&quot; appears in the message subject, and the term &quot;problems&quot; appears in the message text body, from or subject field, or list name.</p>
-<p><b>subject:linux problems</b></div></ul></p></li>
+<p><ul><div>Return messages where the word <i>linux</i> appears in the message subject, and the word <i>problems</i> appears in the message body, subject or from fields, or mailing list name:</p>
+<p><b>subject:linux problems</b></div></ul></p>
 
-<li><p><b>Phrase queries</b>. A phrase query is a query that retrieves all messages that contain a nominated set of terms or term prefixes in a specified order with no intervening tokens. Phrase queries are specified by enclosing a space separated sequence of terms or term prefixes in double quotes (&quot;). For example:</p>
+<p><ul><div>Return messages from <i>jminter@redhat.com</i> where the word <i>linux</i> appears in the message subject:</p>
+<p><b>from:jminter@redhat.com subject:linux</b></div></ul></p>
 
-<p><ul><div>Query for all messages that contain the phrase &quot;linux applications&quot;.</p>
+<p><ul><div>Return messages sent to list <i>foo-list</i> where the word <i>linux</i> appears in the message subject:</p>
+<p><b>list:foo-list subject:linux</b></div></ul></p></li>
+
+<li><p><b>Quoted queries</b>. These return messages containing the words matching the given general or prefix queries, in the specified order with no intervening words. Phrase queries are specified by enclosing one or more space-separated words or prefixes in double quotes.  Field queries may not be included in quoted queries.</p>
+
+<p><ul><div>Return messages that contain the phrase <i>linux applications</i>:</p>
 <p><b>&quot;linux applications&quot;</b></div></ul></p>
 
-<p><ul><div>Query for all messages that contain a phrase that matches &quot;lin* app*&quot;. As well as &quot;linux applications&quot;, this will match common phrases such as &quot;linoleum appliances&quot; or &quot;link apprentice&quot;.</p>
-<p><b>&quot;lin* app*&quot;</b></div></ul></p></li>
+<p><ul><div>Return messages that contain a phrase matching <i>lin* app*</i>. As well as <i>linux applications</i>, this would match such common phrases as <i>linoleum appliances</i> or <i>link apprentices</i>, etc.:</p>
+<p><b>&quot;lin* app*&quot;</b></div></ul></p></li></ul></p>
 
-<li><p><b>NEAR queries</b>. A NEAR query is a query that returns messages that contain two or more nominated terms or phrases within a specified proximity of each other (by default with 10 or fewer intervening terms). A NEAR query is specified by putting the keyword &quot;NEAR&quot; between two phrase, term or prefix queries. To specify a proximity other than the default, an operator of the form &quot;NEAR/&lt;N&gt;&quot; may be used, where &lt;N&gt; is the maximum number of intervening terms allowed. For example:</p>
-
-<p><ul><div>Search for messages that contain the terms &quot;sqlite&quot; and &quot;database&quot; with not more than 10 intervening terms. Note that the order in which the terms appear in the message does not have to be the same as the order in which they appear in the query.</p>
-<p><b>sqlite NEAR database</b></div></ul></p>
-
-<p><ul><div>Search for messages that contain the terms &quot;sqlite&quot; and &quot;database&quot; with not more than 6 intervening terms. Note that the order in which the terms appear in the message does not have to be the same as the order in which they appear in the query.</p>
-<p><b>database NEAR/6 sqlite</b></div></ul></p>
-
-<p><ul><div>Search for messages that contain the phrase &quot;ACID compliant&quot; and the term &quot;database&quot; with not more than 2 terms separating the two.</p>
-<p><b>database NEAR/2 &quot;ACID compliant&quot;</b></div></ul></p>
-
-<p>More than one NEAR operator may appear in a single query. In this case each pair of terms or phrases separated by a NEAR operator must appear within the specified proximity of each other in the message.</p>
-
-<p><ul><div>The following query selects messages that contains an instance of the term &quot;sqlite&quot; separated by two or fewer terms from an instance of the term &quot;acid&quot;, which is in turn separated by two or fewer terms from an instance of the term &quot;relational&quot;.</p>
-<p><b>sqlite NEAR/2 acid NEAR/2 relational</b></div></ul></p>
-
-<p>Phrase and NEAR queries may not span multiple columns within a row.</p></li></ul>
-
-<p>The three basic query types described above may be used to query the full-text index for the set of messages that match the specified criteria. It is possible to perform various set operations on the results of basic queries. There are currently three supported operations:</p>
+<p>Basic queries of the above three types may be joined using the following four operators, in order of precedence (strongest first):</p>
 
 <p><ul>
-<li><p>Concatenating two basic queries determines the intersection of two sets of messages (this is effectively the AND operator, however note that specifying the string &quot;AND&quot; as part of a standard query syntax query is interpreted as a term query for the set of messages containing the term &quot;AND&quot;).</p></li>
-<li><p>The OR operator calculates the union of two sets of messages.</p></li>
-<li><p>The unary &quot;-&quot; operator (effectively the NOT operator) may be used to compute the relative complement of one set of messages with respect to another. The unary &quot;-&quot; operator may be applied to basic term and term-prefix queries (but not to phrase or NEAR queries). A term or term-prefix that has a unary &quot;-&quot; operator attached to it may not appear as an operand to an OR operator. An FTS query may not consist entirely of terms or term-prefix queries with unary &quot;-&quot; operators attached to them.</p></li>
-</ul></p>
+<li><p><b>The &quot;-&quot; operator</b>. This negates the sense of the general query which follows. Note that the &quot;-&quot; operator may not be used with field or phrase queries, and the overall sense of the query submitted must be positive.</p>
 
-<p><ul><div>Search for the set of messages that contain the term &quot;sqlite&quot; but do not contain the term &quot;database&quot;.</p>
-<p><b>sqlite -database</b></div></ul></p>
+<p><ul><div>Return messages that contain the word <i>linux</i> and not the word <i>windows</i>:</p>
+<p><b>linux -windows</b></div></ul></p>
 
-<p>Note that parentheses are not supported. The precedence of operators when using the standard query syntax is: unary &quot;-&quot; operator (tightest grouping), OR, concatenation (AND) (loosest grouping).</p>
+<li><p><b>The NEAR operator</b>. Note that <b>NEAR</b> must be typed in capitals. This returns messages that contain the two given positive general or positive quoted queries within a certain proximity of eachother. By default the <b>NEAR</b> operator matches when there are 10 or fewer intervening words; a different limit N may be specified by specifying an operator of the form <b>NEAR/N</b>. The order in which the given words or phrases appear in the message does not have to be the same as the order in which they appear in the query.</p>
 
-<p>The following example illustrates precedence of operators:</p>
+<p><ul><div>Return messages containing the words <i>linux</i> and <i>kernel</i> with not more than 10 intervening words:</p>
+<p><b>linux NEAR kernel</b></div></ul></p>
 
-<p><ul><div>Search for messages that contain at least one of the terms &quot;database&quot; and &quot;sqlite&quot;, and also contain the term &quot;library&quot;.</p>
-<p><b>sqlite OR database library</b></div></ul></p>
+<p><ul><div>Return messages containing the words <i>linux</i> and <i>kernel</i> with not more than 5 intervening words:</p>
+<p><b>linux NEAR/5 kernel</b></div></ul></p>
+
+<p><ul><div>Return messages contain the phrase <i>operating system</i> and word <i>linux</i> with not more than 2 words separating the two:</p>
+<p><b>linux NEAR/2 &quot;operating system&quot;</b></div></ul></p>
+
+<li><p><b>The OR operator</b>. Note that <b>OR</b> must be typed in capitals. This returns messages that match at least one of the two given positive subqueries.</p>
+
+<p><ul><div>Return messages that contain the word <i>linux</i> or the word <i>windows</i>, or both:</p>
+<p><b>linux OR windows</b></div></ul></p>
+
+<li><p><b>The implicit &quot;and&quot; operator</b>. This returns messages that match both of the given positive subqueries. As may by now be clear, the &quot;and&quot; operator is not actually given, but is implicitly understood when subqueries are concatenated.</p>
+
+<p><ul><div>Return messages sent to list <i>foo-list</i> where the word <i>linux</i> appears in the message subject:</p>
+<p><b>list:foo-list subject:linux</b></div></ul></p>
+</li></ul>
+
+<p>Implementation detail: SA tools list search uses <a href="http://www.sqlite.org/fts3.html">SQLite full-text searching</a> to provide its results. The FTS query language is documented in full at <a href="http://www.sqlite.org/fts3.html#section_3">http://www.sqlite.org/fts3.html#section_3</a>; only an overview specific to searching mailing lists is given here. Note if referring to the SQLite documentation that SA tools list search uses the SQLite <i>standard query syntax</i>, not the <i>enhanced query syntax</i>.</p>
 
 <h2><a name="lists">Lists indexed on this server</a></h2>
-
-<p>This server hosts indexes for messages sent since 01/01/$lists-start-year to the following lists:</p>
-
+<p>This server hosts allows searching of messages sent since 01/01/$lists-start-year to the following lists:</p>
 <ul>$lists</ul>
-
 <p>$update</p>
 
+</div>
 </body>
 </html>
-

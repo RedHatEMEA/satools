@@ -19,7 +19,7 @@ def quote(arg):
         args = arg.split(":", 1)
         if args[0].lower() == "list": args[1] = args[1].replace("-", "")
         return ":".join((args[0], args[1]))
-    elif arg.startswith("-"):
+    elif arg.startswith("-") or arg == "OR" or arg == "NEAR":
         return arg
     else:
         return '"' + arg + '"'
