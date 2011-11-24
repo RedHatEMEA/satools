@@ -11,7 +11,7 @@ import urllib2
 
 configfile = os.environ["HOME"] + "/.satools"
 
-class DB:
+class DB(object):
     def __init__(self, path):
         self.readdb(path)
 
