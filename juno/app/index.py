@@ -10,6 +10,7 @@ import os
 import PIL.Image
 import stat
 import sys
+import time
 
 slidesize = (1024, 768)
 thumbsize = (256, 192)
@@ -164,12 +165,15 @@ def add_preso(db, srcp, dstp):
     log("Committing and disconnecting...")
 
     preso.dispose()
-    juno.disconnect()
+    try:
+        juno.disconnect()
+    except Exception, e:
+        log("WARNING: disconnect failed (%s), continuing..." % e)
 
     doqueries(db, sql)
 
 def log(s):
-    sys.stderr.write("%d: %s\n" % (workerid, s))
+    sys.stderr.write("%d: %s: %s\n" % (workerid, time.ctime(), s))
     
 def worker(me, q):
     global workerid
@@ -250,8 +254,8 @@ def check_db(db, srcbase, dstbase):
     doqueries(db, [["DELETE FROM presos WHERE PATH = ?", args]])
 
 def check_tree(db, srcbase, dstbase):
-    check_db(srcbase, dstbase)
-    check_fs(srcbase, dstbase)
+    check_db(db, srcbase, dstbase)
+    check_fs(db, srcbase, dstbase)
 
 def doqueries(db, sql):
     for s in sql:
@@ -286,5 +290,5 @@ if __name__ == "__main__":
             add_tree(srcbase, dstbase)
 
         db = DB(".db")
-        check_tree(srcbase, dstbase)
+        check_tree(db, srcbase, dstbase)
         db.close()
