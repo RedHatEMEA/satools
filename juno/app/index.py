@@ -1,13 +1,16 @@
 #!/usr/bin/python
 
+from db import DB
 from satools import common
-import db
+import argparse
 import hashlib
+import multiprocessing
 import odptools
 import os
 import PIL.Image
 import stat
 import sys
+import time
 
 slidesize = (1024, 768)
 thumbsize = (256, 192)
@@ -50,6 +53,7 @@ def removepagenumbers(pages):
 def insertcontent(dstp, preso):
     args = []
 
+    log("Exporting content...")
     pages = preso.getDrawPages()
     for i in range(0, pages.getCount()):
         t = []
@@ -79,7 +83,8 @@ def createthumbs(juno, dstp, preso):
     filter = juno.createInstance("com.sun.star.drawing.GraphicExportFilter")
 
     pages = preso.getDrawPages()
-    for i in range(0, pages.getCount()):
+    pagect = pages.getCount()
+    for i in range(0, pagect):
         slidep = dstp + "/slides/%03u.png" % i
         thumbp = dstp + "/thumbs/%03u.jpg" % i
 
@@ -91,10 +96,18 @@ def createthumbs(juno, dstp, preso):
                                juno.PropertyValue("PixelHeight", y)))
 
         filter.setSourceDocument(page)
-        filter.filter((juno.PropertyValue("MediaType", "image/png"),
-                       juno.PropertyValue("URL", juno.mkpath(slidep)),
-                       juno.PropertyValue("FilterData", filterdata)))
 
+        log("Exporting PNG %u/%u..." % (i + 1, pagect))
+        try:
+            filter.filter((juno.PropertyValue("MediaType", "image/png"),
+                           juno.PropertyValue("URL", juno.mkpath(slidep)),
+                           juno.PropertyValue("FilterData", filterdata)))
+
+        except Exception, e:
+            log("WARNING: export failed (%s), continuing..." % e)
+            continue
+
+        log("Resizing PNGs...")
         im = extend(slidep, slidesize)
         resize(im, thumbp, thumbsize)
 
@@ -110,7 +123,7 @@ def insertpreso(srcp, dstp):
     return [["REPLACE INTO presos VALUES(?, ?)",
              [(dstp, mtime)]]]
 
-def needs_add(srcp, dstp):
+def needs_add(db, srcp, dstp):
     if not odptools.is_odp(srcp):
         return False
 
@@ -124,10 +137,10 @@ def needs_add(srcp, dstp):
 
     return row is None or row["mtime"] != mtime
 
-def add_preso(srcp, dstp):
-    if not needs_add(srcp, dstp): return
+def add_preso(db, srcp, dstp):
+    if not needs_add(db, srcp, dstp): return
 
-    print >>sys.stderr, srcp
+    log("Adding %s..." % srcp)
 
     common.rmtree(dstp)
     common.mkdirs(dstp)
@@ -137,6 +150,7 @@ def add_preso(srcp, dstp):
     preso = juno.desktop.loadComponentFromURL \
         (juno.mkpath(srcp), "_blank", 0,
          (juno.PropertyValue("Hidden", True),
+          juno.PropertyValue("ReadOnly", True),
           juno.PropertyValue("FilterName", "impress8")))
 
     preso.storeToURL(juno.mkpath(os.path.join(os.getcwd(), dstp) + "/data.odp"), ())
@@ -148,21 +162,56 @@ def add_preso(srcp, dstp):
     sql.extend(createthumbs(juno, dstp, preso))
     sql.extend(insertcontent(dstp, preso))
 
-    preso.dispose()
-    juno.disconnect()
+    log("Committing and disconnecting...")
 
-    doqueries(sql)
-    db.commit()
+    preso.dispose()
+    try:
+        juno.disconnect()
+    except Exception, e:
+        log("WARNING: disconnect failed (%s), continuing..." % e)
+
+    doqueries(db, sql)
+
+def log(s):
+    sys.stderr.write("%d: %s: %s\n" % (workerid, time.ctime(), s))
+    
+def worker(me, q):
+    global workerid
+    workerid = me
+
+    db = DB(".db")
+    for srcp, dstp in iter(q.get, "STOP"):
+        add_preso(db, srcp, dstp)
+    db.close()
 
 def add_tree(srcbase, dstbase):
+    procs = []
+
+    q = multiprocessing.Queue()
+    for i in range(args["workers"]):
+        procs.append(multiprocessing.Process(target = worker, args = (i, q)))
+
+    for p in procs:
+        p.start()
+
     for dirpath, dirnames, filenames in sorted(os.walk(srcbase)):
         for f in sorted(filenames):
             srcp = os.path.join(dirpath, f)
             dstp = os.path.join(dstbase, os.path.relpath(srcp, srcbase))
 
-            add_preso(srcp, dstp)
+            q.put((srcp, dstp))
 
-def check_fs(srcbase, dstbase):
+    for i in range(len(procs)):
+        q.put("STOP")
+
+    for p in procs:
+        p.join()
+
+    for p in procs:
+        if p.exitcode:
+            sys.exit(1)
+
+def check_fs(db, srcbase, dstbase):
     for dirpath, dirnames, filenames in os.walk(dstbase):
         reldirpath = os.path.relpath(dirpath, dstbase)
         srcp = os.path.join(srcbase, reldirpath)
@@ -178,49 +227,68 @@ def check_fs(srcbase, dstbase):
             continue
 
         if stat.S_ISREG(mode):
+            cu = db.execute("SELECT path FROM presos WHERE path = ?", (dirpath, ))
+            row = cu.fetchone()
+            if row is None:
+                common.rmtree(dirpath)
+
             del dirnames[:]
             continue
 
         raise Exception("unexpected file type")
 
-def check_db(srcbase, dstbase):
+    for dirpath, dirnames, filenames in os.walk(dstbase, topdown = False):
+        if not os.listdir(dirpath):
+            os.rmdir(dirpath)
+
+def check_db(db, srcbase, dstbase):
     args = []
 
     for row in db.execute("SELECT path FROM presos WHERE SUBSTR(path, 1, ?) = ?",
                           (len(dstbase) + 1, dstbase + "/")):
         reldirpath = os.path.relpath(row["path"], dstbase)
         srcp = os.path.join(srcbase, reldirpath)
-
-        if not os.path.exists(srcp):
+        if not os.path.exists(srcp) or not os.path.exists(row["path"]):
             args.append((row["path"], ))
 
-    doqueries([["DELETE FROM presos WHERE PATH = ?", args]])
-    db.commit()
+    doqueries(db, [["DELETE FROM presos WHERE PATH = ?", args]])
 
-def check_tree(srcbase, dstbase):
-    check_db(srcbase, dstbase)
-    check_fs(srcbase, dstbase)
+def check_tree(db, srcbase, dstbase):
+    check_db(db, srcbase, dstbase)
+    check_fs(db, srcbase, dstbase)
 
-def doqueries(sql):
+def doqueries(db, sql):
     for s in sql:
         db.executemany(s[0], s[1])
+    db.commit()
+
+def parse_args():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-c", action="store_true", dest = "onlyclean",
+                    help = "clean %s" % config["juno-base"])
+    ap.add_argument("-w", dest = "workers", default = 4, type = int,
+                    help = "number of workers (default 4)")
+
+    return vars(ap.parse_args())
 
 if __name__ == "__main__":
-    global config, db
-
-    os.nice(10)
+    global args, config
 
     config = common.load_config()
+    args = parse_args()
+
+    os.nice(10)
 
     common.mkdirs(config["juno-base"])
     os.chdir(config["juno-base"])
 
     lock = common.Lock(".lock")
-    db = db.DB(".db")
 
     for sync in config["juno-sync"]:
         (srcbase, dstbase) = sync.rsplit(" ", 1)
-        add_tree(srcbase, dstbase)
-        check_tree(srcbase, dstbase)
+        if not args["onlyclean"]:
+            add_tree(srcbase, dstbase)
 
-    db.close()
+        db = DB(".db")
+        check_tree(db, srcbase, dstbase)
+        db.close()

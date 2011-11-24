@@ -77,7 +77,7 @@ class juno:
 
     def disconnect(self):
         self.desktop.terminate()
-        if self.waitBind(self.masterSocketName(), 10):
+        if self.waitBind(self.masterSocketName(), 30):
             shutil.rmtree(self.tempdir)
 
     @staticmethod
