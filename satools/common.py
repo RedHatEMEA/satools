@@ -11,7 +11,7 @@ import urllib2
 
 configfile = os.environ["HOME"] + "/.satools"
 
-class DB:
+class DB(object):
     def __init__(self, path):
         self.readdb(path)
 
@@ -90,7 +90,10 @@ def load_config():
                "clearspace-root": None,
                "clearspace-username": None,
                "clearspace-password": None,
-               "clearspace-odponly": "1" }
+               "clearspace-odponly": "1",
+               "juno-base": os.environ["HOME"] + "/content/juno",
+               "juno-sync": [],
+               }
 
     if not os.path.exists(configfile):
         with open(configfile, "w") as f:

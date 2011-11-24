@@ -10,7 +10,7 @@ import re
 import sqlite3
 import sys
 
-class MailDB:
+class MailDB(object):
     def __init__(self, dbpath):
         self.db = sqlite3.connect(dbpath)
         self.db.row_factory = sqlite3.Row
