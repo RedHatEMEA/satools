@@ -104,8 +104,10 @@ def createthumbs(juno, dstp, preso):
                            juno.PropertyValue("FilterData", filterdata)))
 
         except Exception, e:
-            log("WARNING: export failed (%s), continuing..." % e)
-            continue
+            if getattr(e, "typeName", "") == "com.sun.star.uno.RuntimeException":
+                log("WARNING: export failed (%s), continuing..." % e)
+                continue
+            raise
 
         log("Resizing PNGs...")
         im = extend(slidep, slidesize)
@@ -203,6 +205,9 @@ def add_tree(srcbase, dstbase):
 
     for i in range(len(procs)):
         q.put("STOP")
+
+    q.close()
+    q.join_thread()
 
     for p in procs:
         p.join()
