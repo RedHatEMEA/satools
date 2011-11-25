@@ -34,6 +34,23 @@ class juno:
         ctx = res.resolve("uno:pipe,name=%s;urp;StarOffice.ComponentContext" % junopipename)
         self.smgr = ctx.ServiceManager
         self.desktop = self.createInstance("com.sun.star.frame.Desktop")
+        self.disableCairo()
+
+    def disableCairo(self):
+        # work around https://bugs.freedesktop.org/show_bug.cgi?id=38875
+
+        configprovider = self.createInstance("com.sun.star.configuration.ConfigurationProvider")
+
+        config = configprovider.createInstanceWithArguments( \
+            "com.sun.star.configuration.ConfigurationUpdateAccess",
+            (juno.PropertyValue("nodepath", "/org.openoffice.Office.Canvas/CanvasServiceList"), ))
+        
+        for servicename in config.getElementNames():
+            service = config.getByName(servicename)
+            service.PreferredImplementations = \
+                tuple(filter(lambda x: "cairo" not in x.lower(),
+                             map(unicode.strip, service.PreferredImplementations)))
+        config.commitChanges()
 
     def masterSocketName(self):
         md5 = hashlib.md5()
