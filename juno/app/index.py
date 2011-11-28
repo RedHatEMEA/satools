@@ -98,16 +98,9 @@ def createthumbs(juno, dstp, preso):
         filter.setSourceDocument(page)
 
         log("Exporting PNG %u/%u..." % (i + 1, pagect))
-        try:
-            filter.filter((juno.PropertyValue("MediaType", "image/png"),
-                           juno.PropertyValue("URL", juno.mkpath(slidep)),
-                           juno.PropertyValue("FilterData", filterdata)))
-
-        except Exception, e:
-            if getattr(e, "typeName", "") == "com.sun.star.uno.RuntimeException":
-                log("WARNING: export failed (%s), continuing..." % e)
-                continue
-            raise
+        filter.filter((juno.PropertyValue("MediaType", "image/png"),
+                       juno.PropertyValue("URL", juno.mkpath(slidep)),
+                       juno.PropertyValue("FilterData", filterdata)))
 
         log("Resizing PNGs...")
         im = extend(slidep, slidesize)
@@ -128,9 +121,6 @@ def insertpreso(srcp, dstp):
 def needs_add(db, srcp, dstp):
     if not odptools.is_odp(srcp):
         return False
-
-    # if dstp in badfilelist:
-    #     return False
 
     mtime = os.stat(srcp)[stat.ST_MTIME]
 
@@ -167,10 +157,7 @@ def add_preso(db, srcp, dstp):
     log("Committing and disconnecting...")
 
     preso.dispose()
-    try:
-        juno.disconnect()
-    except Exception, e:
-        log("WARNING: disconnect failed (%s), continuing..." % e)
+    juno.disconnect()
 
     doqueries(db, sql)
 
@@ -183,7 +170,12 @@ def worker(me, q):
 
     db = DB(".db")
     for srcp, dstp in iter(q.get, "STOP"):
-        add_preso(db, srcp, dstp)
+        try:
+            add_preso(db, srcp, dstp)
+        except Exception, e:
+            log("WARNING: add_preso failed (%s), skipping..." %
+                str(e).replace("\n", ""))
+
     db.close()
 
 def add_tree(srcbase, dstbase):
