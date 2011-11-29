@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from satools import common
 import hashlib
 import os
 import shutil
@@ -8,14 +9,14 @@ import subprocess
 import tempfile
 import time
 import uno
+import urllib
 
 class juno:
     def __init__(self):
         junopipename = "juno_%u" % os.getpid()
         junosocket = juno.socketName(junopipename)
 
-        if os.path.exists(junosocket):
-            raise Exception("%s already exists" % junosocket)
+        common.unlink(junosocket)
 
         self.tempdir = tempfile.mkdtemp()
 
@@ -103,7 +104,7 @@ class juno:
 
     @staticmethod
     def mkpath(x):
-        return "file://" + os.path.abspath(x)
+        return "file://" + urllib.quote(os.path.abspath(x))
 
     @staticmethod
     def Any(_type, value):

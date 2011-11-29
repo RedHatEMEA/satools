@@ -8,12 +8,40 @@ import multiprocessing
 import odptools
 import os
 import PIL.Image
+import re
 import stat
 import sys
 import time
 
+# TODO: some soffice crashes are recoverable (skip slide)...
+# C++ code threw St12length_error: vector::_M_default_append (recoverable - broken WMF file)
+# C++ code threw N5vigra21PreconditionViolationE: Precondition violation!BasicImage::upperLeft(): image must have non-zero size. (not recoverable)
+
 slidesize = (1024, 768)
 thumbsize = (256, 192)
+
+class Mapper(object):
+    @staticmethod
+    def init():
+        Mapper._s2d = {}
+        Mapper._d2s = {}
+        for sync in config["juno-sync"]:
+            (srcbase, dstbase) = sync.rsplit(" ", 1)
+            Mapper._s2d[srcbase] = dstbase
+            Mapper._d2s[dstbase] = srcbase
+
+    @staticmethod
+    def s2d(path):
+        for head in Mapper._s2d:
+            if path.startswith(head):
+                return Mapper._s2d[head] + path[len(head):]
+        raise Exception("mapping not found")
+
+    @staticmethod
+    def d2s(path):
+        if not os.sep in path: path += os.sep
+        (head, tail) = path.split(os.sep, 1)
+        return os.path.join(Mapper._d2s[head], tail)
 
 def resize(im, dstp, target):
     im = im.resize(target, PIL.Image.ANTIALIAS)
@@ -74,19 +102,21 @@ def insertcontent(dstp, preso):
 
         args.append(("".join(t), dstp, i))
 
-    return [["INSERT INTO slides_fts (docid, content) SELECT rowid, ? FROM slides WHERE preso = ? AND slide = ?", args]]
+    return [["INSERT INTO slides_fts (docid, content) "
+             "SELECT rowid, ? FROM slides WHERE preso = ? AND slide = ?", args]]
 
 def createthumbs(juno, dstp, preso):
     args = []
-    common.mkdirs(dstp + "/slides")
-    common.mkdirs(dstp + "/thumbs")
+    common.mkdirs(os.path.join("slides", dstp))
+    common.mkdirs(os.path.join("thumbs", dstp))
+
     filter = juno.createInstance("com.sun.star.drawing.GraphicExportFilter")
 
     pages = preso.getDrawPages()
     pagect = pages.getCount()
     for i in range(0, pagect):
-        slidep = dstp + "/slides/%03u.png" % i
-        thumbp = dstp + "/thumbs/%03u.jpg" % i
+        slidep = os.path.join("slides", dstp, "%03u.png" % i)
+        thumbp = os.path.join("thumbs", dstp, "%03u.jpg" % i)
 
         page = pages.getByIndex(i)
         (x, y) = constrain((page.Width, page.Height), slidesize)
@@ -119,23 +149,23 @@ def insertpreso(srcp, dstp):
              [(dstp, mtime)]]]
 
 def needs_add(db, srcp, dstp):
-    if not odptools.is_odp(srcp):
-        return False
-
     mtime = os.stat(srcp)[stat.ST_MTIME]
 
     cu = db.execute("SELECT mtime FROM presos WHERE path = ?", (dstp, ))
     row = cu.fetchone()
 
-    return row is None or row["mtime"] != mtime
+    if row and row["mtime"] == mtime:
+        return False
 
-def add_preso(db, srcp, dstp):
+    return odptools.is_odp(srcp)
+
+def add_preso(db, srcp):
+    dstp = Mapper.s2d(srcp)
     if not needs_add(db, srcp, dstp): return
 
     log("Adding %s..." % srcp)
 
-    common.rmtree(dstp)
-    common.mkdirs(dstp)
+    common.mkdirs(os.path.join("root", os.path.dirname(dstp)))
 
     juno = odptools.juno.juno()
 
@@ -145,11 +175,11 @@ def add_preso(db, srcp, dstp):
           juno.PropertyValue("ReadOnly", True),
           juno.PropertyValue("FilterName", "impress8")))
 
-    preso.storeToURL(juno.mkpath(os.path.join(os.getcwd(), dstp) + "/data.odp"), ())
+    preso.storeToURL(juno.mkpath(os.path.join(os.getcwd(), "root", dstp)), ())
 
     removepagenumbers(preso.getMasterPages())
     removepagenumbers(preso.getDrawPages())
-      
+
     sql = insertpreso(srcp, dstp)
     sql.extend(createthumbs(juno, dstp, preso))
     sql.extend(insertcontent(dstp, preso))
@@ -169,33 +199,31 @@ def worker(me, q):
     workerid = me
 
     db = DB(".db")
-    for srcp, dstp in iter(q.get, "STOP"):
+    for srcp in iter(q.get, "STOP"):
         try:
-            add_preso(db, srcp, dstp)
+            add_preso(db, srcp)
         except Exception, e:
             log("WARNING: add_preso failed (%s), skipping..." %
                 str(e).replace("\n", ""))
 
     db.close()
 
-def add_tree(srcbase, dstbase):
+def add_trees():
     procs = []
 
     q = multiprocessing.Queue()
     for i in range(args["workers"]):
-        procs.append(multiprocessing.Process(target = worker, args = (i, q)))
+        p = multiprocessing.Process(target = worker, args = (i, q))
+        p.start()
+        procs.append(p)
+
+    for sync in config["juno-sync"]:
+        srcpath = sync.rsplit(" ", 1)[0]
+        for dirpath, dirnames, filenames in sorted(os.walk(srcpath)):
+            for f in sorted(filenames):
+                q.put(os.path.join(dirpath, f))
 
     for p in procs:
-        p.start()
-
-    for dirpath, dirnames, filenames in sorted(os.walk(srcbase)):
-        for f in sorted(filenames):
-            srcp = os.path.join(dirpath, f)
-            dstp = os.path.join(dstbase, os.path.relpath(srcp, srcbase))
-
-            q.put((srcp, dstp))
-
-    for i in range(len(procs)):
         q.put("STOP")
 
     q.close()
@@ -208,51 +236,72 @@ def add_tree(srcbase, dstbase):
         if p.exitcode:
             sys.exit(1)
 
-def check_fs(db, srcbase, dstbase):
-    for dirpath, dirnames, filenames in os.walk(dstbase):
-        reldirpath = os.path.relpath(dirpath, dstbase)
-        srcp = os.path.join(srcbase, reldirpath)
+def do_check_fs(db, fs, slideregexp = None):
+    for dirpath, dirnames, filenames in os.walk(fs):
+        if dirpath == fs: continue
+
+        reldirpath = os.path.relpath(dirpath, fs)
+        srcp = Mapper.d2s(reldirpath)
         if not os.path.exists(srcp):
             common.rmtree(dirpath)
             del dirnames[:]
             continue
 
-        mode = os.stat(srcp).st_mode
-        if stat.S_ISDIR(mode):
-            for f in filenames:
-                os.unlink(os.path.join(dirpath, f))
-            continue
+        for f in filenames:
+            if slideregexp:
+                m = slideregexp.match(f)
+                if m:
+                    slide = int(m.group(1))
+                    cu = db.execute("SELECT preso, slide FROM slides "
+                                    "WHERE preso = ? AND slide = ?",
+                                    (reldirpath, slide))
+                    row = cu.fetchone()
+                    if row is not None:
+                        continue
+            else:
+                cu = db.execute("SELECT path FROM presos WHERE path = ?",
+                                (os.path.join(reldirpath, f), ))
+                row = cu.fetchone()
+                if row is not None and os.path.isfile(os.path.join(srcp, f)):
+                    continue
 
-        if stat.S_ISREG(mode):
-            cu = db.execute("SELECT path FROM presos WHERE path = ?", (dirpath, ))
-            row = cu.fetchone()
-            if row is None:
-                common.rmtree(dirpath)
+            os.unlink(os.path.join(dirpath, f))
 
-            del dirnames[:]
-            continue
-
-        raise Exception("unexpected file type")
-
-    for dirpath, dirnames, filenames in os.walk(dstbase, topdown = False):
+    for dirpath, dirnames, filenames in os.walk(fs, topdown = False):
         if not os.listdir(dirpath):
             os.rmdir(dirpath)
 
-def check_db(db, srcbase, dstbase):
-    args = []
+def check_fs(db):
+    for f in os.listdir("."):
+        if f[0] == "." or f in ("root", "slides", "thumbs"): continue
+        if os.path.isdir(f):
+            common.rmtree(f)
+        else:
+            os.unlink(f)
 
-    for row in db.execute("SELECT path FROM presos WHERE SUBSTR(path, 1, ?) = ?",
-                          (len(dstbase) + 1, dstbase + "/")):
-        reldirpath = os.path.relpath(row["path"], dstbase)
-        srcp = os.path.join(srcbase, reldirpath)
-        if not os.path.exists(srcp) or not os.path.exists(row["path"]):
-            args.append((row["path"], ))
+    do_check_fs(db, "root")
+    do_check_fs(db, "slides", re.compile("^(\d{3})\.png"))
+    do_check_fs(db, "thumbs", re.compile("^(\d{3})\.jpg"))
 
+def check_db(db):
+    args = set()
+    for row in db.execute("SELECT path FROM presos"):
+        srcp = Mapper.d2s(row["path"])
+        rootp = os.path.join("root", row["path"])
+        if not os.path.exists(srcp) or not os.path.exists(rootp):
+            args.add(row["path"])
+
+    for row in db.execute("SELECT preso, slide FROM slides"):
+        if row["preso"] in args: continue
+        slidesp = os.path.join("slides", row["preso"],
+                               "%03u.png" % row["slide"])
+        thumbsp = os.path.join("thumbs", row["preso"],
+                               "%03u.jpg" % row["slide"])
+        if not os.path.exists(slidesp) or not os.path.exists(thumbsp):
+            args.add(row["preso"])
+
+    args = map(lambda x:(x, ), args)
     doqueries(db, [["DELETE FROM presos WHERE PATH = ?", args]])
-
-def check_tree(db, srcbase, dstbase):
-    check_db(db, srcbase, dstbase)
-    check_fs(db, srcbase, dstbase)
 
 def doqueries(db, sql):
     for s in sql:
@@ -261,7 +310,7 @@ def doqueries(db, sql):
 
 def parse_args():
     ap = argparse.ArgumentParser()
-    ap.add_argument("-c", action="store_true", dest = "onlyclean",
+    ap.add_argument("-c", action="store_false", dest = "addtrees",
                     help = "clean %s" % config["juno-base"])
     ap.add_argument("-w", dest = "workers", default = 4, type = int,
                     help = "number of workers (default 4)")
@@ -269,23 +318,21 @@ def parse_args():
     return vars(ap.parse_args())
 
 if __name__ == "__main__":
-    global args, config
-
     config = common.load_config()
     args = parse_args()
-
-    os.nice(10)
+    Mapper.init()
 
     common.mkdirs(config["juno-base"])
     os.chdir(config["juno-base"])
 
     lock = common.Lock(".lock")
 
-    for sync in config["juno-sync"]:
-        (srcbase, dstbase) = sync.rsplit(" ", 1)
-        if not args["onlyclean"]:
-            add_tree(srcbase, dstbase)
+    os.nice(10)
 
-        db = DB(".db")
-        check_tree(db, srcbase, dstbase)
-        db.close()
+    db = DB(".db")
+    check_fs(db)
+    check_db(db)
+    db.close()
+
+    if args["addtrees"]:
+        add_trees()

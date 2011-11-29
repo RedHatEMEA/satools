@@ -58,7 +58,7 @@ class DB(object):
 
         self.db = sqlite3.connect(self.name)
         self.db.row_factory = sqlite3.Row
-        #self.db.text_factory = str
+        self.db.text_factory = str
         self.execute("PRAGMA foreign_keys = 1")
 
     def execute(self, sql, args = None):
