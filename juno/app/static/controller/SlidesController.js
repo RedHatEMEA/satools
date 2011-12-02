@@ -2,6 +2,7 @@ Ext.define("Juno.controller.SlidesController", {
     extend: "Ext.app.Controller",
 
     stores: [
+	"PresosStore",
 	"SlidesStore"
     ],
 

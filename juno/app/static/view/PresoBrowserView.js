@@ -4,7 +4,7 @@ Ext.define("Juno.view.PresoBrowserView", {
     height: 205, //bug
     itemSelector: "span.thumb-wrap",
     multiSelect: true,
-    store: "SlidesStore",
+    store: "PresosStore",
     tpl: new Ext.XTemplate(
 	'<tpl for=".">',
 	'<span class="thumb-wrap" style="display:inline-block;margin:3px;">',

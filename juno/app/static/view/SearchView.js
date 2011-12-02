@@ -5,9 +5,10 @@ Ext.define("Juno.view.SearchView", {
     //width: 300,
     bodyPadding: 10,
     items: [ { xtype: "textfield",
-	       name: "search",
+	       itemId: "searchfield",
 	       fieldLabel: "Search" },
 	     { xtype: "button",
+	       itemId: "searchbutton",
 	       text: "Submit" }
 	   ]
 });

@@ -8,7 +8,7 @@ Ext.define("Juno.controller.SearchController", {
     refs: [
 	{
 	    ref: "searchfield",
-	    selector: 'textfield[name="search"]'
+	    selector: "#searchfield"
 	}, {
 	    ref: "slidebrowser",
 	    selector: "slidebrowser"
@@ -17,21 +17,18 @@ Ext.define("Juno.controller.SearchController", {
 
     init: function() {
         this.control({
-            "button": {
+            "#searchbutton": {
 		click: this.click
             }
         });
     },
 
     click: function() {
-	newstore = Ext.create("Ext.data.Store", {
-	    model: "Image",
-	    proxy: {
-		type: "ajax",
-		url: "/search/" + this.getSearchfield().getSubmitValue()
-	    },
-	    autoLoad: true
+	var s = this.getSlidebrowser().getStore();
+	s.setProxy({
+	    type: "ajax",
+	    url: "../search/" + this.getSearchfield().getSubmitValue()
 	});
-	this.getSlidebrowser().bindStore(newstore);
+	s.load();
     }
 });

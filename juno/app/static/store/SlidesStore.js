@@ -3,9 +3,7 @@ Ext.define("Juno.store.SlidesStore", {
     fields: [{ name: "src", type: "string"},
              { name: "png", type: "string"},
              { name: "preso", type: "string"},
-             { name: "slide", type: "int"},
-             { name: "height", type: "int"},
-             { name: "width", type: "int"}
+             { name: "slide", type: "int"}
 	    ],
     data: [],
     autoLoad: true
