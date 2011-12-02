@@ -1,4 +1,4 @@
-Ext.define("Juno.store.Slides", {
+Ext.define("Juno.store.SlidesStore", {
     extend: "Ext.data.Store",
     fields: [{ name: "src", type: "string"},
              { name: "png", type: "string"},

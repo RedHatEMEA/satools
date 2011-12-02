@@ -1,12 +1,12 @@
-Ext.define("Juno.controller.Tree", {
+Ext.define("Juno.controller.TreeController", {
     extend: "Ext.app.Controller",
 
     stores: [
-	"Nodes"
+	"NodesStore"
     ],
 
     views: [
-	"Tree"
+	"TreeView"
     ],
 
     init: function() {

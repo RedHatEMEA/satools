@@ -1,4 +1,4 @@
-Ext.define("Juno.store.Nodes", {
+Ext.define("Juno.store.NodesStore", {
     extend: "Ext.data.TreeStore",
     proxy: {
 	type: "ajax",

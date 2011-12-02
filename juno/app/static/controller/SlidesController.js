@@ -1,13 +1,13 @@
-Ext.define("Juno.controller.Slides", {
+Ext.define("Juno.controller.SlidesController", {
     extend: "Ext.app.Controller",
 
     stores: [
-	"Slides"
+	"SlidesStore"
     ],
 
     views: [
-	"PresoBrowser",
-	"SlideBrowser"
+	"PresoBrowserView",
+	"SlideBrowserView"
     ],
 
     init: function() {

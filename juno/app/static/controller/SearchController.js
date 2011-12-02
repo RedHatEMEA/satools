@@ -1,8 +1,8 @@
-Ext.define("Juno.controller.Search", {
+Ext.define("Juno.controller.SearchController", {
     extend: "Ext.app.Controller",
 
     views: [
-	"Search"
+	"SearchView"
     ],
 
     refs: [

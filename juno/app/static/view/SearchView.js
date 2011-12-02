@@ -1,4 +1,4 @@
-Ext.define("Juno.view.Search", {
+Ext.define("Juno.view.SearchView", {
     alias: "widget.search",
     extend: "Ext.form.Panel",
     title: "Search",

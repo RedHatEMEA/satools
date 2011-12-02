@@ -11,9 +11,9 @@ Ext.application({
     appFolder: "",
 
     controllers: [
-	"Search",
-	"Slides",
-	"Tree"
+	"SearchController",
+	"SlidesController",
+	"TreeController"
     ],
 
     launch: function() {
