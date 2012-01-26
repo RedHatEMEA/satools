@@ -27,7 +27,7 @@ if __name__ == "__main__":
     toc = lxml.html.soupparser.parse("index.html").getroot()
     for url in toc.xpath("//a[substring-after(@href, '.') = 'pdf']/../../.."):
         url = copy.deepcopy(url)
-        title = url.xpath("//h4/a/text()")[0].replace("/", "_")
+        title = url.xpath("//h4//a/text()")[0].replace("/", "_")
         href = url.xpath("//a[substring-after(@href, '.') = 'pdf']/@href")[0]
 
         print >>sys.stderr, title
