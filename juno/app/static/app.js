@@ -17,71 +17,58 @@ Ext.application({
     ],
 
     launch: function() {
-	Ext.define("Image", {
-	    extend: "Ext.data.Model",
-	    fields: [
-		{name: "src", type: "string"},
-		{name: "png", type: "string"},
-		{name: "preso", type: "string"},
-		{name: "slide", type: "int"},
-		{name: "height", type: "int"},
-		{name: "width", type: "int"}
-	    ]
-	});
-
-	var dvwrap = Ext.create("Ext.panel.Panel", {
-	    autoScroll: true,
-	    items: [ { xtype: "slidebrowser" } ],
-	    region: "center",
-	    title: "Slides"
-	});
-
-	var dv2wrap = Ext.create("Ext.panel.Panel", {
-	    autoScroll: true,
-	    collapsible: true,
-	    height: 250,
-	    items: [ { xtype: "presobrowser" } ],
-	    region: "south",
-	    title: "Presentation"
-	});
-
         Ext.create("Ext.container.Viewport", {
-	    id: "myviewport",
-            defaults: {
-		split: true
-            },
-            items: [
-		{
-		    collapsible: true,
-		    height: "100", //bug
-		    items: [
-			{ xtype: "tree" },
-			{ xtype: "search" }
-		    ],
-		    layout: "accordion",
+            items: [{
+		xtype: "toolbar",
+		style: "border: 0px",
+		items: [{
+		    xtype: "splitbutton",
+		    text: "File"
+		}, {
+		    xtype: "splitbutton",
+		    text: "Edit"
+		}],
+	    }, {
+		items: [{
+		    xtype: "tree",
 		    region: "west",
-		    title: "Juno",
-		    width: "20%"
-		},
-		{
-		    border: false,
-		    defaults: {
+		    title: "Tree",
+		    collapsible: true,
+		    split: true,
+		    width: "18%"
+		}, {
+		    items: [{
+			xtype: "search",
+			region: "center"
+		    }, {
+			items: [{
+			    xtype: "presobrowser",
+			}],
+			region: "south",
+			title: "Presentation",
+			autoScroll: true,
+			collapsible: true,
+			layout: "fit",
+			height: 252,
 			split: true
-		    },
-		    items: [
-			dvwrap,
-			dv2wrap
-		    ],
+		    }],
 		    layout: {
 			type: "border"
 		    },
-		    region: "center"
-		}
-	    ],
-            layout: {
-		padding: 5,
-		type: "border"
-            }
+		    region: "center",
+		    border: false
+		}],
+		layout: {
+		    padding: 5,
+		    type: "border"
+		},
+		flex: 1
+	    }],
+	    layout: {
+		type: "vbox",
+		align: "stretch"
+	    },
+	    id: "myviewport"
         });
     }
 });

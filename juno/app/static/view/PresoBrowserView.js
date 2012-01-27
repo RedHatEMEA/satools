@@ -1,7 +1,7 @@
 Ext.define("Juno.view.PresoBrowserView", {
     alias: "widget.presobrowser",
     extend: "Ext.view.View",
-    height: 205, //bug
+
     itemSelector: "span.thumb-wrap",
     multiSelect: true,
     store: "PresosStore",

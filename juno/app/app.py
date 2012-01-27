@@ -28,9 +28,9 @@ def tell(path):
 
     dirpath, dirnames, filenames = os.walk(path).next()
     for i in sorted(dirnames):
-        entries.append({"text": i, "id": os.path.relpath(os.path.join(path, i), base)})
+        entries.append({"text": i, "id": "/" + os.path.relpath(os.path.join(path, i), base)})
     for i in sorted(filenames):
-        entries.append({"text": i, "id": os.path.relpath(os.path.join(path, i), base), "leaf": "true"})
+        entries.append({"text": i, "id": "/" + os.path.relpath(os.path.join(path, i), base), "leaf": "true"})
 
     return json.dumps(entries)
 
@@ -66,7 +66,7 @@ class preso:
         entries = []
         for row in c:
             entries.append({"src": "/static/thumbs/%s/%03u.jpg" % (row["preso"], row["slide"]),
-                            "preso": row["preso"],
+                            "preso": "/" + row["preso"],
                             "slide": row["slide"],
                             "png": "/static/slides/%s/%03u.png" % (row["preso"], row["slide"])
                             })
@@ -76,12 +76,12 @@ class preso:
 
 class search:
     def GET(self, search):
-        c = web.ctx.db.execute("SELECT preso, slide FROM slides, slides_fts WHERE slides.rowid = slides_fts.docid AND slides_fts.content MATCH ? GROUP BY checksum ORDER BY preso, slide", (search, ))
+        c = web.ctx.db.execute("SELECT preso, slide FROM slides, slides_fts WHERE slides.rowid = slides_fts.docid AND slides_fts.content MATCH ? GROUP BY checksum ORDER BY preso, slide LIMIT 500", (search, ))
 
         entries = []
         for row in c:
             entries.append({"src": "/static/thumbs/%s/%03u.jpg" % (row["preso"], row["slide"]),
-                            "preso": row["preso"],
+                            "preso": "/" + row["preso"],
                             "slide": row["slide"],
                             "png": "/static/slides/%s/%03u.png" % (row["preso"], row["slide"])
                             })

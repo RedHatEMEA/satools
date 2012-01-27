@@ -138,7 +138,6 @@ Ext.define("Juno.controller.SlidesController", {
 		text: "Find in tree",
 		handler: function() {
 		    var tree = Ext.ComponentQuery.query("treepanel")[0];
-		    tree.expand();
 		    tree.selectPath("/Filesystem" + rec.data.preso, "text");
 		}
 	    }]

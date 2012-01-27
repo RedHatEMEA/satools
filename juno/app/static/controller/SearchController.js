@@ -5,22 +5,35 @@ Ext.define("Juno.controller.SearchController", {
 	"SearchView"
     ],
 
-    refs: [
-	{
-	    ref: "searchfield",
-	    selector: "#searchfield"
-	}, {
-	    ref: "slidebrowser",
-	    selector: "slidebrowser"
-	}
-    ],
+    refs: [{
+	ref: "searchfield",
+	selector: "#searchfield"
+    }, {
+	ref: "slidebrowser",
+	selector: "slidebrowser"
+    }],
 
     init: function() {
         this.control({
             "#searchbutton": {
 		click: this.click
-            }
+            },
+	    "#searchfield": {
+		render: this.render,
+		specialkey: this.specialkey
+	    }
+
         });
+    },
+
+    render: function(_this, options) {
+	_this.focus();
+    },
+
+    specialkey: function(_this, e, options) {
+	if(e.getKey() == e.ENTER) {
+            this.click(_this, e, options);
+        }
     },
 
     click: function() {
