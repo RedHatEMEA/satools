@@ -31,9 +31,8 @@ Ext.define("Juno.controller.SearchController", {
     },
 
     specialkey: function(_this, e, options) {
-	if(e.getKey() == e.ENTER) {
+	if(e.getKey() == e.ENTER)
             this.click(_this, e, options);
-        }
     },
 
     click: function() {

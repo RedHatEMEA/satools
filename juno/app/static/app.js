@@ -13,60 +13,43 @@ Ext.application({
     controllers: [
 	"SearchController",
 	"SlidesController",
-	"TreeController"
+	"FilesystemController"
     ],
 
     launch: function() {
         Ext.create("Ext.container.Viewport", {
-            items: [{
-		xtype: "toolbar",
-		style: "border: 0px",
-		items: [{
-		    xtype: "splitbutton",
-		    text: "File"
-		}, {
-		    xtype: "splitbutton",
-		    text: "Edit"
-		}],
+	    items: [{
+		xtype: "filesystem",
+		region: "west",
+		title: "Filesystem",
+		collapsible: true,
+		split: true,
+		width: "18%"
 	    }, {
 		items: [{
-		    xtype: "tree",
-		    region: "west",
-		    title: "Tree",
-		    collapsible: true,
-		    split: true,
-		    width: "18%"
+		    xtype: "search",
+		    region: "center"
 		}, {
 		    items: [{
-			xtype: "search",
-			region: "center"
-		    }, {
-			items: [{
-			    xtype: "presobrowser",
-			}],
-			region: "south",
-			title: "Presentation",
-			autoScroll: true,
-			collapsible: true,
-			layout: "fit",
-			height: 252,
-			split: true
+			xtype: "presobrowser",
 		    }],
-		    layout: {
-			type: "border"
-		    },
-		    region: "center",
-		    border: false
+		    region: "south",
+		    title: "Presentation",
+		    autoScroll: true,
+		    collapsible: true,
+		    layout: "fit",
+		    height: 252,
+		    split: true
 		}],
 		layout: {
-		    padding: 5,
 		    type: "border"
 		},
-		flex: 1
+		region: "center",
+		border: false
 	    }],
 	    layout: {
-		type: "vbox",
-		align: "stretch"
+		padding: 5,
+		type: "border"
 	    },
 	    id: "myviewport"
         });

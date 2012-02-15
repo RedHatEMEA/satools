@@ -5,7 +5,7 @@ Ext.define("Juno.store.NodesStore", {
 	url: "/nodes"
     },
     root: {
-	text: "Filesystem",
+	text: "root",
 	id: "/",
 	expanded: true
     }

@@ -27,6 +27,12 @@ Ext.define("Juno.view.SearchView", {
 	    xtype: "button",
 	    itemId: "searchbutton",
 	    text: "Submit"
+	}, {
+	    xtype: "label",
+	    width: 10
+	}, {
+	    xtype: "label",
+	    html: "<a href='../help' target='_blank'>Help</a>"
 	}],
 	height: 50
     }, {

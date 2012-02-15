@@ -25,6 +25,7 @@ Ext.define("Juno.controller.SlidesController", {
 		containerkeydown: this.selectall,
 		itemclick: this.click,
                 itemcontextmenu: this.rclick2,
+                containercontextmenu: this.rclick3,
                 itemdblclick: this.zoom,
 		itemkeydown: this.iselectall,
 		render: this.setupdragzone
@@ -135,7 +136,11 @@ Ext.define("Juno.controller.SlidesController", {
 	var menu = new Ext.menu.Menu({
 	    plain: true,
 	    items: [{
-		text: "Find in tree",
+		text: "Select all"
+	    }, {
+		text: "Zoom slide..."
+	    }, {
+		text: "Find slide in filesystem",
 		handler: function() {
 		    var tree = Ext.ComponentQuery.query("treepanel")[0];
 		    tree.selectPath("/Filesystem" + rec.data.preso, "text");
@@ -146,11 +151,34 @@ Ext.define("Juno.controller.SlidesController", {
 	e.stopEvent();
     },
 
+    rclick3: function(dv, e, options) {
+	return this.rclick2(dv, null, null, null, e);
+    },
+
     rclick2: function(dv, rec, item, index, e) {
 	var menu = new Ext.menu.Menu({
 	    plain: true,
 	    items: [{
-		text: dv.getSelectionModel().selected.items.length <= 1 ? "Delete Slide" : "Delete Slides",
+		text: "New presentation"
+	    }, {
+		text: "Save presentation"
+	    }, {
+		text: "Save presentation as..."
+	    }, {
+		text: "Download presentation",
+		handler: function() {
+		    var a = [];
+		    for(var i in dv.store.data.items) {
+			a.push(dv.store.data.items[i].data.preso + "[" + dv.store.data.items[i].data.slide + "]");
+		    }
+		    postToURL("/odp", {slides: a});
+		}
+	    }, "-", {
+		text: "Select all"
+	    }, {
+		text: "Zoom slide..."
+	    }, {
+		text: dv.getSelectionModel().selected.items.length <= 1 ? "Remove slide" : "Remove slides",
 		handler: function() {
 		    if(!dv.isSelected(item)) {
 			dv.select(rec, false);
@@ -160,15 +188,6 @@ Ext.define("Juno.controller.SlidesController", {
 		    dv.store.remove(nodes.slice());
 		    
 		    dv.setSize((dv.store.getCount() + 1) * 268, 205);
-		}
-	    },{
-		text: "Create presentation",
-		handler: function() {
-		    var a = [];
-		    for(var i in dv.store.data.items) {
-			a.push(dv.store.data.items[i].data.preso + "[" + dv.store.data.items[i].data.slide + "]");
-		    }
-		    postToURL("/odp", {slides: a});
 		}
 	    }]
 	});
