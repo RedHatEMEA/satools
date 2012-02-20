@@ -31,7 +31,7 @@ Ext.application({
 		    region: "center"
 		}, {
 		    items: [{
-			xtype: "presobrowser",
+			xtype: "presobrowser"
 		    }],
 		    region: "south",
 		    title: "Presentation",

@@ -8,8 +8,22 @@ Ext.define("Juno.controller.SlidesController", {
 
     views: [
 	"PresoBrowserView",
-	"SlideBrowserView"
+	"PresoBrowserMenuView",
+	"SlideBrowserView",
+	"SlideBrowserMenuView",
+	"SlideZoomView"
     ],
+
+    refs: [{
+	ref: "slidebrowser",
+	selector: "slidebrowser"
+    }, {
+	ref: "treepanel",
+	selector: "treepanel"
+    }, {
+	ref: "viewport",
+	selector: "#myviewport"
+    }],
 
     init: function() {
         this.control({
@@ -17,8 +31,8 @@ Ext.define("Juno.controller.SlidesController", {
 		containerkeydown: this.selectall,
 		itemclick: this.click,
                 itemcontextmenu: this.rclick,
-                itemdblclick: this.zoom,
-		itemkeydown: this.iselectall,
+                itemdblclick: this.idblclick,
+		itemkeydown: this.sb_iselectall,
 		render: this.setupdragzone
             },
 	    "presobrowser": {
@@ -26,14 +40,43 @@ Ext.define("Juno.controller.SlidesController", {
 		itemclick: this.click,
                 itemcontextmenu: this.rclick2,
                 containercontextmenu: this.rclick3,
-                itemdblclick: this.zoom,
-		itemkeydown: this.iselectall,
+                itemdblclick: this.idblclick,
+		itemkeydown: this.pb_iselectall,
 		render: this.setupdragzone
+	    },
+	    "menuitem[itemid = 'sbmv_selectall']": {
+		click: this.sbmv_selectall
+	    },
+	    "menuitem[itemid = 'sbmv_zoom']": {
+		click: this.sbmv_zoom
+	    },
+	    "menuitem[itemid = 'sbmv_find']": {
+		click: this.sbmv_find
+	    },
+	    "menuitem[itemid = 'pbmv_new']": {
+		click: this.pbmv_new
+	    },
+	    "menuitem[itemid = 'pbmv_save']": {
+		click: this.pbmv_save
+	    },
+	    "menuitem[itemid = 'pbmv_saveas']": {
+		click: this.pbmv_saveas
+	    },
+	    "menuitem[itemid = 'pbmv_download']": {
+		click: this.pbmv_download
+	    },
+	    "menuitem[itemid = 'pbmv_selectall']": {
+		click: this.sbmv_selectall
+	    },
+	    "menuitem[itemid = 'pbmv_zoom']": {
+		click: this.sbmv_zoom
+	    },
+	    "menuitem[itemid = 'pbmv_remove']": {
+		click: this.pbmv_remove
 	    }
         });
         this.control({
 	    "presobrowser": {
-		itemkeydown: this.idel,
 		render: this.setupdropzone
 	    }
         });
@@ -86,11 +129,12 @@ Ext.define("Juno.controller.SlidesController", {
 		var x = e.getX() - dv.getPosition()[0];
 		
 		var nodes = dv.getNodes();
-		for(var insert = 0; insert < nodes.length && nodes[insert].offsetLeft + nodes[insert].offsetWidth < x; insert++);
+		for(var insert = 0; insert < nodes.length && nodes[insert].offsetLeft + nodes[insert].offsetWidth < x; insert++) true;
 		
 		var newnodes = source.dragData.dv.getSelectionModel().selected.items;
 		for(var i = 0; i < newnodes.length; i++) {
-		    dv.store.insert(insert++, newnodes[i].data);
+		    dv.store.insert(insert, newnodes[i].data);
+		    insert++;
 		}
 		
 		if(source.dragData.dv == dv) {
@@ -106,49 +150,56 @@ Ext.define("Juno.controller.SlidesController", {
 
     selectall: function(dv, e, options) {
 	if(e.getCharCode() == 65 && e.ctrlKey) {
-	    dv.getSelectionModel().selectAll();
+	    this.selectall(dv);
 	    e.preventDefault();
 	}
     },
 
-    idel: function(dv, rec, item, index, e, options) {
-	if(e.keyCode == e.DELETE) {
-	    if(!dv.isSelected(item)) {
-		dv.select(rec, false);
-	    }
-	    
-	    var nodes = dv.getSelectionModel().selected.items;
-	    dv.store.remove(nodes.slice());
-	    
-	    dv.setSize((dv.store.getCount() + 1) * 268, 205);
-	    e.preventDefault();
-	}
-    },
-
-    iselectall: function(dv, rec, item, index, e, options) {
+    pb_iselectall: function(dv, rec, item, index, e, options) {
 	if(e.getCharCode() == 65 && e.ctrlKey) {
-	    dv.getSelectionModel().selectAll();
+	    this.selectall(dv);
 	    e.preventDefault();
 	}
+
+	if(e.keyCode == e.DELETE) { // TODO: handle press delete when no item selected
+	    this.remove(dv, rec, item);
+	    e.preventDefault();
+	}
+    },
+
+    sb_iselectall: function(dv, rec, item, index, e, options) {
+	if(e.getCharCode() == 65 && e.ctrlKey) {
+	    this.selectall(dv);
+	    e.preventDefault();
+	}
+    },
+
+    idblclick: function(dv, rec, item, index, e, options) {
+	this.zoom(rec);
     },
 
     rclick: function(dv, rec, item, index, e) {
-	var menu = new Ext.menu.Menu({
-	    plain: true,
-	    items: [{
-		text: "Select all"
-	    }, {
-		text: "Zoom slide..."
-	    }, {
-		text: "Find slide in filesystem",
-		handler: function() {
-		    var tree = Ext.ComponentQuery.query("treepanel")[0];
-		    tree.selectPath("/Filesystem" + rec.data.preso, "text");
-		}
-	    }]
+	var menu = Ext.ComponentManager.create({
+	    xtype: "slidebrowsermenu",
+	    dv: dv,
+	    rec: rec
 	});
+
 	menu.showAt(e.getXY());
 	e.stopEvent();
+    },
+
+    sbmv_find: function(item, e, options) {
+	var tree = this.getTreepanel();
+	tree.selectPath("/root" + item.parentMenu.rec.data.preso, "text");
+    },
+
+    sbmv_zoom: function(item, e, options) {
+	this.zoom(item.parentMenu.rec);
+    },
+
+    sbmv_selectall: function(item, e, options) {
+	this.selectall(item.parentMenu.dv);
     },
 
     rclick3: function(dv, e, options) {
@@ -156,80 +207,50 @@ Ext.define("Juno.controller.SlidesController", {
     },
 
     rclick2: function(dv, rec, item, index, e) {
-	var menu = new Ext.menu.Menu({
-	    plain: true,
-	    items: [{
-		text: "New presentation"
-	    }, {
-		text: "Save presentation"
-	    }, {
-		text: "Save presentation as..."
-	    }, {
-		text: "Download presentation",
-		handler: function() {
-		    var a = [];
-		    for(var i in dv.store.data.items) {
-			a.push(dv.store.data.items[i].data.preso + "[" + dv.store.data.items[i].data.slide + "]");
-		    }
-		    postToURL("/odp", {slides: a});
-		}
-	    }, "-", {
-		text: "Select all"
-	    }, {
-		text: "Zoom slide..."
-	    }, {
-		text: dv.getSelectionModel().selected.items.length <= 1 ? "Remove slide" : "Remove slides",
-		handler: function() {
-		    if(!dv.isSelected(item)) {
-			dv.select(rec, false);
-		    }
-		    
-		    var nodes = dv.getSelectionModel().selected.items;
-		    dv.store.remove(nodes.slice());
-		    
-		    dv.setSize((dv.store.getCount() + 1) * 268, 205);
-		}
-	    }]
+	var menu = Ext.ComponentManager.create({
+	    xtype: "presobrowsermenu",
+	    dv: dv,
+	    rec: rec,
+	    item: item
 	});
+
 	menu.showAt(e.getXY());
 	e.stopEvent();
     },
 
-    zoom: function(dv, rec, item, index, e, options) {
-	var vp = Ext.ComponentManager.get("myviewport");
-	var picaspect = 4 / 3; // units w/h
-	var sz = 0.75; // 75% of screen
-	var vph = vp.getHeight();
-	var vpw = vp.getWidth();
-	var w;
-	if(vpw/vph >= picaspect) {
-	    //screen letterbox, h is constraining factor;
-	    w = vph * picaspect * sz;
-	} else {
-	    w = vpw * sz;
+    pbmv_download: function(item, e, options) {
+	var data = item.parentMenu.dv.store.data;
+	var a = [];
+	for(var i in data.items) {
+	    a.push(data.items[i].data.preso + "[" + data.items[i].data.slide + "]");
 	}
+	postToURL("/odp", {slides: a});
+    },
 
-	var win = Ext.create("Ext.window.Window", {
-	    title: rec.data.preso,
-	    width: w,
-	    modal: true,
-	    layout: "anchor",
-	    resizable: false,
-	    items: {
-		anchor: "100%",
-		xtype: "image",
-		src: rec.data.png,
-		listeners: {
-		    click: {
-			element: "el",
-			fn: function(){ win.close(); }
-		    },
-		    afterrender: function(ths, opt){
-			win.setHeight(w / picaspect + 25);
-		    }
-		}
-	    }
-	});
-	win.show();
+    pbmv_remove: function(item, e, options) {
+	this.remove(item.parentMenu.dv, item.parentMenu.rec,
+		    item.parentMenu.item);
+    },
+
+    remove: function(dv, rec, item) {
+	if(!dv.isSelected(item))
+	    dv.select(rec, false);
+		
+	var nodes = dv.getSelectionModel().selected.items;
+	dv.store.remove(nodes.slice());
+	
+	dv.setSize((dv.store.getCount() + 1) * 268, 205);
+    },
+
+    selectall: function(dv) {
+	dv.getSelectionModel().selectAll();
+    },
+
+    zoom: function(rec) {
+	Ext.ComponentManager.create({
+	    xtype: "slidezoom",
+	    title: rec.data.preso + " (" + rec.data.slide + ")",
+	    png: rec.data.png
+	}).show();
     }
 });

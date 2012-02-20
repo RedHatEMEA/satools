@@ -41,5 +41,5 @@ Ext.define("Juno.view.SearchView", {
 	items: [ { xtype: "slidebrowser" } ],
 	flex: 1,
 	border: 0
-    }],
+    }]
 });

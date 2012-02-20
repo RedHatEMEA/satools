@@ -1,0 +1,36 @@
+Ext.define("Juno.view.PresoBrowserMenuView", {
+    alias: "widget.presobrowsermenu",
+    extend: "Ext.menu.Menu",
+    plain: true,
+
+    constructor: function() {
+	this.callParent(arguments);
+	this.populate();
+	return this;
+    },
+
+    populate: function() {
+	this.add([{
+	    text: "New presentation",
+	    itemid: "pbmv_new"
+	}, {
+	    text: "Save presentation",
+	    itemid: "pbmv_save"
+	}, {
+	    text: "Save presentation as...",
+	    itemid: "pbmv_saveas"
+	}, {
+	    text: "Download presentation",
+	    itemid: "pbmv_download"
+	}, "-", {
+	    text: "Select all",
+	    itemid: "pbmv_selectall"
+	}, {
+	    text: "Zoom slide...",
+	    itemid: "pbmv_zoom"
+	}, {
+	    text: this.dv.getSelectionModel().selected.items.length > 1 ? "Remove slides" : "Remove slide",
+	    itemid: "pbmv_remove"
+	}]);
+    }
+});
