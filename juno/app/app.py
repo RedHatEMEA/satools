@@ -2,6 +2,7 @@
 
 from satools import common
 from db import DB
+import auth
 import json
 #import odp_utils.odp_cat
 import os
@@ -28,9 +29,18 @@ def tell(path):
 
     dirpath, dirnames, filenames = os.walk(path).next()
     for i in sorted(dirnames):
-        entries.append({"text": i, "id": "/" + os.path.relpath(os.path.join(path, i), base)})
+        subpath = "/" + os.path.relpath(os.path.join(path, i), base)
+        entries.append({ "text": i,
+                         "id": subpath,
+                         "can_write_parent": auth.can_write_parent(subpath),
+                         "can_write": auth.can_write(subpath) })
     for i in sorted(filenames):
-        entries.append({"text": i, "id": "/" + os.path.relpath(os.path.join(path, i), base), "leaf": "true"})
+        subpath = "/" + os.path.relpath(os.path.join(path, i), base)
+        entries.append({ "text": i,
+                         "id": subpath,
+                         "can_write_parent": auth.can_write_parent(subpath),
+                         "can_write": auth.can_write(subpath),
+                         "leaf": "true" })
 
     return json.dumps(entries)
 
