@@ -1,0 +1,4 @@
+Filenames with " in don't work on the extjs side (example search: '"rhev 3"')
+Hide folder / presentation
+Search tags
+Rename / move functionality
