@@ -219,7 +219,11 @@ def add_trees():
 
     for sync in config["juno-sync"]:
         srcpath = sync.rsplit(" ", 1)[0]
-        for dirpath, dirnames, filenames in sorted(os.walk(srcpath)):
+        for dirpath, dirnames, filenames in os.walk(srcpath):
+            if os.path.split(dirpath)[1][0] == ".":
+                del dirnames[:]
+                continue
+
             for f in sorted(filenames):
                 q.put(os.path.join(dirpath, f))
 
@@ -236,13 +240,12 @@ def add_trees():
         if p.exitcode:
             sys.exit(1)
 
-def do_check_fs(db, fs, slideregexp = None):
+def check_fs_2(db, fs, slideregexp = None):
     for dirpath, dirnames, filenames in os.walk(fs):
-        if dirpath == fs: continue
-
-        reldirpath = os.path.relpath(dirpath, fs)
+        reldirpath = dirpath.split(os.sep, 1)[1]
         srcp = Mapper.d2s(reldirpath)
-        if not os.path.exists(srcp):
+
+        if os.path.split(dirpath)[1][0] == "." or not os.path.exists(srcp):
             common.rmtree(dirpath)
             del dirnames[:]
             continue
@@ -267,21 +270,35 @@ def do_check_fs(db, fs, slideregexp = None):
 
             os.unlink(os.path.join(dirpath, f))
 
-    for dirpath, dirnames, filenames in os.walk(fs, topdown = False):
-        if not os.listdir(dirpath):
-            os.rmdir(dirpath)
+def check_fs_1(db, fs, slideregexp = None):
+    (dirpath, dirnames, filenames) = os.walk(fs).next()
+
+    for d in dirnames:
+        if d not in Mapper._d2s:
+            common.rmtree(d)
+
+    for f in filenames:
+        os.unlink(f)
+
+    for d in dirnames:
+        if d in Mapper._d2s:
+            check_fs_2(db, os.path.join(fs, d), slideregexp)
+
 
 def check_fs(db):
-    for f in os.listdir("."):
-        if f[0] == "." or f in ("root", "slides", "thumbs"): continue
-        if os.path.isdir(f):
-            common.rmtree(f)
-        else:
+    (dirpath, dirnames, filenames) = os.walk(".").next()
+
+    for d in dirnames:
+        if d not in ("root", "slides", "thumbs"):
+            common.rmtree(d)
+
+    for f in filenames:
+        if not f.startswith("."):
             os.unlink(f)
 
-    do_check_fs(db, "root")
-    do_check_fs(db, "slides", re.compile("^(\d{3})\.png"))
-    do_check_fs(db, "thumbs", re.compile("^(\d{3})\.jpg"))
+    check_fs_1(db, "root")
+    check_fs_1(db, "slides", re.compile("^(\d{3})\.png"))
+    check_fs_1(db, "thumbs", re.compile("^(\d{3})\.jpg"))
 
 def check_db(db):
     args = set()
