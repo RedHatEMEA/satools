@@ -149,6 +149,9 @@ def insertpreso(srcp, dstp):
              [(dstp, mtime)]]]
 
 def needs_add(db, srcp, dstp):
+    if not (os.path.isfile(srcp) and not os.path.islink(srcp)):
+        return False
+
     mtime = os.stat(srcp)[stat.ST_MTIME]
 
     cu = db.execute("SELECT mtime FROM presos WHERE path = ?", (dstp, ))
@@ -164,8 +167,6 @@ def add_preso(db, srcp):
     if not needs_add(db, srcp, dstp): return
 
     log("Adding %s..." % srcp)
-
-    common.mkdirs(os.path.join("root", os.path.dirname(dstp)))
 
     juno = odptools.juno.juno()
 
@@ -191,6 +192,17 @@ def add_preso(db, srcp):
 
     doqueries(db, sql)
 
+def del_preso(db, srcp):
+    log("Removing %s..." % srcp)
+
+    dstp = Mapper.s2d(srcp)
+
+    doqueries(db, [["DELETE FROM presos WHERE path = ?", [(dstp, )]]])
+
+    common.unlink(os.path.join("root", dstp))
+    common.rmtree(os.path.join("slides", dstp))
+    common.rmtree(os.path.join("thumbs", dstp))
+
 def log(s):
     sys.stderr.write("%d: %s: %s\n" % (workerid, time.ctime(), s))
     
@@ -205,6 +217,7 @@ def worker(me, q):
         except Exception, e:
             log("WARNING: add_preso failed (%s), skipping..." %
                 str(e).replace("\n", ""))
+            del_preso(db, srcp)
 
     db.close()
 
@@ -218,14 +231,23 @@ def add_trees():
         procs.append(p)
 
     for sync in config["juno-sync"]:
-        srcpath = sync.rsplit(" ", 1)[0]
-        for dirpath, dirnames, filenames in os.walk(srcpath):
+        (srcbase, dstbase) = sync.rsplit(" ", 1)[0]
+        for dirpath, dirnames, filenames in os.walk(srcbase):
             if os.path.split(dirpath)[1][0] == ".":
                 del dirnames[:]
                 continue
+            
+            created = False
+            if dstbase == "home":
+                common.mkdirs(os.path.join("root", Mapper.s2d(dirpath)))
+                created = True
 
             for f in sorted(filenames):
-                q.put(os.path.join(dirpath, f))
+                if f[0] != ".":
+                    if not created:
+                        common.mkdirs(os.path.join("root", Mapper.s2d(dirpath)))
+                        created = True
+                    q.put(os.path.join(dirpath, f))
 
     for p in procs:
         q.put("STOP")
@@ -245,36 +267,45 @@ def check_fs_2(db, fs, slideregexp = None):
         reldirpath = dirpath.split(os.sep, 1)[1]
         srcp = Mapper.d2s(reldirpath)
 
-        if os.path.split(dirpath)[1][0] == "." or not os.path.exists(srcp):
+        if os.path.split(dirpath)[1][0] == "." or not os.path.exists(srcp) \
+                or os.path.islink(dirpath) or os.path.islink(srcp):
             common.rmtree(dirpath)
             del dirnames[:]
             continue
 
         for f in filenames:
-            if slideregexp:
-                m = slideregexp.match(f)
-                if m:
-                    slide = int(m.group(1))
-                    cu = db.execute("SELECT preso, slide FROM slides "
-                                    "WHERE preso = ? AND slide = ?",
-                                    (reldirpath, slide))
+            if not os.path.islink(os.path.join(dirpath, f)):
+                if slideregexp:
+                    m = slideregexp.match(f)
+                    if m:
+                        slide = int(m.group(1))
+                        cu = db.execute("SELECT preso, slide FROM slides "
+                                        "WHERE preso = ? AND slide = ?",
+                                        (reldirpath, slide))
+                        row = cu.fetchone()
+                        if row is not None:
+                            continue
+                else:
+                    cu = db.execute("SELECT path FROM presos WHERE path = ?",
+                                    (os.path.join(reldirpath, f), ))
                     row = cu.fetchone()
-                    if row is not None:
+                    if row is not None \
+                            and os.path.isfile(os.path.join(srcp, f)) \
+                            and not os.path.islink(os.path.join(srcp, f)):
                         continue
-            else:
-                cu = db.execute("SELECT path FROM presos WHERE path = ?",
-                                (os.path.join(reldirpath, f), ))
-                row = cu.fetchone()
-                if row is not None and os.path.isfile(os.path.join(srcp, f)):
-                    continue
 
             os.unlink(os.path.join(dirpath, f))
+
+    if fs != "root/home":
+        for dirpath, dirnames, filenames in os.walk(fs, topdown = False):
+            if not os.listdir(dirpath):
+                os.rmdir(dirpath)
 
 def check_fs_1(db, fs, slideregexp = None):
     (dirpath, dirnames, filenames) = os.walk(fs).next()
 
     for d in dirnames:
-        if d not in Mapper._d2s:
+        if os.path.islink(d) or d not in Mapper._d2s:
             common.rmtree(d)
 
     for f in filenames:
@@ -289,11 +320,11 @@ def check_fs(db):
     (dirpath, dirnames, filenames) = os.walk(".").next()
 
     for d in dirnames:
-        if d not in ("root", "slides", "thumbs"):
+        if os.path.islink(d) or d not in ("root", "slides", "thumbs"):
             common.rmtree(d)
 
     for f in filenames:
-        if not f.startswith("."):
+        if os.path.islink(f) or not f.startswith("."):
             os.unlink(f)
 
     check_fs_1(db, "root")
@@ -318,7 +349,7 @@ def check_db(db):
             args.add(row["preso"])
 
     args = map(lambda x:(x, ), args)
-    doqueries(db, [["DELETE FROM presos WHERE PATH = ?", args]])
+    doqueries(db, [["DELETE FROM presos WHERE path = ?", args]])
 
 def doqueries(db, sql):
     for s in sql:
