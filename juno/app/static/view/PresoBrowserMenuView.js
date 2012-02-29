@@ -25,12 +25,15 @@ Ext.define("Juno.view.PresoBrowserMenuView", {
 	}, "-", {
 	    text: "Select all",
 	    itemid: "pbmv_selectall"
-	}, {
-	    text: "Zoom slide...",
-	    itemid: "pbmv_zoom"
-	}, {
-	    text: this.dv.getSelectionModel().selected.items.length > 1 ? "Remove slides" : "Remove slide",
-	    itemid: "pbmv_remove"
 	}]);
+
+	if(this.rec)
+	    this.add([{
+		text: "Zoom slide...",
+		itemid: "pbmv_zoom"
+	    }, {
+		text: this.dv.getSelectionModel().getCount() > 1 ? "Remove slides" : "Remove slide",
+		itemid: "pbmv_remove"
+	    }]);
     }
 });

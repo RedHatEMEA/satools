@@ -18,6 +18,9 @@ Ext.define("Juno.controller.SlidesController", {
 	ref: "slidebrowser",
 	selector: "slidebrowser"
     }, {
+	ref: "presobrowser",
+	selector: "presobrowser"
+    }, {
 	ref: "treepanel",
 	selector: "treepanel"
     }, {
@@ -28,21 +31,24 @@ Ext.define("Juno.controller.SlidesController", {
     init: function() {
         this.control({
             "slidebrowser": {
-		containerkeydown: this.selectall,
-		itemclick: this.click,
-                itemcontextmenu: this.rclick,
+		containerkeydown: this.keydown,
+		containerclick: this.click,
+		itemclick: this.iclick,
+                itemcontextmenu: this.irclick,
                 itemdblclick: this.idblclick,
-		itemkeydown: this.sb_iselectall,
+		itemkeydown: this.ikeydown,
 		render: this.setupdragzone
             },
 	    "presobrowser": {
-		containerkeydown: this.selectall,
-		itemclick: this.click,
-                itemcontextmenu: this.rclick2,
-                containercontextmenu: this.rclick3,
+		containerkeydown: this.keydown,
+		containerclick: this.click,
+		itemclick: this.iclick,
+                itemcontextmenu: this.irclick,
+                containercontextmenu: this.rclick,
                 itemdblclick: this.idblclick,
-		itemkeydown: this.pb_iselectall,
-		render: this.setupdragzone
+		itemkeydown: this.ikeydown,
+		render: this.setupdragzone,
+		resize: this.resize
 	    },
 	    "menuitem[itemid = 'sbmv_selectall']": {
 		click: this.sbmv_selectall
@@ -82,29 +88,23 @@ Ext.define("Juno.controller.SlidesController", {
         });
     },
 
-    click: function(dv, rec, item, index, e, options) {
-	dv.focus();
-    },
-
     setupdragzone: function(dv) {
 	dv.dragZone = new Ext.dd.DragZone(dv.el, {
 	    onStartDrag: function(x, y) {
-		if(!dv.isSelected(this.dragData.ddel)) {
-		    dv.select(this.dragData.rec, false);
-		}
+		if(!dv.isSelected(this.dragData.ddel))
+		    dv.select(this.dragData.rec);
 	    },
 	    
 	    getDragData: function(e) {
 		var elem = e.getTarget(dv.itemSelector);
 		
-		if(elem) {
+		if(elem)
 		    return {
 			rec: dv.getRecord(elem),
 			ddel: elem,
 			dv: dv,
 			repairXY: Ext.fly(elem).getXY()
 		    };
-		}
 		
 		return null;
 	    },
@@ -116,6 +116,8 @@ Ext.define("Juno.controller.SlidesController", {
     },
 
     setupdropzone: function(dv) {
+	var controller = this;
+
 	dv.dropZone = new Ext.dd.DropZone(dv.el, {
 	    getTargetFromEvent: function(e) {
 		return dv;
@@ -126,67 +128,95 @@ Ext.define("Juno.controller.SlidesController", {
 	    },
 	    
 	    onNodeDrop: function(nodeData, source, e, data) {
-		var x = e.getX() - dv.getPosition()[0];
-		
 		var nodes = dv.getNodes();
-		for(var insert = 0; insert < nodes.length && nodes[insert].offsetLeft + nodes[insert].offsetWidth < x; insert++) true;
-		
-		var newnodes = source.dragData.dv.getSelectionModel().selected.items;
-		for(var i = 0; i < newnodes.length; i++) {
-		    dv.store.insert(insert, newnodes[i].data);
-		    insert++;
-		}
-		
+		var srcnodes = source.dragData.dv.getSelectedNodes();
+		var srcrecs = source.dragData.dv.getSelectionModel().getSelection();
+		var x = e.getX() - dv.el.getLeft();
+
+		for(var insert = 0; insert < nodes.length && nodes[insert].offsetLeft + nodes[insert].offsetWidth < x; insert++);
+
 		if(source.dragData.dv == dv) {
-		    dv.store.remove([source.dragData.rec]);
-		} else {
-		    dv.setSize((nodes.length + newnodes.length + 1) * 268, 205);
+		    for(var i = 0; i < srcnodes.length; i++)
+			if(srcnodes[i].offsetLeft < x) {
+			    insert++;
+			    break;
+			}
 		}
+
+		for(var i = 0; i < srcrecs.length; i++)
+		    dv.store.insert(insert++, srcrecs[i].data);
+		
+		if(source.dragData.dv == dv)
+		    dv.store.remove(srcrecs);
+		else
+		    controller.resize(dv);
 		
 		return true;
 	    }
 	});
     },
 
-    selectall: function(dv, e, options) {
-	if(e.getCharCode() == 65 && e.ctrlKey) {
-	    this.selectall(dv);
-	    e.preventDefault();
-	}
+    click: function(dv, rec, item, index, e, options) {
+	dv.select([]);
     },
 
-    pb_iselectall: function(dv, rec, item, index, e, options) {
-	if(e.getCharCode() == 65 && e.ctrlKey) {
-	    this.selectall(dv);
-	    e.preventDefault();
-	}
-
-	if(e.keyCode == e.DELETE) { // TODO: handle press delete when no item selected
-	    this.remove(dv, rec, item);
-	    e.preventDefault();
-	}
-    },
-
-    sb_iselectall: function(dv, rec, item, index, e, options) {
-	if(e.getCharCode() == 65 && e.ctrlKey) {
-	    this.selectall(dv);
-	    e.preventDefault();
-	}
+    iclick: function(dv, rec, item, index, e, options) {
+	dv.focus();
     },
 
     idblclick: function(dv, rec, item, index, e, options) {
 	this.zoom(rec);
     },
 
-    rclick: function(dv, rec, item, index, e) {
+    rclick: function(dv, e, options) {
+	dv.select([]);
+	return this.irclick(dv, null, null, null, e);
+    },
+
+    irclick: function(dv, rec, item, index, e) {
+	if(rec && !dv.isSelected(rec))
+	    dv.select(rec);
+	
 	var menu = Ext.ComponentManager.create({
-	    xtype: "slidebrowsermenu",
+	    xtype: dv == this.getSlidebrowser() ? "slidebrowsermenu" : "presobrowsermenu",
 	    dv: dv,
 	    rec: rec
 	});
 
 	menu.showAt(e.getXY());
 	e.stopEvent();
+    },
+
+    keydown: function(dv, e, options) {
+	if(e.getCharCode() == 65 && e.ctrlKey) {
+	    this.selectall(dv);
+	    e.preventDefault();
+	}
+    },
+
+    ikeydown: function(dv, rec, item, index, e, options) {
+	this.keydown(dv, e, options);
+
+	if(dv == this.getPresobrowser() && e.keyCode == e.DELETE) {
+	    this.removeselected(dv);
+	    e.preventDefault();
+	}
+    },
+
+    resize: function(dv, w, h, options) {
+	var w = dv.el.parent().getWidth(true);
+	var h = dv.el.parent().getHeight(true);
+
+	if(dv.store.getCount()) {
+	    var _w = (dv.store.getCount() + 1) * dv.el.first().getWidth();
+	    var _h = dv.el.first().getHeight();
+
+	    if(_w > w) {
+		w = _w;
+		h = _h;
+	    }
+	}
+	dv.setSize(w, h);
     },
 
     sbmv_find: function(item, e, options) {
@@ -202,22 +232,6 @@ Ext.define("Juno.controller.SlidesController", {
 	this.selectall(item.parentMenu.dv);
     },
 
-    rclick3: function(dv, e, options) {
-	return this.rclick2(dv, null, null, null, e);
-    },
-
-    rclick2: function(dv, rec, item, index, e) {
-	var menu = Ext.ComponentManager.create({
-	    xtype: "presobrowsermenu",
-	    dv: dv,
-	    rec: rec,
-	    item: item
-	});
-
-	menu.showAt(e.getXY());
-	e.stopEvent();
-    },
-
     pbmv_download: function(item, e, options) {
 	var data = item.parentMenu.dv.store.data;
 	var a = [];
@@ -227,21 +241,36 @@ Ext.define("Juno.controller.SlidesController", {
 	postToURL("/odp", {slides: a});
     },
 
+    pbmv_new: function(item, e, options) {
+	if(!item.parentMenu.dv.store.getCount())
+	    return;
+
+	Ext.Msg.show({
+	    title: _["title"],
+	    msg: "This will remove the slides you have selected. Are you sure?",
+	    buttons: Ext.Msg.YESNOCANCEL,
+	    icon: Ext.Msg.WARNING,
+	    scope: this,
+	    fn: function(buttonId) {
+		if(buttonId == "yes") {
+		    var pb = this.getPresobrowser();
+		    this.selectall(pb);
+		    this.removeselected(pb);
+		}
+	    }
+	});
+    },
+
     pbmv_remove: function(item, e, options) {
-	this.remove(item.parentMenu.dv, item.parentMenu.rec,
-		    item.parentMenu.item);
+	this.removeselected(item.parentMenu.dv);
     },
 
-    remove: function(dv, rec, item) {
-	if(!dv.isSelected(item))
-	    dv.select(rec, false);
-		
-	var nodes = dv.getSelectionModel().selected.items;
-	dv.store.remove(nodes.slice());
-	
-	dv.setSize((dv.store.getCount() + 1) * 268, 205);
+    removeselected: function(dv) {
+	var nodes = dv.getSelectionModel().getSelection();
+	dv.store.remove(nodes);
+	this.resize(dv);
     },
-
+    
     selectall: function(dv) {
 	dv.getSelectionModel().selectAll();
     },

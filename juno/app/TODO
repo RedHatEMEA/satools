@@ -1,4 +1,6 @@
-Filenames with " in don't work on the extjs side (example search: '"rhev 3"')
 Hide folder / presentation
 Search tags
 Rename / move functionality
+index.py / check_fs should check all slides present
+Include file date in search
+Zoom screen left & right

@@ -85,8 +85,7 @@ Ext.define("Juno.controller.FilesystemController", {
     },
 
     not_implemented: function() {
-	Ext.Msg.alert("SA tools presentation search",
-		      "Functionality not implemented yet.");
+	Ext.Msg.alert(_["title"], "Functionality not implemented yet");
     },
 
     do_search: function(verb, noclick) {

@@ -6,6 +6,8 @@ Ext.require("Ext.layout.container.Border");
 Ext.require("Ext.tree.Panel");
 Ext.require("Ext.Img");
 
+var _ = { title: "SA tools presentation search" };
+
 Ext.application({
     name: "Juno",
     appFolder: "",
