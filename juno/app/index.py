@@ -20,29 +20,6 @@ import time
 slidesize = (1024, 768)
 thumbsize = (256, 192)
 
-class Mapper(object):
-    @staticmethod
-    def init():
-        Mapper._s2d = {}
-        Mapper._d2s = {}
-        for sync in config["juno-sync"]:
-            (srcbase, dstbase) = sync.rsplit(" ", 1)
-            Mapper._s2d[srcbase] = dstbase
-            Mapper._d2s[dstbase] = srcbase
-
-    @staticmethod
-    def s2d(path):
-        for head in Mapper._s2d:
-            if path.startswith(head):
-                return Mapper._s2d[head] + path[len(head):]
-        raise Exception("mapping not found")
-
-    @staticmethod
-    def d2s(path):
-        if not os.sep in path: path += os.sep
-        (head, tail) = path.split(os.sep, 1)
-        return os.path.join(Mapper._d2s[head], tail)
-
 def resize(im, dstp, target):
     im = im.resize(target, PIL.Image.ANTIALIAS)
     im.save(dstp)
@@ -163,7 +140,7 @@ def needs_add(db, srcp, dstp):
     return odptools.is_odp(srcp)
 
 def add_preso(db, srcp):
-    dstp = Mapper.s2d(srcp)
+    dstp = common.Mapper.s2d(srcp)
     if not needs_add(db, srcp, dstp): return
 
     log("Adding %s..." % srcp)
@@ -195,7 +172,7 @@ def add_preso(db, srcp):
 def del_preso(db, srcp):
     log("Removing %s..." % srcp)
 
-    dstp = Mapper.s2d(srcp)
+    dstp = common.Mapper.s2d(srcp)
 
     doqueries(db, [["DELETE FROM presos WHERE path = ?", [(dstp, )]]])
 
@@ -239,13 +216,13 @@ def add_trees():
             
             created = False
             if dstbase == "home":
-                common.mkdirs(os.path.join("root", Mapper.s2d(dirpath)))
+                common.mkdirs(os.path.join("root", common.Mapper.s2d(dirpath)))
                 created = True
 
             for f in sorted(filenames):
                 if f[0] != ".":
                     if not created:
-                        common.mkdirs(os.path.join("root", Mapper.s2d(dirpath)))
+                        common.mkdirs(os.path.join("root", common.Mapper.s2d(dirpath)))
                         created = True
                     q.put(os.path.join(dirpath, f))
 
@@ -265,7 +242,7 @@ def add_trees():
 def check_fs_2(db, fs, slideregexp = None):
     for dirpath, dirnames, filenames in os.walk(fs):
         reldirpath = dirpath.split(os.sep, 1)[1]
-        srcp = Mapper.d2s(reldirpath)
+        srcp = common.Mapper.d2s(reldirpath)
 
         if os.path.split(dirpath)[1][0] == "." or not os.path.exists(srcp) \
                 or os.path.islink(dirpath) or os.path.islink(srcp):
@@ -305,14 +282,14 @@ def check_fs_1(db, fs, slideregexp = None):
     (dirpath, dirnames, filenames) = os.walk(fs).next()
 
     for d in dirnames:
-        if os.path.islink(d) or d not in Mapper._d2s:
+        if os.path.islink(d) or d not in common.Mapper._d2s:
             common.rmtree(d)
 
     for f in filenames:
         os.unlink(f)
 
     for d in dirnames:
-        if d in Mapper._d2s:
+        if d in common.Mapper._d2s:
             check_fs_2(db, os.path.join(fs, d), slideregexp)
 
 
@@ -334,7 +311,7 @@ def check_fs(db):
 def check_db(db):
     args = set()
     for row in db.execute("SELECT path FROM presos"):
-        srcp = Mapper.d2s(row["path"])
+        srcp = common.Mapper.d2s(row["path"])
         rootp = os.path.join("root", row["path"])
         if not os.path.exists(srcp) or not os.path.exists(rootp):
             args.add(row["path"])
@@ -368,7 +345,6 @@ def parse_args():
 if __name__ == "__main__":
     config = common.load_config()
     args = parse_args()
-    Mapper.init()
 
     common.mkdirs(config["juno-base"])
     os.chdir(config["juno-base"])

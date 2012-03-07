@@ -45,17 +45,17 @@ def tell(path):
 
     return json.dumps(entries)
 
-class index:
+class Index:
     def GET(self):
         raise web.seeother("/static/")
 
-class nodes:
+class Nodes:
     def GET(self):
         web.header("Content-Type", "application/json")
         q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
         return tell(q["node"])
 
-class odp:
+class Odp:
     def POST(self):
         tmp = tempfile.mkdtemp()
 
@@ -69,6 +69,15 @@ class odp:
         f = open(tmp + "/mypreso.odp")
         shutil.rmtree(tmp)
         return f
+
+class Download:
+    def GET(self, path):
+        path = common.Mapper.d2s(safepath(path))
+
+        web.header("Content-Type", "application/vnd.oasis.opendocument.presentation")
+        web.header("Content-disposition", "attachment; filename=\"%s\"" % path.rsplit("/", 1)[1])
+        
+        return open(path)
         
 class Search:
     def GET(self, query):
@@ -91,10 +100,11 @@ class Search:
         return json.dumps(entries)
 
 
-urls = ("/", "index",
-        "/nodes", "nodes",
-        "/odp", "odp",
-        "/s/(.*)", "Search",
+urls = ("/", "Index",
+        "/dl/(.*)", "Download",
+        "/nodes", "Nodes",
+        "/odp", "Odp",
+        "/s/(.*)", "Search"
         )
 
 def db_load_hook():

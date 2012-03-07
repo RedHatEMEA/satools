@@ -70,6 +70,29 @@ class Lock(object):
         fcntl.lockf(self.f, fcntl.LOCK_UN)
         self.f.close()
 
+class Mapper(object):
+    @staticmethod
+    def init(config):
+        Mapper._s2d = {}
+        Mapper._d2s = {}
+        for sync in config["juno-sync"]:
+            (srcbase, dstbase) = sync.rsplit(" ", 1)
+            Mapper._s2d[srcbase] = dstbase
+            Mapper._d2s[dstbase] = srcbase
+
+    @staticmethod
+    def s2d(path):
+        for head in Mapper._s2d:
+            if path.startswith(head):
+                return Mapper._s2d[head] + path[len(head):]
+        raise Exception("mapping not found")
+
+    @staticmethod
+    def d2s(path):
+        if not os.sep in path: path += os.sep
+        (head, tail) = path.split(os.sep, 1)
+        return os.path.join(Mapper._d2s[head], tail)
+
 def load_config():
     config = { "product-docs-base": os.environ["HOME"] + "/content/product-docs",
                "product-docs-locale": "en-US",
@@ -122,6 +145,8 @@ def load_config():
                 config[k].append(v)
             else:
                 config[k] = v
+
+    Mapper.init(config)
 
     return config
 

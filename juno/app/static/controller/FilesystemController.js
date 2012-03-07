@@ -38,7 +38,7 @@ Ext.define("Juno.controller.FilesystemController", {
 		click: this.fpmv_show
 	    },
 	    "menuitem[itemid = 'fpmv_download']": {
-		click: this.not_implemented
+		click: this.fpmv_download
 	    },
 	    "menuitem[itemid = 'fpmv_delete']": {
 		click: this.not_implemented
@@ -86,6 +86,12 @@ Ext.define("Juno.controller.FilesystemController", {
 
     not_implemented: function() {
 	Ext.Msg.alert(_["title"], "Functionality not implemented yet");
+    },
+
+    fpmv_download:function() {
+	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
+
+	window.open("../dl/" + rec.data.id, "_blank");
     },
 
     do_search: function(verb) {
