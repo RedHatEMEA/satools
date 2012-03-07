@@ -88,33 +88,15 @@ Ext.define("Juno.controller.FilesystemController", {
 	Ext.Msg.alert(_["title"], "Functionality not implemented yet");
     },
 
-    do_search: function(verb, noclick) {
+    do_search: function(verb) {
 	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
-	var id = rec.data.id;
 
-	if(id.search(" ") != -1)
-	    id = "\"" + id + "\"";
-
-	this.getSearchfield().setValue(verb + ":" + id);
-	if(!noclick)
-	    this.getSearchbutton().fireEvent("click");
+	this.getSearchfield().setValue(verb + ":\"" + rec.data.id + "\"");
+	this.getSearchbutton().fireEvent("click");
     },
 
     fpmv_show: function() {
-	this.do_search("is", 1);
-
-	// TODO: not necessary when "is" logic implemented
-	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
-	var newurl = "../preso" + rec.data.id;
-
-	var s = this.getSlidebrowser().getStore();
-	if(s.getProxy().url != newurl) {
-	    s.setProxy({
-		type: "ajax",
-		url: newurl
-	    });
-	    s.load();
-	}
+	this.do_search("is");
     },
 
     ffmv_searchin: function() {

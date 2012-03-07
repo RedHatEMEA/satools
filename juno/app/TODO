@@ -2,5 +2,8 @@ Hide folder / presentation
 Search tags
 Rename / move functionality
 index.py / check_fs should check all slides present
-Include file date in search
+Include file name in search
 Zoom screen left & right
+Use ODP embedded dates for searching
+On merged slides, allow backlink to all relevant presos
+Check if pyo's are created by RPM, and if so, does parsing still work?

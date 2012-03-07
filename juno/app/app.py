@@ -6,6 +6,7 @@ import auth
 import json
 #import odp_utils.odp_cat
 import os
+import search
 import shutil
 import tempfile
 import urlparse
@@ -69,24 +70,14 @@ class odp:
         shutil.rmtree(tmp)
         return f
         
-class preso:
-    def GET(self, preso):
-        c = web.ctx.db.execute("SELECT preso, slide FROM slides WHERE preso = ? ORDER BY slide", (preso, ))
-
-        entries = []
-        for row in c:
-            entries.append({"src": "/static/thumbs/%s/%03u.jpg" % (row["preso"], row["slide"]),
-                            "preso": "/" + row["preso"],
-                            "slide": row["slide"],
-                            "png": "/static/slides/%s/%03u.png" % (row["preso"], row["slide"])
-                            })
-
-        web.header("Content-Type", "application/json")
-        return json.dumps(entries)
-
-class search:
-    def GET(self, search):
-        c = web.ctx.db.execute("SELECT preso, slide FROM slides, slides_fts WHERE slides.rowid = slides_fts.docid AND slides_fts.content MATCH ? GROUP BY checksum ORDER BY preso, slide LIMIT 500", (search, ))
+class Search:
+    def GET(self, query):
+        w = search.build_where(query)
+        if w.merge:
+            w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s GROUP BY checksum ORDER BY preso, slide LIMIT 500" % w.sql
+        else:
+            w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s ORDER BY preso, slide" % w.sql
+        c = web.ctx.db.execute(w.sql, w.args)
 
         entries = []
         for row in c:
@@ -102,9 +93,8 @@ class search:
 
 urls = ("/", "index",
         "/nodes", "nodes",
-        "/preso/(.*)", "preso",
         "/odp", "odp",
-        "/search/(.*)", "search",
+        "/s/(.*)", "Search",
         )
 
 def db_load_hook():

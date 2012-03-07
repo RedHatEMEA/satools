@@ -39,7 +39,7 @@ Ext.define("Juno.controller.SearchController", {
 	var s = this.getSlidebrowser().getStore();
 	s.setProxy({
 	    type: "ajax",
-	    url: "../search/" + this.getSearchfield().getSubmitValue()
+	    url: "../s/" + this.getSearchfield().getSubmitValue()
 	});
 	s.load();
     }

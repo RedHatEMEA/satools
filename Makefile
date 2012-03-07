@@ -27,9 +27,11 @@ rpm-base: clean
 clean:
 	find -name '*.pyc' -print0 | xargs -i -0 rm -f '{}'
 	rm -f juno/app/static/app-all.js juno/app/static/all-classes.js
+	rm -f juno/app/parsetab.py
 	rm -f search/app/static/app-all.js search/app/static/all-classes.js
 
 juno:
+	cd juno/app && python search.py
 	cd juno/app/static && sencha build -p app.jsb3 -d .
 
 search:
