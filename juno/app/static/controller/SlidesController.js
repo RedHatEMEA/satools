@@ -62,9 +62,6 @@ Ext.define("Juno.controller.SlidesController", {
 	    "menuitem[itemid = 'pbmv_new']": {
 		click: this.pbmv_new
 	    },
-	    "menuitem[itemid = 'pbmv_save']": {
-		click: not_implemented
-	    },
 	    "menuitem[itemid = 'pbmv_saveas']": {
 		click: not_implemented
 	    },
@@ -233,6 +230,7 @@ Ext.define("Juno.controller.SlidesController", {
     },
 
     pbmv_download: function(item, e, options) {
+	// TODO: not linked currently
 	var data = item.parentMenu.dv.store.data;
 	var a = [];
 	for(var i in data.items) {

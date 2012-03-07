@@ -39,7 +39,13 @@ Ext.define("Juno.controller.SearchController", {
 	var s = this.getSlidebrowser().getStore();
 	s.setProxy({
 	    type: "ajax",
-	    url: "../s/" + this.getSearchfield().getSubmitValue()
+	    url: "../s/" + this.getSearchfield().getSubmitValue(),
+	    listeners: {
+		exception: function(_this, response, operation, options) {
+		    s.removeAll();
+		    Ext.Msg.alert(_["title"], "Invalid search text");
+		}
+	    }
 	});
 	s.load();
     }

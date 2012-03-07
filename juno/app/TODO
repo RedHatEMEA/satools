@@ -8,4 +8,5 @@ Use ODP embedded dates for searching
 On merged slides, allow backlink to all relevant presos
 Check if pyo's are created by RPM, and if so, does parsing still work?
 Search history (back & forward buttons)
-Syntax error reporting to user
+Allow quoted date searching (after:"1/1/2012")
+Filenames with double quotes...

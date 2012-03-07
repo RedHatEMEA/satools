@@ -12,6 +12,10 @@ import tempfile
 import urlparse
 import web
 
+def error(message):
+    web.ctx.status = "400 Bad Request"
+    return message
+
 def safepath(path):
     path = os.path.normpath(path.lstrip(os.sep))
     if path.split(os.sep)[0] == "..":
@@ -81,7 +85,11 @@ class Download:
         
 class Search:
     def GET(self, query):
-        w = search.build_where(query)
+        try:
+            w = search.build_where(query)
+        except search.SearchException, e:
+            return error(e)
+
         if w.merge:
             w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s GROUP BY checksum ORDER BY preso, slide LIMIT 500" % w.sql
         else:
