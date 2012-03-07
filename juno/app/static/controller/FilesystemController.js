@@ -41,7 +41,7 @@ Ext.define("Juno.controller.FilesystemController", {
 		click: this.fpmv_download
 	    },
 	    "menuitem[itemid = 'fpmv_delete']": {
-		click: this.not_implemented
+		click: not_implemented
 	    },
 	    "menuitem[itemid = 'ffmv_searchin']": {
 		click: this.ffmv_searchin
@@ -50,13 +50,13 @@ Ext.define("Juno.controller.FilesystemController", {
 		click: this.ffmv_searchunder
 	    },
 	    "menuitem[itemid = 'ffmv_create']": {
-		click: this.not_implemented
+		click: not_implemented
 	    },
 	    "menuitem[itemid = 'ffmv_delete']": {
-		click: this.not_implemented
+		click: not_implemented
 	    },
 	    "menuitem[itemid = 'ffmv_upload']": {
-		click: this.not_implemented
+		click: not_implemented
 	    },
 	    "menuitem[itemid = 'ffmv_expand']": {
 		click: this.ffmv_expand
@@ -82,10 +82,6 @@ Ext.define("Juno.controller.FilesystemController", {
 	    this.fpmv_show();
 	else
 	    tv.expand(rec);
-    },
-
-    not_implemented: function() {
-	Ext.Msg.alert(_["title"], "Functionality not implemented yet");
     },
 
     fpmv_download:function() {

@@ -8,6 +8,10 @@ Ext.require("Ext.Img");
 
 var _ = { title: "SA tools presentation search" };
 
+function not_implemented() {
+    Ext.Msg.alert(_["title"], "Functionality not implemented yet");
+}
+
 Ext.application({
     name: "Juno",
     appFolder: "",

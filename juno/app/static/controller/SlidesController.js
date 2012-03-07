@@ -63,13 +63,13 @@ Ext.define("Juno.controller.SlidesController", {
 		click: this.pbmv_new
 	    },
 	    "menuitem[itemid = 'pbmv_save']": {
-		click: this.pbmv_save
+		click: not_implemented
 	    },
 	    "menuitem[itemid = 'pbmv_saveas']": {
-		click: this.pbmv_saveas
+		click: not_implemented
 	    },
 	    "menuitem[itemid = 'pbmv_download']": {
-		click: this.pbmv_download
+		click: not_implemented
 	    },
 	    "menuitem[itemid = 'pbmv_selectall']": {
 		click: this.sbmv_selectall
