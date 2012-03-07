@@ -137,7 +137,7 @@ def needs_add(db, srcp, dstp):
     if row and row["mtime"] == mtime:
         return False
 
-    return odptools.is_odp(srcp)
+    return odptools.odf.Odp.is_odp(srcp)
 
 def add_preso(db, srcp):
     dstp = common.Mapper.s2d(srcp)
@@ -145,7 +145,7 @@ def add_preso(db, srcp):
 
     log("Adding %s..." % srcp)
 
-    juno = odptools.juno.juno()
+    juno = odptools.odf.juno.juno()
 
     preso = juno.desktop.loadComponentFromURL \
         (juno.mkpath(srcp), "_blank", 0,
@@ -208,7 +208,7 @@ def add_trees():
         procs.append(p)
 
     for sync in config["juno-sync"]:
-        (srcbase, dstbase) = sync.rsplit(" ", 1)[0]
+        (srcbase, dstbase) = sync.rsplit(" ", 1)
         for dirpath, dirnames, filenames in os.walk(srcbase):
             if os.path.split(dirpath)[1][0] == ".":
                 del dirnames[:]
