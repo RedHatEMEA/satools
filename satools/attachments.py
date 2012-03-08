@@ -39,7 +39,6 @@ def extract(path):
                      'text/x-vcard'):
 
                 p = config["attachments-base"] + "/" + path
-                common.mkdirs(p)
 
                 try:
                     fn = cleanfilename(fn)
@@ -47,6 +46,7 @@ def extract(path):
                     if config["attachments-odponly"] != "1" or \
                             fn.lower().endswith(".odp") or \
                             typ.lower().startswith("application/vnd.oasis.opendocument.presentation"):
+                        common.mkdirs(p)
                         p += "/%03u-%03u-%s" % (msg, index, fn)
 
                         if not os.path.exists(p):
