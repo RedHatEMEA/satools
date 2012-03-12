@@ -49,14 +49,14 @@ Ext.define("Juno.controller.FilesystemController", {
 	    "menuitem[itemid = 'ffmv_searchunder']": {
 		click: this.ffmv_searchunder
 	    },
-	    "menuitem[itemid = 'ffmv_create']": {
-		click: not_implemented
+	    "menuitem[itemid = 'ffmv_mkdir']": {
+		click: this.ffmv_mkdir
 	    },
-	    "menuitem[itemid = 'ffmv_delete']": {
-		click: not_implemented
+	    "menuitem[itemid = 'ffmv_rmdir']": {
+		click: this.ffmv_rmdir
 	    },
 	    "menuitem[itemid = 'ffmv_upload']": {
-		click: not_implemented
+		click: this.ffmv_upload
 	    },
 	    "menuitem[itemid = 'ffmv_expand']": {
 		click: this.ffmv_expand
@@ -109,17 +109,65 @@ Ext.define("Juno.controller.FilesystemController", {
 	this.do_search("under");
     },
 
-    ffmv_create: function() {
-    },
-
-    ffmv_delete: function() {
+    ffmv_mkdir: function() {
 	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
 	var store = this.getTreepanel().getStore();
+	var tv = this.getTreeview();
+
+	Ext.Msg.prompt(_["title"], "Subfolder name:", function(btn, text) {
+	    if(btn == "ok") {
+		Ext.Ajax.request({
+		    url: "../mkdir" + rec.data.id + "/" + text,
+		    method: "POST",
+		    callback: function(options, success, response) {
+			if(!success)
+			    Ext.Msg.alert(_["title"],
+					  "Unable to create subfolder");
+			store.load({
+			    node: rec,
+			    callback: function(records, operation, success) {
+				tv.expand(rec, true);
+			    }
+			});
+		    }
+		});
+	    }
+	});
+
+    },
+
+    ffmv_rmdir: function() {
+	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
+	var store = this.getTreepanel().getStore();
+
+	Ext.Msg.show({
+	    title: _["title"],
+	    msg: "This will delete the folder you have selected. Are you sure?",
+	    buttons: Ext.Msg.YESNOCANCEL,
+	    icon: Ext.Msg.WARNING,
+	    scope: this,
+	    fn: function(buttonId) {
+		if(buttonId == "yes") {
+		    Ext.Ajax.request({
+			url: "../rmdir" + rec.data.id,
+			method: "POST",
+			callback: function(options, success, response) {
+			    if(success)
+				rec.remove();
+			    else
+				Ext.Msg.alert(_["title"],
+					      "Unable to delete subfolder");
+			}
+		    });
+		}
+	    }
+	});
 
 	store.load({ node: rec });
     },
 
     ffmv_upload: function() {
+	not_implemented();
     },
 
     ffmv_expand: function() {

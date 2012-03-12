@@ -37,21 +37,52 @@ def tell(path):
         subpath = "/" + os.path.relpath(os.path.join(path, i), base)
         entries.append({ "text": i,
                          "id": subpath,
-                         "can_write_parent": auth.can_write_parent(subpath),
-                         "can_write": auth.can_write(subpath) })
+                         "can_write_parent": auth.can_write_parent(subpath[1:]),
+                         "can_write": auth.can_write(subpath[1:]) })
     for i in sorted(filenames):
         subpath = "/" + os.path.relpath(os.path.join(path, i), base)
         entries.append({ "text": i,
                          "id": subpath,
-                         "can_write_parent": auth.can_write_parent(subpath),
-                         "can_write": auth.can_write(subpath),
+                         "can_write_parent": auth.can_write_parent(subpath[1:]),
+                         "can_write": auth.can_write(subpath[1:]),
                          "leaf": "true" })
 
     return json.dumps(entries)
 
+class Download:
+    def GET(self, path):
+        path = common.Mapper.d2s(safepath(path))
+
+        web.header("Content-Type", "application/vnd.oasis.opendocument.presentation")
+        web.header("Content-disposition", "attachment; filename=\"%s\"" % path.rsplit("/", 1)[1])
+        
+        return open(path)
+        
 class Index:
     def GET(self):
         raise web.seeother("/static/")
+
+class Mkdir:
+    def POST(self, path):
+        path = safepath(path)
+        (parent, child) = path.rsplit(os.sep, 1)
+
+        if not auth.can_write(parent):
+            return error("Unauthorized")
+
+        srcp = common.Mapper.d2s(parent)
+        if not srcp.startswith(config["juno-home"] + "/"):
+            return error("Unauthorized")
+
+        if not os.path.isdir(srcp) or not child or child[0] == ".":
+            return error("Unauthorized")
+
+        srcp = os.path.join(srcp, child)
+        
+        base = os.path.join(config["juno-base"], "root")
+        dstp = os.path.join(base, common.Mapper.s2d(srcp))
+        os.mkdir(srcp)
+        os.mkdir(dstp)
 
 class Nodes:
     def GET(self):
@@ -74,15 +105,26 @@ class Odp:
         shutil.rmtree(tmp)
         return f
 
-class Download:
-    def GET(self, path):
-        path = common.Mapper.d2s(safepath(path))
+class Rmdir:
+    def POST(self, path):
+        path = safepath(path)
 
-        web.header("Content-Type", "application/vnd.oasis.opendocument.presentation")
-        web.header("Content-disposition", "attachment; filename=\"%s\"" % path.rsplit("/", 1)[1])
-        
-        return open(path)
-        
+        if not auth.can_write_parent(path):
+            return error("Unauthorized")
+
+        srcp = common.Mapper.d2s(path)
+        if not srcp.startswith(config["juno-home"] + "/"):
+            return error("Unauthorized")
+
+        base = os.path.join(config["juno-base"], "root")
+        dstp = os.path.join(base, common.Mapper.s2d(srcp))
+
+        if not os.path.isdir(srcp) or os.listdir(srcp) or os.listdir(dstp):
+            return error("Unauthorized")
+
+        os.rmdir(srcp)
+        os.rmdir(dstp)
+
 class Search:
     def GET(self, query):
         try:
@@ -110,8 +152,10 @@ class Search:
 
 urls = ("/", "Index",
         "/dl/(.*)", "Download",
+        "/mkdir/(.*)", "Mkdir",
         "/nodes", "Nodes",
         "/odp", "Odp",
+        "/rmdir/(.*)", "Rmdir",
         "/s/(.*)", "Search"
         )
 

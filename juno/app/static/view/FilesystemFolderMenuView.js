@@ -19,11 +19,11 @@ Ext.define("Juno.view.FilesystemFolderMenuView", {
 	}, "-", {
 	    text: "Create subfolder...",
 	    disabled: !this.data.can_write,
-	    itemid: "ffmv_create"
+	    itemid: "ffmv_mkdir"
 	}, {
 	    text: "Delete folder",
 	    disabled: !this.data.can_write_parent,
-	    itemid: "ffmv_delete"
+	    itemid: "ffmv_rmdir"
 	}, {
 	    text: "Upload presentation to \"" + this.data.text + "\"...",
 	    disabled: !this.data.can_write,

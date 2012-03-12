@@ -10,3 +10,5 @@ Check if pyo's are created by RPM, and if so, does parsing still work?
 Search history (back & forward buttons)
 Allow quoted date searching (after:"1/1/2012")
 Filenames with double quotes...
+* partial download bug in common.py
+have to disable selinux

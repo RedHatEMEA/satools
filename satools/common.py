@@ -115,6 +115,7 @@ def load_config():
                "clearspace-password": None,
                "clearspace-odponly": "1",
                "juno-base": os.environ["HOME"] + "/content/juno",
+               "juno-home": os.environ["HOME"] + "/content/juno-home",
                "juno-sync": [],
                }
 
