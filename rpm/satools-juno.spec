@@ -1,7 +1,7 @@
 Name:		satools-juno
 Version:	0.3
 Release:	1%{?dist}
-Summary:	Red Hat UK&I SA tools ODP search engine
+Summary:	Red Hat UK&I SA tools presentation search engine
 License:	GPL
 URL:		https://github.com/RedHatUKI/satools
 Source:		satools-juno.tar.gz
@@ -12,7 +12,7 @@ BuildRequires:	redhat-rpm-config
 %define _srcdefattr (-,root,root)
 
 %description
-Red Hat UK&I SA tools ODP search engine
+Red Hat UK&I SA tools presentation search engine
 
 %prep
 %setup -qc
@@ -37,12 +37,16 @@ rm -rf %{buildroot}
 %pre
 /usr/sbin/groupadd -f -r satools
 /usr/bin/id satools &>/dev/null || /usr/sbin/useradd -r -s /sbin/nologin -m -k /dev/null -g satools satools
+/bin/chmod 0701 /home/satools
 
 %post
-service httpd reload
+/bin/ln -s /home/satools/content/juno/root /opt/satools/juno/static
+/bin/ln -s /home/satools/content/juno/slides /opt/satools/juno/static
+/bin/ln -s /home/satools/content/juno/thumbs /opt/satools/juno/static
+/sbin/service httpd reload
 
 %postun
-service httpd reload
+/sbin/service httpd reload
 
 %files
 %defattr(-,root,root,-)
@@ -51,5 +55,5 @@ service httpd reload
 
 %changelog
 
-* Thu Nov 24 2011 Jim Minter <jminter@redhat.com> 0.3
+* Mon Mar 19 2012 Jim Minter <jminter@redhat.com> 0.3
 - First release

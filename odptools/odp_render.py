@@ -67,7 +67,7 @@ def render(src, dst_template, offset, mimetype, omitinvisible, omitnumbers, prog
         
         filter.setSourceDocument(page)
         filter.filter((juno.PropertyValue("MediaType", mimetype),
-                       juno.PropertyValue("URL", juno.mkpath(dst_template) % offset)))
+                       juno.PropertyValue("URL", juno.mkpath(dst_template % offset))))
         offset += 1
 
     if progress:

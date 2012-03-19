@@ -37,19 +37,21 @@ rm -rf %{buildroot}
 %pre
 /usr/sbin/groupadd -f -r satools
 /usr/bin/id satools &>/dev/null || /usr/sbin/useradd -r -s /sbin/nologin -m -k /dev/null -g satools satools
+/bin/chmod 0701 /home/satools
 
 %post
-service httpd reload
+/sbin/service httpd reload
 
 %postun
-service httpd reload
+/sbin/service httpd reload
 
 %files
-%defattr(-,root,root,-)
 /
 %doc README.rst
 
 %changelog
+
+* Mon Mar 19 2012 Jim Minter <jminter@redhat.com> 0.3
 
 * Fri Nov 18 2011 Jim Minter <jminter@redhat.com> 0.2
 

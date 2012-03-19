@@ -4,7 +4,7 @@ ifneq ($(SIGN),)
 override SIGN=--sign
 endif
 
-all: satools.rpm satools-juno.rpm satools-search.rpm
+all: satools.rpm satools-juno.rpm satools-odptools.rpm satools-search.rpm
 
 all-sign:
 	$(MAKE) all SIGN=1
@@ -17,6 +17,9 @@ preprep-satools: rpm-base
 
 preprep-satools-juno: rpm-base
 	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools-juno.tar.gz" contrib/ext-4.0.2a Makefile README.rst rpm/satools-juno.spec juno
+
+preprep-satools-odptools: rpm-base
+	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools.tar.gz" Makefile README.rst rpm/satools-odptools.spec odptools
 
 preprep-satools-search: rpm-base
 	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools-search.tar.gz" contrib/ext-4.0.2a Makefile README.rst rpm/satools-search.spec search

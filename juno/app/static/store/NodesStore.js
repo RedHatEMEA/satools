@@ -7,7 +7,7 @@ Ext.define("Juno.store.NodesStore", {
 	    ],
     proxy: {
 	type: "ajax",
-	url: "/nodes"
+	url: "../nodes"
     },
     root: {
 	text: "root",

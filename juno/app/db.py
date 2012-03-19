@@ -87,3 +87,6 @@ if __name__ == "__main__":
 
     if args.cmd == "create":
         DB(".db").createschema()
+        common.mkdirs("root")
+        common.mkdirs("slides")
+        common.mkdirs("thumbs")

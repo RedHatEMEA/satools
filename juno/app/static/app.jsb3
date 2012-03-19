@@ -1,5 +1,5 @@
 {
-    "projectName": "SA tools Juno",
+    "projectName": "SA tools presentation search",
     "builds": [
         {
             "name": "All Classes",
@@ -26,6 +26,10 @@
                 },
                 {
                     "path": "extjs/src/util/",
+                    "name": "Floating.js"
+                },
+                {
+                    "path": "extjs/src/util/",
                     "name": "KeyMap.js"
                 },
                 {
@@ -35,10 +39,6 @@
                 {
                     "path": "extjs/src/fx/",
                     "name": "CubicBezier.js"
-                },
-                {
-                    "path": "extjs/src/util/",
-                    "name": "Floating.js"
                 },
                 {
                     "path": "extjs/src/data/",
@@ -69,6 +69,18 @@
                     "name": "Grouper.js"
                 },
                 {
+                    "path": "extjs/src/util/",
+                    "name": "Animate.js"
+                },
+                {
+                    "path": "extjs/src/",
+                    "name": "ComponentQuery.js"
+                },
+                {
+                    "path": "extjs/src/layout/",
+                    "name": "Layout.js"
+                },
+                {
                     "path": "extjs/src/panel/",
                     "name": "Proxy.js"
                 },
@@ -89,20 +101,8 @@
                     "name": "None.js"
                 },
                 {
-                    "path": "extjs/src/layout/",
-                    "name": "Layout.js"
-                },
-                {
                     "path": "extjs/src/util/",
                     "name": "KeyNav.js"
-                },
-                {
-                    "path": "extjs/src/util/",
-                    "name": "Animate.js"
-                },
-                {
-                    "path": "extjs/src/",
-                    "name": "ComponentQuery.js"
                 },
                 {
                     "path": "extjs/src/util/",
@@ -113,12 +113,16 @@
                     "name": "Ajax.js"
                 },
                 {
-                    "path": "extjs/src/dd/",
-                    "name": "StatusProxy.js"
+                    "path": "extjs/src/",
+                    "name": "ElementLoader.js"
                 },
                 {
                     "path": "extjs/src/layout/component/",
                     "name": "Component.js"
+                },
+                {
+                    "path": "extjs/src/dd/",
+                    "name": "StatusProxy.js"
                 },
                 {
                     "path": "extjs/src/form/field/",
@@ -149,8 +153,8 @@
                     "name": "Color.js"
                 },
                 {
-                    "path": "extjs/src/",
-                    "name": "ElementLoader.js"
+                    "path": "extjs/src/state/",
+                    "name": "Provider.js"
                 },
                 {
                     "path": "extjs/src/dd/",
@@ -167,10 +171,6 @@
                 {
                     "path": "extjs/src/layout/component/field/",
                     "name": "Field.js"
-                },
-                {
-                    "path": "extjs/src/state/",
-                    "name": "Provider.js"
                 },
                 {
                     "path": "extjs/src/data/writer/",
@@ -265,6 +265,22 @@
                     "name": "NodeInterface.js"
                 },
                 {
+                    "path": "extjs/src/",
+                    "name": "PluginManager.js"
+                },
+                {
+                    "path": "extjs/src/",
+                    "name": "LoadMask.js"
+                },
+                {
+                    "path": "extjs/src/",
+                    "name": "ComponentLoader.js"
+                },
+                {
+                    "path": "extjs/src/layout/component/",
+                    "name": "Auto.js"
+                },
+                {
                     "path": "extjs/src/layout/component/",
                     "name": "AbstractDock.js"
                 },
@@ -337,50 +353,6 @@
                     "name": "TreeModel.js"
                 },
                 {
-                    "path": "extjs/src/",
-                    "name": "PluginManager.js"
-                },
-                {
-                    "path": "extjs/src/",
-                    "name": "LoadMask.js"
-                },
-                {
-                    "path": "extjs/src/",
-                    "name": "ComponentLoader.js"
-                },
-                {
-                    "path": "extjs/src/layout/component/",
-                    "name": "Auto.js"
-                },
-                {
-                    "path": "extjs/src/",
-                    "name": "FocusManager.js"
-                },
-                {
-                    "path": "extjs/src/util/",
-                    "name": "ComponentDragger.js"
-                },
-                {
-                    "path": "extjs/src/util/",
-                    "name": "Region.js"
-                },
-                {
-                    "path": "extjs/src/dd/",
-                    "name": "DragDropManager.js"
-                },
-                {
-                    "path": "extjs/src/layout/component/field/",
-                    "name": "Text.js"
-                },
-                {
-                    "path": "extjs/src/layout/component/field/",
-                    "name": "TextArea.js"
-                },
-                {
-                    "path": "extjs/src/menu/",
-                    "name": "Manager.js"
-                },
-                {
                     "path": "extjs/src/state/",
                     "name": "Manager.js"
                 },
@@ -395,6 +367,10 @@
                 {
                     "path": "extjs/src/",
                     "name": "Component.js"
+                },
+                {
+                    "path": "extjs/src/form/",
+                    "name": "Label.js"
                 },
                 {
                     "path": "extjs/src/",
@@ -425,10 +401,6 @@
                     "name": "Header.js"
                 },
                 {
-                    "path": "extjs/src/button/",
-                    "name": "Button.js"
-                },
-                {
                     "path": "extjs/src/",
                     "name": "ProgressBar.js"
                 },
@@ -447,6 +419,38 @@
                 {
                     "path": "extjs/src/toolbar/",
                     "name": "Fill.js"
+                },
+                {
+                    "path": "extjs/src/",
+                    "name": "FocusManager.js"
+                },
+                {
+                    "path": "extjs/src/util/",
+                    "name": "ComponentDragger.js"
+                },
+                {
+                    "path": "extjs/src/util/",
+                    "name": "Region.js"
+                },
+                {
+                    "path": "extjs/src/dd/",
+                    "name": "DragDropManager.js"
+                },
+                {
+                    "path": "extjs/src/layout/component/field/",
+                    "name": "Text.js"
+                },
+                {
+                    "path": "extjs/src/layout/component/field/",
+                    "name": "TextArea.js"
+                },
+                {
+                    "path": "extjs/src/menu/",
+                    "name": "Manager.js"
+                },
+                {
+                    "path": "extjs/src/button/",
+                    "name": "Button.js"
                 },
                 {
                     "path": "extjs/src/form/",
@@ -685,16 +689,16 @@
                     "name": "Request.js"
                 },
                 {
+                    "path": "extjs/src/layout/component/",
+                    "name": "Draw.js"
+                },
+                {
                     "path": "extjs/src/menu/",
                     "name": "Item.js"
                 },
                 {
                     "path": "extjs/src/menu/",
                     "name": "KeyNav.js"
-                },
-                {
-                    "path": "extjs/src/layout/component/",
-                    "name": "Draw.js"
                 },
                 {
                     "path": "extjs/src/grid/",
@@ -705,12 +709,12 @@
                     "name": "Client.js"
                 },
                 {
-                    "path": "extjs/src/layout/container/",
-                    "name": "AbstractFit.js"
-                },
-                {
                     "path": "extjs/src/draw/",
                     "name": "CompositeSprite.js"
+                },
+                {
+                    "path": "extjs/src/layout/container/",
+                    "name": "AbstractFit.js"
                 },
                 {
                     "path": "extjs/src/dd/",
@@ -745,20 +749,20 @@
                     "name": "Memory.js"
                 },
                 {
-                    "path": "extjs/src/layout/container/",
-                    "name": "Fit.js"
-                },
-                {
-                    "path": "extjs/src/menu/",
-                    "name": "Menu.js"
-                },
-                {
                     "path": "extjs/src/draw/",
                     "name": "Surface.js"
                 },
                 {
                     "path": "extjs/src/draw/",
                     "name": "Component.js"
+                },
+                {
+                    "path": "extjs/src/layout/container/",
+                    "name": "Fit.js"
+                },
+                {
+                    "path": "extjs/src/menu/",
+                    "name": "Menu.js"
                 },
                 {
                     "path": "extjs/src/grid/header/",
@@ -815,6 +819,74 @@
                 {
                     "path": "extjs/src/draw/engine/",
                     "name": "Vml.js"
+                },
+                {
+                    "path": "view/",
+                    "name": "SearchView.js"
+                },
+                {
+                    "path": "view/",
+                    "name": "PresoBrowserView.js"
+                },
+                {
+                    "path": "view/",
+                    "name": "PresoBrowserMenuView.js"
+                },
+                {
+                    "path": "view/",
+                    "name": "SlideBrowserView.js"
+                },
+                {
+                    "path": "view/",
+                    "name": "SlideBrowserMenuView.js"
+                },
+                {
+                    "path": "view/",
+                    "name": "SlideZoomView.js"
+                },
+                {
+                    "path": "store/",
+                    "name": "PresosStore.js"
+                },
+                {
+                    "path": "store/",
+                    "name": "SlidesStore.js"
+                },
+                {
+                    "path": "view/",
+                    "name": "FileUploadView.js"
+                },
+                {
+                    "path": "view/",
+                    "name": "FilesystemView.js"
+                },
+                {
+                    "path": "view/",
+                    "name": "FilesystemFolderMenuView.js"
+                },
+                {
+                    "path": "view/",
+                    "name": "FilesystemPresentationMenuView.js"
+                },
+                {
+                    "path": "store/",
+                    "name": "NodesStore.js"
+                },
+                {
+                    "path": "controller/",
+                    "name": "SearchController.js"
+                },
+                {
+                    "path": "controller/",
+                    "name": "SlidesController.js"
+                },
+                {
+                    "path": "controller/",
+                    "name": "FileUploadController.js"
+                },
+                {
+                    "path": "controller/",
+                    "name": "FilesystemController.js"
                 }
             ]
         },
