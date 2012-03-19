@@ -16,6 +16,9 @@ if __name__ == "__main__":
     global config
     config = common.load_config()
 
+    print >>sys.stderr, "Utility needs update since relaunch of www.redhat.com, feel free to submit patches..."
+    sys.exit(1)
+
     common.mkdirs(config["references-base"])
     os.chdir(config["references-base"])
 
