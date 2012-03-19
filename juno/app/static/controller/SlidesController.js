@@ -236,7 +236,7 @@ Ext.define("Juno.controller.SlidesController", {
 	for(var i in data.items) {
 	    a.push(data.items[i].data.preso + "[" + data.items[i].data.slide + "]");
 	}
-	postToURL("/odp", {slides: a});
+	postToURL("../odp", {slides: a});
     },
 
     pbmv_new: function(item, e, options) {
