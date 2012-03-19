@@ -19,7 +19,7 @@ Ext.define("Juno.view.FilesystemPresentationMenuView", {
 	}, {
 	    text: "Delete presentation",
 	    disabled: !this.data.can_write_parent,
-	    itemid: "fpmv_delete"
+	    itemid: "fpmv_rm"
 	}]);
     }
 });

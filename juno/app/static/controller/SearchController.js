@@ -22,7 +22,6 @@ Ext.define("Juno.controller.SearchController", {
 		render: this.render,
 		specialkey: this.specialkey
 	    }
-
         });
     },
 

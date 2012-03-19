@@ -176,9 +176,9 @@ def del_preso(db, srcp):
 
     doqueries(db, [["DELETE FROM presos WHERE path = ?", [(dstp, )]]])
 
-    common.unlink(os.path.join("root", dstp))
-    common.rmtree(os.path.join("slides", dstp))
-    common.rmtree(os.path.join("thumbs", dstp))
+    common.unlink(os.path.join(config["juno-base"], "root", dstp))
+    common.rmtree(os.path.join(config["juno-base"], "slides", dstp))
+    common.rmtree(os.path.join(config["juno-base"], "thumbs", dstp))
 
 def log(s):
     sys.stderr.write("%d: %s: %s\n" % (workerid, time.ctime(), s))
@@ -335,6 +335,8 @@ def doqueries(db, sql):
 
 def parse_args():
     ap = argparse.ArgumentParser()
+    ap.add_argument("-p", dest = "path",
+                    help = "index single presentation")
     ap.add_argument("-c", action="store_false", dest = "addtrees",
                     help = "clean %s" % config["juno-base"])
     ap.add_argument("-w", dest = "workers", default = 4, type = int,
@@ -349,14 +351,23 @@ if __name__ == "__main__":
     common.mkdirs(config["juno-base"])
     os.chdir(config["juno-base"])
 
-    lock = common.Lock(".lock")
+    if args["path"]:
+        global workerid
+        workerid = 0
 
-    os.nice(10)
+        db = DB(".db")
+        add_preso(db, args["path"])
+        db.close()
 
-    db = DB(".db")
-    check_fs(db)
-    check_db(db)
-    db.close()
+    else:
+        lock = common.Lock(".lock")
 
-    if args["addtrees"]:
-        add_trees()
+        os.nice(10)
+
+        db = DB(".db")
+        check_fs(db)
+        check_db(db)
+        db.close()
+
+        if args["addtrees"]:
+            add_trees()

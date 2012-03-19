@@ -19,6 +19,7 @@ Ext.application({
     controllers: [
 	"SearchController",
 	"SlidesController",
+	"FileUploadController",
 	"FilesystemController"
     ],
 
@@ -47,9 +48,7 @@ Ext.application({
 		    height: 252,
 		    split: true
 		}],
-		layout: {
-		    type: "border"
-		},
+		layout: "border",
 		region: "center",
 		border: false
 	    }],

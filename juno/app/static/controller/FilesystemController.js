@@ -40,8 +40,8 @@ Ext.define("Juno.controller.FilesystemController", {
 	    "menuitem[itemid = 'fpmv_download']": {
 		click: this.fpmv_download
 	    },
-	    "menuitem[itemid = 'fpmv_delete']": {
-		click: not_implemented
+	    "menuitem[itemid = 'fpmv_rm']": {
+		click: this.fpmv_rm
 	    },
 	    "menuitem[itemid = 'ffmv_searchin']": {
 		click: this.ffmv_searchin
@@ -136,6 +136,34 @@ Ext.define("Juno.controller.FilesystemController", {
 
     },
 
+    fpmv_rm: function() {
+	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
+	var store = this.getTreepanel().getStore();
+
+	Ext.Msg.show({
+	    title: _["title"],
+	    msg: "This will delete the presentation you have selected. Are you sure?",
+	    buttons: Ext.Msg.YESNOCANCEL,
+	    icon: Ext.Msg.WARNING,
+	    scope: this,
+	    fn: function(buttonId) {
+		if(buttonId == "yes") {
+		    Ext.Ajax.request({
+			url: "../rm" + rec.data.id,
+			method: "POST",
+			callback: function(options, success, response) {
+			    if(success)
+				rec.remove();
+			    else
+				Ext.Msg.alert(_["title"],
+					      "Unable to delete presentation");
+			}
+		    });
+		}
+	    }
+	});
+    },
+
     ffmv_rmdir: function() {
 	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
 	var store = this.getTreepanel().getStore();
@@ -162,12 +190,15 @@ Ext.define("Juno.controller.FilesystemController", {
 		}
 	    }
 	});
-
-	store.load({ node: rec });
     },
 
     ffmv_upload: function() {
-	not_implemented();
+	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
+
+	Ext.ComponentManager.create({
+	    xtype: "fileupload",
+	    rec: rec
+	}).show();
     },
 
     ffmv_expand: function() {

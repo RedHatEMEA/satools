@@ -66,7 +66,7 @@ Ext.define("Juno.controller.SlidesController", {
 		click: not_implemented
 	    },
 	    "menuitem[itemid = 'pbmv_download']": {
-		click: not_implemented
+		click: this.pbmv_download
 	    },
 	    "menuitem[itemid = 'pbmv_selectall']": {
 		click: this.sbmv_selectall

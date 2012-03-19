@@ -3,11 +3,13 @@
 from satools import common
 from db import DB
 import auth
+import index
 import json
-#import odp_utils.odp_cat
+import odptools
 import os
 import search
 import shutil
+import subprocess
 import tempfile
 import urlparse
 import web
@@ -40,6 +42,8 @@ def tell(path):
                          "can_write_parent": auth.can_write_parent(subpath[1:]),
                          "can_write": auth.can_write(subpath[1:]) })
     for i in sorted(filenames):
+        if i[0] == ".": continue
+
         subpath = "/" + os.path.relpath(os.path.join(path, i), base)
         entries.append({ "text": i,
                          "id": subpath,
@@ -96,7 +100,7 @@ class Odp:
 
         dct = urlparse.parse_qs(web.data())
         # TODO: security, single slide not in array, make odp_cat work...
-        odp_utils.odp_cat.cat(map(lambda x: config.home + x, dct["slides"]), tmp + "/mypreso.odp")
+        odptools.odp_cat.cat(map(lambda x: config["juno-base"] + "/root" + x, dct["slides"]), tmp + "/mypreso.odp")
 
         web.header("Content-Type", "application/vnd.oasis.opendocument.presentation")
         web.header("Content-disposition", "attachment; filename=mypreso.odp")
@@ -104,6 +108,25 @@ class Odp:
         f = open(tmp + "/mypreso.odp")
         shutil.rmtree(tmp)
         return f
+
+class Rm:
+    def POST(self, path):
+        path = safepath(path)
+
+        if not auth.can_write_parent(path):
+            return error("Unauthorized")
+
+        srcp = common.Mapper.d2s(path)
+        if not srcp.startswith(config["juno-home"] + "/"):
+            return error("Unauthorized")
+
+        if not os.path.isfile(srcp):
+            return error("Unauthorized")
+
+        index.workerid = 0
+        index.config = config
+        index.del_preso(web.ctx.db, srcp)
+        os.unlink(srcp)
 
 class Rmdir:
     def POST(self, path):
@@ -149,14 +172,51 @@ class Search:
         web.header("Content-Type", "application/json")
         return json.dumps(entries)
 
+class Upload:
+    def POST(self):
+        web.header("Content-Type", "text/html")
+
+        i = web.input(myfile = {})
+        (parent, child) = (safepath(i["path"]), i["myfile"].filename)
+
+        if not auth.can_write(parent):
+            return json.dumps({"success": False, "msg": "Unauthorized"})
+
+        srcp = common.Mapper.d2s(parent)
+        if not srcp.startswith(config["juno-home"] + "/"):
+            return json.dumps({"success": False, "msg": "Unauthorized"})
+
+        if not os.path.isdir(srcp) or not child or child[0] == "." \
+                or "/" in child:
+            return json.dumps({"success": False, "msg": "Unauthorized"})
+
+        srcp = os.path.join(srcp, child)
+        if os.path.exists(srcp):
+            return json.dumps({"success": False, "msg": "Unauthorized"})
+        
+        f = open(srcp, "w")
+        f.write(i["myfile"].value)
+        f.close()
+        
+        if not odptools.odf.Odp.is_odp(srcp):
+            os.unlink(srcp)
+            return json.dumps({"success": False, "msg": "Unauthorized"})
+
+        if subprocess.call(("./index.py", "-p", srcp)):
+            os.unlink(srcp)
+            return json.dumps({"success": False, "msg": "Unauthorized"})
+
+        return json.dumps({"success": True})
 
 urls = ("/", "Index",
         "/dl/(.*)", "Download",
         "/mkdir/(.*)", "Mkdir",
         "/nodes", "Nodes",
         "/odp", "Odp",
+        "/rm/(.*)", "Rm",
         "/rmdir/(.*)", "Rmdir",
-        "/s/(.*)", "Search"
+        "/s/(.*)", "Search",
+        "/upload", "Upload"
         )
 
 def db_load_hook():
