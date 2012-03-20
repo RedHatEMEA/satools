@@ -22,7 +22,7 @@ Red Hat UK&I SA tools presentation search engine
 
 %install
 mkdir -p %{buildroot}/opt/satools/juno/static/extjs
-cp -a juno/app/*.py %{buildroot}/opt/satools/juno
+cp -a juno/app/{*.py,templates} %{buildroot}/opt/satools/juno
 cp -a juno/app/static/{app-all.js,app.css,postToURL.js} %{buildroot}/opt/satools/juno/static
 cp juno/app/static/index-prod.html %{buildroot}/opt/satools/juno/static/index.html
 cp juno/app/static/extjs/ext.js %{buildroot}/opt/satools/juno/static/extjs
@@ -40,9 +40,9 @@ rm -rf %{buildroot}
 /bin/chmod 0701 /home/satools
 
 %post
-/bin/ln -s /home/satools/content/juno/root /opt/satools/juno/static
-/bin/ln -s /home/satools/content/juno/slides /opt/satools/juno/static
-/bin/ln -s /home/satools/content/juno/thumbs /opt/satools/juno/static
+/bin/ln -s /home/satools/content/juno/root /opt/satools/juno/static 2>/dev/null
+/bin/ln -s /home/satools/content/juno/slides /opt/satools/juno/static 2>/dev/null
+/bin/ln -s /home/satools/content/juno/thumbs /opt/satools/juno/static 2>/dev/null
 /sbin/service httpd reload
 
 %postun
