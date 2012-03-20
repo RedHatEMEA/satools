@@ -15,8 +15,8 @@ reserved = ["AFTER", "BEFORE", "IN", "IS", "NEAR", "NOT", "OR", "UNDER"]
 tokens = ["INT", "QSTRING", "STRING"] + reserved
 
 def t_STRING(t):
-    '[^" ()/:]+'
-    if t.value.upper() in reserved: t.type = t.value.upper()
+    '[^" ()/-:]+'
+    if t.value.upper() in reserved: t.value = t.type = t.value.upper()
     if t.value.isdigit(): t.type = "INT"
     return t
 
@@ -51,8 +51,6 @@ def p_passthrough(p):
 
 def p_or_expr(p):
     """or_expr        : or_expr OR and_expr"""
-    print p[1]
-    print p[2]
     p[0] = Where("(%s OR %s)" % (p[1].sql, p[3].sql), p[1].args + p[3].args,
                  p[1].merge or p[3].merge)
 
@@ -126,8 +124,8 @@ if __name__ == "__main__":
             if not tok: break
             print tok
             
-            try:
-                w = build_where(sys.argv[1])
-                print (w.sql, w.args, w.merge)
-            except SearchException, e:
-                print e
+        try:
+            w = build_where(sys.argv[1])
+            print (w.sql, w.args, w.merge)
+        except SearchException, e:
+            print e

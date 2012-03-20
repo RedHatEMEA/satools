@@ -61,7 +61,17 @@ class Download:
         web.header("Content-disposition", "attachment; filename=\"%s\"" % path.rsplit("/", 1)[1])
         
         return open(path)
-        
+
+class Help(object):
+    def GET(self):
+        web.header("Content-Type", "text/html")
+
+        f = open("templates/help.html")
+        data = f.read()
+        f.close()
+
+        return data
+
 class Index:
     def GET(self):
         raise web.seeother("/static/")
@@ -210,6 +220,7 @@ class Upload:
 
 urls = ("/?", "Index",
         "/dl/(.*)", "Download",
+        "/help", "Help",
         "/mkdir/(.*)", "Mkdir",
         "/nodes", "Nodes",
         "/odp", "Odp",

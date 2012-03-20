@@ -1,0 +1,333 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
+<html>
+<head>
+  <title>SA tools presentation search &ndash; help</title>
+  <style type="text/css">
+* { text-align:justify; font-family:
+    sans-serif; } div { background-color: #dfe8f6; } div.container
+    { position: absolute; left: 10%; width: 80%; background-color:
+    #ffffff; border: 1px solid #b5b8c8; padding: 5px }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Welcome to SA tools presentation search!</h1>
+
+    <h2>Contents</h2>
+
+    <ul>
+      <li><a href="#about">About SA tools presentation
+      search</a></li>
+
+      <li><a href="#warning">Warning</a></li>
+
+      <li><a href="#intro">Introduction</a></li>
+
+      <li><a href="#filesystem">Filesystem viewer</a></li>
+
+      <li><a href="#search">Search and search results</a></li>
+
+      <li><a href="#creation">Presentation creation</a></li>
+
+      <li><a href="#syntax">Query syntax and search
+      modifiers</a></li>
+    </ul>
+
+    <h2><a name="about" id="about">About SA tools presentation
+    search</a></h2>
+
+    <p>This is the help page for SA tools presentation search 0.3,
+    written by Jim Minter. SA tools presentation search and all its
+    command line tooling are open-sourced at <a href=
+    "https://github.com/RedHatUKI/satools">https://github.com/RedHatUKI/satools</a>.
+    I hope they are useful to you. Questions, comments, feature
+    requests, patches (hey, it is open source after all), pull
+    requests and cake are all welcomed at <a href=
+    "mailto:jminter@redhat.com">jminter@redhat.com</a>.</p>
+
+    <h2><a name="warning" id="warning">Warning</a></h2>
+
+    <p>Please note that the SA tools presentation search tool is
+    not yet production quality. Some features are not yet fully
+    implemented and in particular the presentation creation code is
+    incomplete and may return an error causing your presentation to
+    be lost. You are warned!</p>
+
+    <h2><a name="intro" id="intro">Introduction</a></h2>
+
+    <p>The SA tools presentation search portal consists of three
+    windows: a filesystem viewer (on the left), the main search and
+    search results window, and a presentation creator (at the
+    bottom).</p>
+
+    <h2><a name="filesystem" id="filesystem">Filesystem
+    viewer</a></h2>
+
+    <p>The filesystem viewer allows quick access to all
+    presentations contained within the synchronised repositories.
+    Presentation text searches (see <a href="#syntax">below</a>)
+    can be restricted to particular folders or folder trees within
+    the filesystem by selecting the <i>Search in "xyz"</i> or
+    <i>Search in "xyz" and subfolders</i> entries from the folder
+    context menu (right-click the folder).</p>
+
+    <p>Once selected, a presentation file can be clicked in order
+    to view its slides in the search results window. Alternatively,
+    the original presentation file can be downloaded via the
+    context menu (right-click the presentation).</p>
+
+    <p>Functionality will soon be enabled to allow the user to log
+    in, manage their own home folder and subfolders, and upload and
+    index their own presentations into these folders.</p>
+
+    <h2><a name="search" id="search">Search and search
+    results</a></h2>
+
+    <p>The search box allows full text search of all of the indexed
+    presentation slides. The query syntax and search modifiers are
+    documented <a href="#syntax">below</a>.</p>
+
+    <p>When a search is complete, thumbnails of search results
+    appear underneath the search box. Double-click a thumbnail to
+    view a larger version of the slide in a popup window. To find a
+    presentation containing a particular slide, select <i>Find
+    slide in filesystem</i> from the context menu (right-click the
+    thumbnail).</p>
+
+    <h2><a name="creation" id="creation">Presentation
+    creation</a></h2>
+
+    <p>Custom presentations can be made and downloaded by dragging
+    slides from the search results and dropping them into the
+    presentation creation window. Slides within the presentation
+    creation window can be reordered by dragging and dropping them
+    within the window, and can be removed by selecting <i>Remove
+    slide</i> from the slide context menu (right-click).</p>
+
+    <p>Having completed a custom presentation, select <i>Download
+    presentation</i> from the context menu (right-click) and the
+    application will <a href="#warning">all being well</a> generate
+    a presentation odp file for download.</p>
+
+    <h2><a name="syntax" id="syntax">Query syntax and search
+    modifiers</a></h2>
+
+    <p>SA tools presentation search queries are formed of one or
+    more of the following three basic query types:</p>
+
+    <ul>
+      <li>
+        <p><b>General word or prefix queries</b>. These return
+        slides containing the given word, or in the case of a
+        prefix query, any word which starts with the given prefix.
+        Matching is case-insensitive only for non-extended latin
+        characters (a-z), otherwise it is case sensitive, and the
+        indexer does not strip accents.</p>
+
+        <div style="margin-left: 2em">
+          Return slides containing the word <i>linux</i>:
+
+          <p><b>linux</b></p>
+        </div>
+
+        <div style="margin-left: 2em">
+          Return slides containing a word which starts with the
+          prefix <i>lin</i>. This will match all slides that
+          contain the word <i>linux</i>, but also those that
+          contain the words <i>linear</i>, <i>linker</i>,
+          <i>linguistic</i>, etc.:
+
+          <p><b>lin*</b></p>
+        </div>
+      </li>
+
+      <li>
+        <p><b>Modifiers</b>. The following modifiers further
+        restrict search results: <b>after:</b>, <b>before:</b>,
+        <b>in:</b>, <b>is:</b>, <b>under:</b>.</p>
+
+        <div style="margin-left: 2em">
+          Return slides where the presentation was modified after
+          <i>1st February 2012</i> (note that currently the quotes
+          are mandatory and the date format must be dd/mm/yyyy):
+
+          <p><b>after:"01/02/2012"</b></p>
+        </div>
+
+        <div style="margin-left: 2em">
+          Return slides where the presentation was modified before
+          <i>1st February 2012</i> (note that currently the quotes
+          are mandatory and the date format must be dd/mm/yyyy):
+
+          <p><b>before:"01/02/2012"</b></p>
+        </div>
+
+        <div style="margin-left: 2em">
+          Return slides contained within presentation files in
+          /path/to/folder (note that currently the quotes are
+          mandatory):
+
+          <p><b>in:"/path/to/folder"</b></p>
+        </div>
+
+        <div style="margin-left: 2em">
+          Return all slides from /path/to/presentation.odp (note
+          that currently the quotes are mandatory):
+
+          <p><b>is:"/path/to/presentation.odp"</b></p>
+        </div>
+
+        <div style="margin-left: 2em">
+          Return slides contained within presentation files in
+          /path/to/folder or its subfolders (note that currently
+          the quotes are mandatory):
+
+          <p><b>under:"/path/to/folder"</b></p>
+        </div>
+      </li>
+
+      <li>
+        <p><b>Quoted queries</b>. These return slides containing
+        words matching the given general word or prefix queries, in
+        the specified order with no intervening words. Phrase
+        queries are specified by enclosing one or more
+        space-separated words or prefixes in double quotes.
+        Modifiers may not be included in quoted queries.</p>
+
+        <div style="margin-left: 2em">
+          Return slides that contain the phrase <i>linux
+          applications</i>:
+
+          <p><b>"linux applications"</b></p>
+        </div>
+
+        <div style="margin-left: 2em">
+          Return slides that contain a phrase matching <i>lin*
+          app*</i>. As well as <i>linux applications</i>, this
+          would match such common phrases as <i>linoleum
+          appliances</i> or <i>link apprentices</i>, etc.:
+
+          <p><b>"lin* app*"</b></p>
+        </div>
+      </li>
+    </ul>
+
+    <p>Basic queries of the above three types may be joined using
+    the following four operators, in order of precedence (strongest
+    first):</p>
+
+    <ul>
+      <li>
+        <p><b>The NEAR operator</b>. This returns slides that
+        contain the two given positive general or positive quoted
+        queries within a certain proximity of eachother. By default
+        the <b>NEAR</b> operator matches when there are 10 or fewer
+        intervening words; a different limit N may be specified by
+        specifying an operator of the form <b>NEAR/N</b>. The order
+        in which the given words or phrases appear in the slide
+        does not have to be the same as the order in which they
+        appear in the query.</p>
+
+        <div style="margin-left: 2em">
+          <div>
+            Return slides containing the words <i>linux</i> and
+            <i>kernel</i> with not more than 10 intervening words:
+
+            <p><b>linux NEAR kernel</b></p>
+          </div>
+        </div>
+
+        <div style="margin-left: 2em">
+          <div>
+            Return slides containing the words <i>linux</i> and
+            <i>kernel</i> with not more than 5 intervening words:
+
+            <p><b>linux NEAR/5 kernel</b></p>
+          </div>
+        </div>
+
+        <div style="margin-left: 2em">
+          <div>
+            Return slides contain the phrase <i>operating
+            system</i> and word <i>linux</i> with not more than 2
+            words separating the two:
+
+            <p><b>linux NEAR/2 "operating system"</b></p>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <p><b>Parentheses</b>. These group query sub-expressions to
+        override operator precedence.</p>
+
+        <div style="margin-left: 2em">
+          <div>
+            Return slides that contain both the words <i>linux</i>
+            and <i>scalability</i>, or which contain the word
+            <i>performance</i>:
+
+            <p><b>linux scalability OR performance</b></p>
+          </div>
+        </div>
+
+        <div style="margin-left: 2em">
+          <div>
+            Return slides that contain the word <i>linux</i>, and
+            which also contain the word <i>scalability</i> or which
+            also contain the word <i>performance</i>:
+
+            <p><b>linux (scalability OR performance)</b></p>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <p><b>The NOT operator</b>. This negates the sense of the
+        query which follows.</p>
+
+        <div style="margin-left: 2em">
+          <div>
+            Return slides that contain the word <i>linux</i> and
+            not the word <i>windows</i>:
+
+            <p><b>linux NOT windows</b></p>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <p><b>The implicit and operator</b>. This returns slides
+        that match both of the given subqueries. As may by now be
+        clear, the and operator is not actually written, but is
+        implicitly understood when subqueries are concatenated.</p>
+
+        <div style="margin-left: 2em">
+          <div>
+            Return slides containing the word <i>linux</i>,
+            modified after <i>1st February 2012</i>:
+
+            <p><b>after:"01/02/2012" linux</b></p>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <p><b>The OR operator</b>. This returns slides that match
+        at least one of the two given subqueries.</p>
+
+        <div style="margin-left: 2em">
+          <div>
+            Return slides that contain the word <i>linux</i> or the
+            word <i>windows</i>, or both:
+
+            <p><b>linux OR windows</b></p>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</body>
+</html>
