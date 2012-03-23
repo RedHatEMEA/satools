@@ -1,12 +1,12 @@
 Name:		satools-odptools
-Version:	0.3
+Version:	0.4
 Release:	1%{?dist}
 Summary:	Red Hat UK&I SA tools ODP tools
 License:	GPL
 URL:		https://github.com/RedHatUKI/satools
 Source:		satools.tar.gz
 BuildArch:	noarch
-Requires:	libreoffice-graphicfilter, libreoffice-headless, libreoffice-impress, libreoffice-pyuno, python-lxml, satools
+Requires:	libreoffice-graphicfilter, libreoffice-headless, libreoffice-impress, libreoffice-pyuno, satools-0.4
 BuildRequires:	redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
@@ -43,6 +43,8 @@ done
 %doc README.rst
 
 %changelog
+
+* Fri Mar 23 2012 Jim Minter <jminter@redhat.com> 0.4
 
 * Mon Mar 19 2012 Jim Minter <jminter@redhat.com> 0.3
 - First release
