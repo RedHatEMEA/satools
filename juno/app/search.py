@@ -15,7 +15,7 @@ reserved = ["AFTER", "BEFORE", "IN", "IS", "NEAR", "NOT", "OR", "UNDER"]
 tokens = ["INT", "QSTRING", "STRING"] + reserved
 
 def t_STRING(t):
-    '[^" ()/-:]+'
+    '[^" ()/:-]+'
     if t.value.upper() in reserved: t.value = t.type = t.value.upper()
     if t.value.isdigit(): t.type = "INT"
     return t
