@@ -37,7 +37,12 @@ class DRAW_page(lxml.etree.ElementBase):
 
     @staticmethod
     def _read_dim(xml, dim):
-        rv = xml.get(ns.SVG(dim), "infcm")
+        if dim == "x":
+            rv = xml.get(ns.SVG_x, "infcm")
+        elif dim == "y":
+            rv = xml.get(ns.SVG_y, "infcm")
+        else:
+            raise Exception("unexpected dimension")
         if rv[-2:] != "cm": raise Exception("unexpected units")
         return float(rv[:-2])
 
