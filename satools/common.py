@@ -199,6 +199,9 @@ def sendfile(srcf, dstf):
     if total:
         print >>sys.stderr
 
+        if current != total:
+            raise Exception("short read")
+
 def sendfile_disk(srcf, path):
     temppath = mktemppath(path)
 
