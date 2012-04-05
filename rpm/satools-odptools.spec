@@ -6,7 +6,7 @@ License:	GPL
 URL:		https://github.com/RedHatUKI/satools
 Source:		satools.tar.gz
 BuildArch:	noarch
-Requires:	libreoffice-graphicfilter, libreoffice-headless, libreoffice-impress, libreoffice-pyuno, satools-0.4
+Requires:	libreoffice-graphicfilter, libreoffice-headless, libreoffice-impress, libreoffice-pyuno, satools = %{version}-%{release}
 BuildRequires:	redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
