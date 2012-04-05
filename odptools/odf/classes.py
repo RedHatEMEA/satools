@@ -167,6 +167,9 @@ class OFFICE_meta(lxml.etree.ElementBase):
     def _generator(self):
         return self.iterchildren(ns.META_generator).next()
 
+    def _date(self):
+        return self.iterchildren(ns.DC_date).next()
+
 class OFFICE_presentation(lxml.etree.ElementBase):
     @staticmethod
     def new():

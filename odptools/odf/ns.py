@@ -40,8 +40,8 @@ nsmap = { "anim": "urn:oasis:names:tc:opendocument:xmlns:animation:1.0",
           "xsi": "http://www.w3.org/2001/XMLSchema-instance" }
 
 for term in ("CHART_style_name", "CONFIG_config_item",
-             "CONFIG_config_item_set", "CONFIG_name", "DRAW_class_names",
-             "DRAW_custom_shape", "DRAW_display_name",
+             "CONFIG_config_item_set", "CONFIG_name", "DC_date",
+             "DRAW_class_names", "DRAW_custom_shape", "DRAW_display_name",
              "DRAW_fill_gradient_name", "DRAW_fill_hatch_name",
              "DRAW_fill_image", "DRAW_fill_image_name", "DRAW_gradient",
              "DRAW_hatch", "DRAW_marker", "DRAW_marker_end",
