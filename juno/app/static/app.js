@@ -32,7 +32,7 @@ Ext.application({
 		title: "Filesystem",
 		collapsible: true,
 		split: true,
-		width: "18%"
+		width: "22%"
 	    }, {
 		items: [{
 		    xtype: "search",
