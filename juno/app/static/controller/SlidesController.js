@@ -129,18 +129,20 @@ Ext.define("Juno.controller.SlidesController", {
 		var srcnodes = source.dragData.dv.getSelectedNodes();
 		var srcrecs = source.dragData.dv.getSelectionModel().getSelection();
 		var x = e.getX() - dv.el.getLeft();
+		var i;
 
 		for(var insert = 0; insert < nodes.length && nodes[insert].offsetLeft + nodes[insert].offsetWidth < x; insert++);
 
 		if(source.dragData.dv == dv) {
-		    for(var i = 0; i < srcnodes.length; i++)
+		    for(i = 0; i < srcnodes.length; i++) {
 			if(srcnodes[i].offsetLeft < x) {
 			    insert++;
 			    break;
 			}
+		    }
 		}
 
-		for(var i = 0; i < srcrecs.length; i++)
+		for(i = 0; i < srcrecs.length; i++)
 		    dv.store.insert(insert++, srcrecs[i].data);
 		
 		if(source.dragData.dv == dv)
@@ -201,8 +203,8 @@ Ext.define("Juno.controller.SlidesController", {
     },
 
     resize: function(dv, w, h, options) {
-	var w = dv.el.parent().getWidth(true);
-	var h = dv.el.parent().getHeight(true);
+	w = dv.el.parent().getWidth(true);
+	h = dv.el.parent().getHeight(true);
 
 	if(dv.store.getCount()) {
 	    var _w = (dv.store.getCount() + 1) * dv.el.first().getWidth();

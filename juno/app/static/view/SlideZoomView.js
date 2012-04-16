@@ -39,7 +39,7 @@ Ext.define("Juno.view.SlideZoomView", {
 		    } else {
 			w = vpw * sz;
 		    }
-		    var h = w / picaspect + 25;
+		    h = w / picaspect + 25;
 
 		    this.setWidth(w);
 		    this.setHeight(h);
