@@ -42,6 +42,7 @@ Ext.define("Search.controller.Results", {
 	    panel.getStore().load(
 		function(records, operation, success) {
 		    panel.setAutoScroll(true);
+		    panel.el.scrollTo("top", 0);
 		}
 	    );
 	}

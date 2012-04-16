@@ -46,6 +46,12 @@ Ext.define("Juno.controller.SearchController", {
 		}
 	    }
 	});
-	s.load();
+	s.load({
+	    scope: this,
+ 	    callback: function(records, operation, success) {
+		if(success)
+		    this.getSlidebrowser().el.scrollTo("top", 0);
+	    }		    
+	});
     }
 });
