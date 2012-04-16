@@ -41,9 +41,9 @@ search:
 	cd search/app/static && sencha build -p app.jsb3 -d .
 
 juno-lint:
-	cd juno/app/static && jsl -process app.js -process 'controller/*.js' -process 'store/*.js' -process 'view/*.js'
+	cd juno/app/static && jsl -nologo -nofilelisting -conf ../jsl.conf -process app.js -process 'controller/*.js' -process 'store/*.js' -process 'view/*.js'
 
 search-lint:
-	cd search/app/static && jsl -process app.js -process 'controller/*.js' -process 'store/*.js' -process 'view/*.js'
+	cd search/app/static && jsl -nologo -nofilelisting -conf ../jsl.conf -process app.js -process 'controller/*.js' -process 'store/*.js' -process 'view/*.js'
 
 .PHONY: %.rpm all clean juno preprep-satools preprep-satools-juno preprep-satools-search rpm-base search
