@@ -34,6 +34,9 @@ Ext.define("Juno.controller.FilesystemController", {
 		itemclick: this.tv_click,
 		itemcontextmenu: this.tv_rclick
             },
+	    "treeview": {
+		render: this.tv_render
+	    },
 	    "menuitem[itemid = 'fpmv_show']": {
 		click: this.fpmv_show
 	    },
@@ -65,6 +68,23 @@ Ext.define("Juno.controller.FilesystemController", {
 		click: this.ffmv_collapse
 	    }
         });
+    },
+
+    tv_render: function() {
+	var tv = this.getTreeview();
+
+	tv.tip = Ext.create("Ext.tip.ToolTip", {
+            target: tv.el,
+            delegate: tv.itemSelector,
+            maxWidth: 500,
+            listeners: {
+		beforeshow: function() {
+		    var s = tv.getRecord(tv.tip.triggerElement).get("text");
+		    s = s.replace(/ /g, "&nbsp;");
+                    tv.tip.update(s);
+		}
+            }
+	});
     },
 
     tv_rclick: function(tv, rec, item, index, e) {
