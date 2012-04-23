@@ -26,6 +26,12 @@ Ext.define("Juno.controller.SlidesController", {
     }, {
 	ref: "viewport",
 	selector: "#myviewport"
+    }, {
+	ref: "zoomimage",
+	selector: "#myimage"
+    }, {
+	ref: "slidezoom",
+	selector: "slidezoom"
     }],
 
     init: function() {
@@ -200,6 +206,12 @@ Ext.define("Juno.controller.SlidesController", {
 	    this.removeselected(dv);
 	    e.preventDefault();
 	}
+
+	if(this.getZoomimage() &&
+	   (e.keyCode == e.LEFT || e.keyCode == e.RIGHT)) {
+	    this.getZoomimage().setSrc(rec.data.png);
+	    this.getSlidezoom().setTitle(rec.data.preso + " (slide " + (rec.data.slide + 1) + ")");
+	}
     },
 
     resize: function(dv, w, h, options) {
@@ -224,6 +236,7 @@ Ext.define("Juno.controller.SlidesController", {
     },
 
     sbmv_zoom: function(item, e, options) {
+	item.parentMenu.dv.focus();
 	this.zoom(item.parentMenu.rec);
     },
 

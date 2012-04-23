@@ -18,6 +18,7 @@ Ext.define("Juno.view.SlideZoomView", {
 	this.add([{
 	    anchor: "100%",
 	    xtype: "image",
+	    id: "myimage",
 	    src: this.png,
 	    listeners: {
 		click: {
@@ -46,5 +47,5 @@ Ext.define("Juno.view.SlideZoomView", {
 		}
 	    }
 	}]);
-    }	 
+    }
 });
