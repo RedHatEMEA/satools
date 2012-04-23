@@ -278,7 +278,7 @@ Ext.define("Juno.controller.SlidesController", {
     zoom: function(rec) {
 	Ext.ComponentManager.create({
 	    xtype: "slidezoom",
-	    title: rec.data.preso + " (" + rec.data.slide + ")",
+	    title: rec.data.preso + " (slide " + (rec.data.slide + 1) + ")",
 	    png: rec.data.png
 	}).show();
     }
