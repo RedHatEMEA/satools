@@ -35,13 +35,20 @@ Ext.define("Juno.controller.SearchController", {
     },
 
     click: function() {
+	this.clear();
+
+	var sv = this.getSearchfield().getSubmitValue();
+        Ext.util.History.add(encodeURIComponent(sv));
+
+	if(!sv)
+	    return;
+
 	var s = this.getSlidebrowser().getStore();
 	s.setProxy({
 	    type: "ajax",
-	    url: "../s/" + this.getSearchfield().getSubmitValue(),
+	    url: "../s/" + sv,
 	    listeners: {
 		exception: function(_this, response, operation, options) {
-		    s.removeAll();
 		    Ext.Msg.alert(_["title"], "Invalid search text");
 		}
 	    }
@@ -53,5 +60,20 @@ Ext.define("Juno.controller.SearchController", {
 		    this.getSlidebrowser().el.scrollTo("top", 0);
 	    }		    
 	});
+    },
+
+    clear: function() {
+	var s = this.getSlidebrowser().getStore();
+	s.removeAll();
+    },
+
+    search: function(s) {
+	this.getSearchfield().setValue(s);
+	this.click();
+    },
+
+    historysearch: function(s) {
+	if(s) s = decodeURIComponent(s);
+	this.search(s);
     }
 });

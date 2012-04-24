@@ -5,6 +5,7 @@ Ext.require("Ext.form.Panel");
 Ext.require("Ext.layout.container.Accordion");
 Ext.require("Ext.layout.container.Border");
 Ext.require("Ext.tree.Panel");
+Ext.require("Ext.util.History");
 Ext.require("Ext.Img");
 
 Ext.require("Ext.grid.Scroller", function() {
@@ -91,5 +92,10 @@ Ext.application({
 	    },
 	    id: "myviewport"
         });
+
+	Ext.util.History.init();
+	var sc = this.getController("SearchController");
+	Ext.util.History.on('change', sc.historysearch, sc);
+	sc.historysearch(Ext.util.History.getToken());
     }
 });

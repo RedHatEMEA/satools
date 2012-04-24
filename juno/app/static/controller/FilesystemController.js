@@ -12,15 +12,6 @@ Ext.define("Juno.controller.FilesystemController", {
     ],
 
     refs: [{
-	ref: "searchfield",
-	selector: "#searchfield"
-    }, {
-	ref: "searchbutton",
-	selector: "#searchbutton"
-    }, {
-	ref: "slidebrowser",
-	selector: "slidebrowser"
-    }, {
 	ref: "treepanel",
 	selector: "treepanel"
     }, {
@@ -113,8 +104,7 @@ Ext.define("Juno.controller.FilesystemController", {
     do_search: function(verb) {
 	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
 
-	this.getSearchfield().setValue(verb + ":\"" + rec.data.id + "\"");
-	this.getSearchbutton().fireEvent("click");
+	this.getController("SearchController").search(verb + ":\"" + rec.data.id + "\"");
     },
 
     fpmv_show: function() {
