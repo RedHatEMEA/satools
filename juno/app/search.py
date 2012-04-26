@@ -43,7 +43,10 @@ def p_passthrough(p):
        string         : basestring
                       | QSTRING
        barestring     : basestring
-       basestring     : INT
+       basestring     : AFTER
+                      | BEFORE
+                      | IN
+                      | INT
                       | IS
                       | STRING
                       | UNDER"""
