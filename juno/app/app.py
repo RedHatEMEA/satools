@@ -166,9 +166,9 @@ class Search:
             return error(e)
 
         if w.merge:
-            w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s GROUP BY checksum ORDER BY preso, slide LIMIT 500" % w.sql
+            w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s GROUP BY checksum ORDER BY mtime DESC, preso, slide LIMIT 500" % w.sql
         else:
-            w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s ORDER BY preso, slide" % w.sql
+            w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s ORDER BY mtime DESC, preso, slide" % w.sql
         c = web.ctx.db.execute(w.sql, w.args)
 
         entries = []
