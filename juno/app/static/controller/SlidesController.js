@@ -62,8 +62,8 @@ Ext.define("Juno.controller.SlidesController", {
 	    "menuitem[itemid = 'sbmv_zoom']": {
 		click: this.sbmv_zoom
 	    },
-	    "menuitem[itemid = 'sbmv_find']": {
-		click: this.sbmv_find
+	    "menuitem[itemid = 'sbmv_show']": {
+		click: this.sbmv_show
 	    },
 	    "menuitem[itemid = 'pbmv_new']": {
 		click: this.pbmv_new
@@ -247,9 +247,10 @@ Ext.define("Juno.controller.SlidesController", {
 	dv.setSize(w, h);
     },
 
-    sbmv_find: function(item, e, options) {
+    sbmv_show: function(item, e, options) {
 	var tree = this.getTreepanel();
 	tree.selectPath("/root" + item.parentMenu.rec.data.preso, "text");
+	this.getController("SearchController").search("is:\"" + item.parentMenu.rec.data.preso + "\"");
     },
 
     sbmv_zoom: function(item, e, options) {
