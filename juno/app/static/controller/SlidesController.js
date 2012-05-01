@@ -207,10 +207,20 @@ Ext.define("Juno.controller.SlidesController", {
 	    e.preventDefault();
 	}
 
-	if(this.getZoomimage() &&
-	   (e.keyCode == e.LEFT || e.keyCode == e.RIGHT)) {
-	    this.getZoomimage().setSrc(rec.data.png);
-	    this.getSlidezoom().setTitle(rec.data.preso + " (slide " + (rec.data.slide + 1) + ")");
+	if(this.getZoomimage()) {
+	    if(e.keyCode == e.LEFT || e.keyCode == e.RIGHT) {
+		this.getZoomimage().setSrc(rec.data.png);
+		this.getSlidezoom().setTitle(rec.data.preso + " (slide " + (rec.data.slide + 1) + ")");
+		e.preventDefault();
+	    } else if(e.keyCode == e.ESC) {
+		this.getSlidezoom().close();
+		e.preventDefault();
+	    }
+	} else {
+	    if(e.keyCode == e.ENTER) {
+		this.zoom(rec);
+		e.preventDefault();
+	    }
 	}
     },
 
