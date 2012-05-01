@@ -202,25 +202,32 @@ Ext.define("Juno.controller.SlidesController", {
     ikeydown: function(dv, rec, item, index, e, options) {
 	this.keydown(dv, e, options);
 
-	if(dv == this.getPresobrowser() && e.keyCode == e.DELETE) {
+	if(e.keyCode == e.DELETE && !this.getSlidezoom() &&
+	   dv == this.getPresobrowser()) {
 	    this.removeselected(dv);
 	    e.preventDefault();
 	}
 
-	if(this.getZoomimage()) {
-	    if(e.keyCode == e.LEFT || e.keyCode == e.RIGHT) {
+	if(e.keyCode == e.ESC && this.getSlidezoom()) {
+	    this.getSlidezoom().close();
+	    e.preventDefault();
+	}
+
+	if(e.keyCode == e.ENTER && !this.getSlidezoom()) {
+	    this.zoom(rec);
+	    e.preventDefault();
+	}
+
+	if(e.keyCode == e.LEFT || e.keyCode == e.RIGHT ||
+	   e.keyCode == e.UP || e.keyCode == e.DOWN) {
+	    item.scrollIntoViewIfNeeded();
+
+	    if(this.getSlidezoom()) {
 		this.getZoomimage().setSrc(rec.data.png);
 		this.getSlidezoom().setTitle(rec.data.preso + " (slide " + (rec.data.slide + 1) + ")");
-		e.preventDefault();
-	    } else if(e.keyCode == e.ESC) {
-		this.getSlidezoom().close();
-		e.preventDefault();
 	    }
-	} else {
-	    if(e.keyCode == e.ENTER) {
-		this.zoom(rec);
-		e.preventDefault();
-	    }
+
+	    e.preventDefault();
 	}
     },
 
