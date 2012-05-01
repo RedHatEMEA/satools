@@ -11,7 +11,7 @@ class Where(object):
     def __init__(self, sql, args, merge = True):
         (self.sql, self.args, self.merge) = (sql, args, merge)
 
-reserved = ["AFTER", "BEFORE", "IN", "IS", "NEAR", "NOT", "OR", "UNDER"]
+reserved = ["AFTER", "BEFORE", "IN", "IS", "NEAR", "NOT", "OR", "PATH", "UNDER"]
 tokens = ["INT", "QSTRING", "STRING"] + reserved
 
 def t_STRING(t):
@@ -48,6 +48,7 @@ def p_passthrough(p):
                       | IN
                       | INT
                       | IS
+                      | PATH
                       | STRING
                       | UNDER"""
     p[0] = p[1]
@@ -85,6 +86,11 @@ def p_expr_is(p):
     """expr           : IS ":" barestring"""
     p[3] = p[3].lstrip("/")
     p[0] = Where("(preso = ?)", [p[3]], False)
+
+def p_expr_path(p):
+    """expr           : PATH ":" barestring"""
+    p[3] = p[3].lstrip("/")
+    p[0] = Where("(preso LIKE ?)", ["%" + p[3] + "%"], False)
 
 def p_expr_under(p):
     """expr           : UNDER ":" barestring"""
