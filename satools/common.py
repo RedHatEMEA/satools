@@ -94,6 +94,9 @@ class Mapper(object):
         (head, tail) = path.split(os.sep, 1)
         return os.path.join(Mapper._d2s[head], tail)
 
+class ShortReadException(Exception):
+    pass
+
 def load_config():
     config = { "product-docs-base": os.environ["HOME"] + "/content/product-docs",
                "product-docs-locale": "en-US",
@@ -201,7 +204,7 @@ def sendfile(srcf, dstf):
         print >>sys.stderr
 
         if current != total:
-            raise Exception("short read")
+            raise ShortReadException()
 
 def sendfile_disk(srcf, path):
     temppath = mktemppath(path)
@@ -237,9 +240,18 @@ def retrieve(url, path, data = None, force = False, tries = 1):
             if mtime == st.st_mtime and int(srcf.info()["Content-Length"]) == st.st_size:
                 return
 
-    srcf = retrieve_m(url, data, tries)
-    sendfile_disk(srcf, path)
-    srcf.close()
+    for i in xrange(tries):
+        srcf = retrieve_m(url, data, tries)
+        try:
+            sendfile_disk(srcf, path)
+            break
+        except ShortReadException, e:
+            if i < tries - 1:
+                print >>sys.stderr, "Short read, retrying..."
+            else:
+                raise e
+        finally:
+            srcf.close()
 
     if "Last-Modified" in srcf.info():
         mtime = calendar.timegm(time.strptime(srcf.info()["Last-Modified"],
