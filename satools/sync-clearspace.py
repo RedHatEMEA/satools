@@ -68,6 +68,7 @@ if __name__ == "__main__":
 
     lock = common.Lock(".lock")
     db = common.DB(".sync-db")
+    db.cmpfn = lambda x, y: cmp(int(x.split("-")[1]), int(y.split("-")[1]))
 
     pm = urllib2.HTTPPasswordMgrWithDefaultRealm()
     pm.add_password(None, config["clearspace-root"],

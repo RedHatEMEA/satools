@@ -13,6 +13,7 @@ configfile = os.environ["HOME"] + "/.satools"
 
 class DB(object):
     def __init__(self, path):
+        self.cmpfn = None
         self.readdb(path)
 
     def readdb(self, path):
@@ -34,7 +35,7 @@ class DB(object):
         temppath = mktemppath(self.path)
     
         with codecs.open(temppath, "w", "utf-8") as f:
-            for key in sorted(self.entries.keys()):
+            for key in sorted(self.entries.keys(), self.cmpfn):
                 if self.entries[key]:
                     print >>f, "%s=%s" % (key, self.get(key))
                 else:
