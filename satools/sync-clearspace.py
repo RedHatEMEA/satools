@@ -126,3 +126,6 @@ if __name__ == "__main__":
         # prune empty local directories
         if not os.listdir(dirpath):
             os.rmdir(dirpath)
+
+    with open(".sync-done", "w") as f:
+        pass
