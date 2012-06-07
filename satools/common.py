@@ -99,6 +99,7 @@ class ShortReadException(Exception):
 
 def load_config():
     config = { "product-docs-base": os.environ["HOME"] + "/content/product-docs",
+               "product-docs-filter": [],
                "product-docs-locale": "en-US",
                "product-docs-type": "pdf",
                "references-base": os.environ["HOME"] + "/content/references",
@@ -137,7 +138,15 @@ def load_config():
 # lgrep-exec=mutt -f %path
 # For lgrep to run alpine on its results mbox, uncomment the following line:
 # lgrep-exec=alpine -f %filename -n 1 -i
-# N.B. your MUA may also need additional configuration."""
+# N.B. your MUA may also need additional configuration.
+
+# The product docs that will be synced can be restricted with filters.  These
+# work identically to LVM filters (man lvm.conf), where the first matching
+# filter in the list is used.  Filters in the form a/./ will accept, those
+# with r/./ will reject.
+# product-docs-filter=r/jboss/
+# product-docs-filter=a/.*/
+"""
         os.chmod(configfile, 0600)
 
     with open(configfile) as f:
