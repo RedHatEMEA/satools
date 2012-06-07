@@ -225,6 +225,9 @@ def retrieve_m(url, data = None, tries = 1):
             if str(e) == "<urlopen error [Errno -2] Name or service not known>" and i < tries - 1:
                 print >>sys.stderr, "DNS lookup failed, sleeping and retrying..."
                 time.sleep(10)
+            elif str(e) == "HTTP Error 502: Proxy Error":
+                print >>sys.stderr, "Proxy error, sleeping and retrying..."
+                time.sleep(10)
             else:
                 raise e
 
