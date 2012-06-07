@@ -7,7 +7,7 @@ Ext.define("Juno.view.PresoBrowserView", {
     tpl: new Ext.XTemplate(
 	'<tpl for=".">',
 	'<span class="thumb-wrap" style="display:inline-block;margin:3px;">',
-	'<img src="{[escape(values.src)]}" style="display:inline-block;margin:6px;"/>',
+	'<img src="{src}" style="display:inline-block;margin:6px;"/>',
 	'</span>',
 	'</tpl>')
 });
