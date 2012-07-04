@@ -54,6 +54,9 @@ def extract(path):
                         
                             f = open(temppath, "w")
                             f.write(part.get_payload(decode = True))
+
+                            f.flush()
+                            os.fsync(f.fileno())
                             f.close()
                 
                             common.rename(temppath, p)

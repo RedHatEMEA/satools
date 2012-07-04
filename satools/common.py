@@ -40,6 +40,8 @@ class DB(object):
                     print >>f, "%s=%s" % (key, self.get(key))
                 else:
                     print >>f, key
+            f.flush()
+            os.fsync(f.fileno())
 
         rename(temppath, self.path)
 
@@ -220,6 +222,9 @@ def sendfile_disk(srcf, path):
 
     dstf = open(temppath, "w")
     sendfile(srcf, dstf)
+
+    dstf.flush()
+    os.fsync(dstf.fileno())
     dstf.close()
 
     rename(temppath, path)
