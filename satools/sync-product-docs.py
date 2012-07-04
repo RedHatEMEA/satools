@@ -89,7 +89,7 @@ if __name__ == "__main__":
         try:
             common.retrieve(urlbase + url, path)
         except urllib2.HTTPError, e:
-            if e.code == 403:
+            if e.code == 403 or e.code == 404:
                 print >>sys.stderr, "WARNING: %s on %s, continuing..." % (e, urlbase + url)
                 warnings += 1
                 continue
