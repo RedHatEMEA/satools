@@ -104,7 +104,7 @@ def load_config():
                "product-docs-filter": [],
                "product-docs-locale": "en-US",
                "product-docs-type": "pdf",
-               "references-base": os.environ["HOME"] + "/content/references",
+               "resourcelibrary-base": os.environ["HOME"] + "/content/resourcelibrary",
                "elluminate-base": os.environ["HOME"] + "/content/elluminate",
                "lists-base": os.environ["HOME"] + "/content/lists",
                "lists-start-year": "2007",
