@@ -247,7 +247,16 @@ def retrieve_m(url, data = None, tries = 1):
 
 def retrieve(url, path, data = None, force = False, tries = 1):
     if os.path.exists(path) and not force:
-        srcf = urllib2.urlopen(HeadRequest(url))
+        for i in xrange(tries):
+            try:
+                srcf = urllib2.urlopen(HeadRequest(url))
+            except urllib2.URLError, e:
+                if str(e) == "<urlopen error [Errno -2] Name or service not known>" and i < tries - 1:
+                    print >>sys.stderr, "DNS lookup failed, sleeping and retrying..."
+                    time.sleep(10)
+                else:
+                    raise e
+
         if "Last-Modified" in srcf.info() and "Content-Length" in srcf.info():
             mtime = calendar.timegm(time.strptime(srcf.info()["Last-Modified"],
                                                   "%a, %d %b %Y %H:%M:%S %Z"))
