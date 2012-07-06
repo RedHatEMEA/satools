@@ -1,11 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/python -ttu
 
+import codecs
 import common
 import cookielib
 import copy
 import lxml.html.soupparser
-import sys
 import os
+import sys
 import urllib2
 
 if __name__ == "__main__":
@@ -15,51 +16,93 @@ if __name__ == "__main__":
     common.mkdirs(config["resourcelibrary-base"])
     os.chdir(config["resourcelibrary-base"])
 
+    lock = common.Lock(".lock")
+
     cj = cookielib.CookieJar()
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
     urllib2.install_opener(opener)
 
-    lock = common.Lock(".lock")
+    if sys.stderr.encoding == None:
+        sys.stderr = codecs.getwriter("UTF-8")(sys.stderr)
 
+    warnings = 0
+    itemno = 0
+    tries = 10
     indexurl = "/resourcelibrary/results"
     while True:
-        html = common.retrieve_m("http://www.redhat.com" + indexurl)
+        html = common.retrieve_m("http://www.redhat.com" + indexurl, tries = tries)
         index = lxml.html.soupparser.fromstring(html)
 
-        for item in index.xpath("//div[@class='sidebar-left']"):
-            item = copy.deepcopy(item)
-            itemtype = item.xpath("//b[text()='Type:']")[0].tail.strip()
-            if itemtype in ("Demos and software tours", "On-demand webinar", "Online tools", "Sales guides", "Whitepapers"):
+        for indexitem in index.xpath("//div[@id='sidebar-left-events']"):
+            itemno += 1
+            indexitem = copy.deepcopy(indexitem)
+            itemtype = indexitem.xpath("//b[text()='Type:']")[0].tail.strip()
+            if itemtype in ("Demos and software tours", "On-demand webinar", "Online tools", "Sales guides"):
                 continue
 
-            itemurl = item.xpath("//a/@href")[0]
-            html = common.retrieve_m("http://www.redhat.com" + itemurl)
-            item = lxml.html.soupparser.fromstring(html)
+            itemurl = indexitem.xpath("//a/@href")[0]
+            itemtitle = indexitem.xpath("//a/text()")[0]
+            if itemurl.startswith("https://engage.redhat.com/") or \
+                    itemurl.startswith("http://engage.jboss.com/"):
+                continue
+            elif itemurl[0] != "/":
+                print >>sys.stderr, "WARNING: unexpected index item page link %s (#%u, %s, %s), continuing..." % (itemurl, itemno, itemtitle, itemtype)
+                warnings += 1
+                continue
 
             dstfile = os.path.join(itemtype, itemurl.split("/")[-1])
-            if itemtype in ("Case Studies"):
-                docurl = item.xpath("//div[@class='ctaLinkWrapper']/a/@href")[0]
-                dstfile += ".pdf"
-            elif itemtype in ("Other Resources"):
+            extension = ".pdf"
+
+            print >>sys.stderr, "\r[%u]" % itemno,
+
+            if itemtype in ("Case Studies", "Whitepapers"):
                 try:
-                    docurl = item.xpath("//a[@class='ResourceFile']/@href")[0]
-                    dstfile += ".pdf"
+                    docurl = indexitem.xpath("//div[@class='pdf-links']//a[@target='_blank']/@href")[0]
                 except IndexError:
+                    print >>sys.stderr, "WARNING: can't find index download link (#%u, %s, %s), continuing..." % (itemno, itemtitle, itemtype)
+                    warnings += 1
                     continue
-            elif itemtype in ("Catalogs", "Datasheets and brochures", "Performance benchmarks", "Reference architectures", "Use cases"):
-                docurl = item.xpath("//a[@class='ResourceFile']/@href")[0]
-                dstfile += ".pdf"
-            elif itemtype in ("Videos"):
-                docurl = item.xpath("//a[text()='OGG']/@href")[0]
-                dstfile += ".ogg"
+
             else:
-                raise Exception("unknown itemtype %s" % itemtype)
+                try:
+                    html = common.retrieve_m("http://www.redhat.com" + itemurl, tries = tries)
+                    item = lxml.html.soupparser.fromstring(html)
+                except urllib2.HTTPError, e:
+                    if e.code / 100 == 4:
+                        print >>sys.stderr, "WARNING: can't load item page %s (#%u, %s, %s) (%s), continuing..." % ("http://www.redhat.com" + itemurl, itemno, itemtitle, itemtype, e)
+                        warnings += 1
+                        continue
+                    raise e
 
+                try:
+                    if itemtype == "Videos":
+                        docurl = item.xpath("//a[text()='OGG']/@href")[0]
+                        extension = ".ogg"
+                    else:
+                        docurl = item.xpath("//a[@class='ResourceFile']/@href")[0]
+                except IndexError:
+                    if itemtype != "Other Resources":
+                        print >>sys.stderr, "WARNING: can't find item download link at %s (#%u, %s, %s), continuing..." % ("http://www.redhat.com" + itemurl, itemno, itemtitle, itemtype)
+                        warnings += 1
+                    continue
+
+            dstfile += extension
             common.mkdirs(itemtype)
-            common.retrieve("http://www.redhat.com" + docurl, dstfile)
-            common.mkro(dstfile)
-
+            try:
+                common.retrieve("http://www.redhat.com" + docurl, dstfile, tries = tries)
+                common.mkro(dstfile)
+            except urllib2.HTTPError, e:
+                if e.code / 100 == 4:
+                    print >>sys.stderr, "WARNING: can't download item at %s (#%u, %s, %s) (%s), continuing..." % ("http://www.redhat.com" + docurl, itemno, itemtitle, itemtype, e)
+                    warnings += 1
+                    continue
+                raise e
+            
         try:
             indexurl = index.xpath("//a[@rel='next']/@href")[0]
         except IndexError:
             break
+
+    print >>sys.stderr, "INFO: %u items parsed." % itemno
+    if warnings:
+        print >>sys.stderr, "WARNING: %u warnings occurred." % warnings

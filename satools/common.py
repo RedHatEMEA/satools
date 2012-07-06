@@ -236,11 +236,8 @@ def retrieve_m(url, data = None, tries = 1):
             return urllib2.urlopen(url, data)
             
         except urllib2.URLError, e:
-            if str(e) == "<urlopen error [Errno -2] Name or service not known>" and i < tries - 1:
-                print >>sys.stderr, "DNS lookup failed, sleeping and retrying..."
-                time.sleep(10)
-            elif str(e) == "HTTP Error 502: Proxy Error":
-                print >>sys.stderr, "Proxy error, sleeping and retrying..."
+            if getattr(e, "code", 0) != 404:
+                print >>sys.stderr, "URLError: %s, sleeping and retrying..." % e
                 time.sleep(10)
             else:
                 raise e
@@ -251,8 +248,8 @@ def retrieve(url, path, data = None, force = False, tries = 1):
             try:
                 srcf = urllib2.urlopen(HeadRequest(url))
             except urllib2.URLError, e:
-                if str(e) == "<urlopen error [Errno -2] Name or service not known>" and i < tries - 1:
-                    print >>sys.stderr, "DNS lookup failed, sleeping and retrying..."
+                if getattr(e, "code", 0) != 404:
+                    print >>sys.stderr, "URLError: %s, sleeping and retrying..." % e
                     time.sleep(10)
                 else:
                     raise e
