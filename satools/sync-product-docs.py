@@ -8,8 +8,6 @@ import re
 import sys
 import urllib2
 
-# TODO: remove local files which are not present remotely (any more?)
-
 class FilterAction(argparse.Action):
     """Adds -i or -x filters to the list of filter regexes"""
     def __call__(self, parser, namespace, values, option_string=None):
@@ -26,6 +24,8 @@ def parse_args():
                     action = FilterAction,
                     metavar = "REGEX",
                     help = "include documents that match this regex, can be ordered")
+    ap.add_argument("-c", action = "store_true", dest = "clean",
+                    help = "clean %s" % config["product-docs-base"])
     ap.add_argument("-l", dest = "locale",
                     default = config["product-docs-locale"],
                     help = "locale for downloaded documentation, e.g. en-US")
@@ -76,15 +76,24 @@ if __name__ == "__main__":
     common.retrieve(urlbase + "toc.html", "toc.html")
     common.mkro("toc.html")
 
+    validpaths = set(("toc.html", ".lock"))
     toc = lxml.etree.parse("toc.html").getroot()
     for url in xpath(toc, "//xhtml:a[@class='type' and text()='%(type)s']/@href" % args):
         url = url[2:] # trim leading ./
-        path = url[:url.index("/%(type)s/" % args)].replace("_", " ")
-        common.mkdirs(path)
-        path = path + "/" + url.split("/")[-1]
+        dirpath = url[:url.index("/%(type)s/" % args)].replace("_", " ")
+        if args["type"] == "html-single":
+            path = dirpath + "/" + url.split("/")[-2] + ".html"
+        else:
+            path = dirpath + "/" + url.split("/")[-1]
+
+        if os.path.isdir(path):
+            continue # shouldn't happen, but occasionally does
 
         if not match_filter(filters, path):
             continue
+
+        common.mkdirs(dirpath)
+        validpaths.add(path)
 
         try:
             common.retrieve(urlbase + url, path)
@@ -95,6 +104,16 @@ if __name__ == "__main__":
                 continue
             raise
         common.mkro(path)
+
+    if args["clean"]:
+        for (dirpath, dirnames, filenames) in os.walk(".", topdown = False):
+            for f in filenames:
+                p = os.path.join(dirpath, f)[2:]
+                if p not in validpaths:
+                    os.unlink(p)
+        
+            if not os.listdir(dirpath):
+                os.rmdir(dirpath)
 
     if warnings:
         print >>sys.stderr, "WARNING: %u warnings occurred." % warnings
