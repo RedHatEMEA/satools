@@ -45,6 +45,7 @@ def download_item(item, extension, tries = 1):
 
     common.mkdirs(item.type_)
     try:
+        print >>sys.stderr, "\r[%u]" % item.number,
         common.retrieve(item.dlurl, dstfile, tries = tries)
         common.mkro(dstfile)
     except urllib2.HTTPError, e:
