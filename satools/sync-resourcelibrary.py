@@ -25,10 +25,12 @@ if __name__ == "__main__":
     if sys.stderr.encoding == None:
         sys.stderr = codecs.getwriter("UTF-8")(sys.stderr)
 
+    common.retrieve_m("http://www.redhat.com/resourcelibrary/results", tries = tries)
+
     warnings = 0
     itemno = 0
     tries = 10
-    indexurl = "/resourcelibrary/results"
+    indexurl = "/resourcelibrary/results?portal:componentId=bf73926d-2aa3-4b8b-bf8d-a1f6f56b8469&portal:type=action&actionType=orderBy&orderBy=Date-Desc&resultPerPage=100"
     while True:
         html = common.retrieve_m("http://www.redhat.com" + indexurl, tries = tries)
         index = lxml.html.soupparser.fromstring(html)
