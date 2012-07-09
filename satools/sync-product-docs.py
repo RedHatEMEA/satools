@@ -3,6 +3,7 @@
 import argparse
 import common
 import lxml.etree
+import lxml.html
 import os
 import re
 import sys
@@ -58,8 +59,81 @@ def match_filter(filters, path):
                 return False
     return True
 
+def download(dirpath, path, url):
+    global validpaths
+    global warnings
+
+    common.mkdirs(dirpath)
+    validpaths.add(os.path.normpath(path))
+
+    try:
+        common.retrieve(url, path)
+        common.mkro(path)
+    except urllib2.HTTPError, e:
+        if e.code == 403 or e.code == 404:
+            print >>sys.stderr, "WARNING: %s on %s, continuing..." % (e, url)
+            warnings += 1
+        else:
+            raise e
+
+def fetch_deps_css(dirbase, path, _urlbase, _url):
+    urlbase = _urlbase + _url.rsplit("/", 1)[0] + "/"
+
+    with open(path) as f:
+        css = f.read()
+
+    rx = re.compile('url\("?([^)]+?)"?\)')
+    urls = set()
+    for m in rx.finditer(css):
+        urls.add(m.group(1))
+
+    for url in urls:
+        dirpath = dirbase
+        path = dirpath + "/" + url
+
+        download(dirpath, path, urlbase + url)
+
+        if path.endswith(".css") and path not in csscache:
+            csscache.add(path)
+            fetch_deps_css(dirpath, path, _urlbase, _url)
+
+def fetch_deps(dirbase, path, urlbase, url):
+    urlbase = urlbase + url.rsplit("/", 1)[0] + "/"
+
+    html = lxml.html.parse(path)
+    urls = set()
+    urls.update(html.xpath("//img/@src"))
+    urls.update(html.xpath("//link/@href"))
+    urls.update(html.xpath("//object/@data"))
+
+    for url in urls:
+        dirpath = dirbase + "/" + url.rsplit("/", 1)[0]
+        path = dirpath + "/" + url.rsplit("/", 1)[1]
+
+        download(dirpath, path, urlbase + url)
+
+        if path.endswith(".css") and path not in csscache:
+            csscache.add(path)
+            fetch_deps_css(dirpath, path, urlbase, url)
+            
+def clean_html(path):
+    global validpaths
+
+    html = lxml.html.parse(path)
+    for body in html.xpath("//body"):
+        del body.attrib["class"]
+    for item in html.xpath("//div[@id='tocdiv']") + html.xpath("//head/script"):
+        item.getparent().remove(item)
+    path = path.replace(".html", "-local.html")
+    html.write(path)
+    validpaths.add(os.path.normpath(path))
+
 if __name__ == "__main__":
+    global validpaths
+    global csscache
+    global warnings
     warnings = 0
+
     global config
     config = common.load_config()
     args = parse_args()
@@ -76,15 +150,15 @@ if __name__ == "__main__":
     common.retrieve(urlbase + "toc.html", "toc.html")
     common.mkro("toc.html")
 
+    csscache = set()
     validpaths = set(("toc.html", ".lock"))
     toc = lxml.etree.parse("toc.html").getroot()
     for url in xpath(toc, "//xhtml:a[@class='type' and text()='%(type)s']/@href" % args):
         url = url[2:] # trim leading ./
         dirpath = url[:url.index("/%(type)s/" % args)].replace("_", " ")
         if args["type"] == "html-single":
-            path = dirpath + "/" + url.split("/")[-2] + ".html"
-        else:
-            path = dirpath + "/" + url.split("/")[-1]
+            dirpath += "/" + url.split("/")[-2]
+        path = dirpath + "/" + url.split("/")[-1]
 
         if os.path.isdir(path):
             continue # shouldn't happen, but occasionally does
@@ -92,18 +166,11 @@ if __name__ == "__main__":
         if not match_filter(filters, path):
             continue
 
-        common.mkdirs(dirpath)
-        validpaths.add(path)
+        download(dirpath, path, urlbase + url)
 
-        try:
-            common.retrieve(urlbase + url, path)
-        except urllib2.HTTPError, e:
-            if e.code == 403 or e.code == 404:
-                print >>sys.stderr, "WARNING: %s on %s, continuing..." % (e, urlbase + url)
-                warnings += 1
-                continue
-            raise
-        common.mkro(path)
+        if args["type"] == "html-single":
+            fetch_deps(dirpath, path, urlbase, url)
+            clean_html(path)
 
     if args["clean"]:
         for (dirpath, dirnames, filenames) in os.walk(".", topdown = False):
