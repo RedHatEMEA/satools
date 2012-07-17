@@ -5,9 +5,14 @@ import common
 import itertools
 import lxml.etree
 import os
+import Queue
 import re
+import threading
 import time
 import urllib2
+
+q = Queue.Queue()
+threadlock = threading.Lock()
 
 class HTML(object):
     def __init__(self, data):
@@ -49,14 +54,51 @@ def parse_args():
 
     return vars(ap.parse_args())
 
+def download(item, db, args, tries):
+    if item["href"] in db and not args["all"]:
+        path = db.get(item["href"])
+
+    else:
+        f = common.retrieve_m(config["clearspace-root"] + item["href"],
+                              tries = tries)
+        doc = WikiDoc(f.read())
+        f.close()
+
+        path = doc.path + "/" + doc.filename
+                
+        if want(path):
+            skip = False
+            if os.path.exists(path):
+                st = os.stat(path)
+                if st.st_mtime == doc.mtime:
+                    skip = True
+
+            if not skip:
+                common.mkdirs(doc.path)
+                common.retrieve(config["clearspace-root"] + doc.filehref,
+                                path, force = True, tries = tries)
+                common.mkro(path)
+                os.utime(path, (doc.mtime, doc.mtime))
+
+    updatedbs(db, keep, item["href"], path)
+
+
 def want(path):
     return not (config["clearspace-odponly"] == "1" and not
                 path.lower().endswith(".odp"))
 
+def worker():
+    while True:
+        items = q.get()
+        items[0](*items[1:])
+        q.task_done()
+
 def updatedbs(db, keep, href, path):
+    threadlock.acquire()
     db.add(href, path)
     if want(path):
         keep.add(path)
+    threadlock.release()
 
 if __name__ == "__main__":
     global config
@@ -77,6 +119,15 @@ if __name__ == "__main__":
     opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(pm))
     urllib2.install_opener(opener)
 
+    threads = int(config["clearspace-threads"])
+    if threads > 1:
+        common.progress = lambda x, y: None
+
+    for i in range(threads):
+        t = threading.Thread(target = worker, name = i)
+        t.daemon = True
+        t.start()
+
     keep = set()
     step = 50
     tries = 10
@@ -86,35 +137,12 @@ if __name__ == "__main__":
         f.close()
 
         for item in index.items:
-            if item["href"] in db and not args["all"]:
-                path = db.get(item["href"])
-
-            else:
-                f = common.retrieve_m(config["clearspace-root"] + item["href"],
-                                      tries = tries)
-                doc = WikiDoc(f.read())
-                f.close()
-
-                path = doc.path + "/" + doc.filename
-                
-                if want(path):
-                    skip = False
-                    if os.path.exists(path):
-                        st = os.stat(path)
-                        if st.st_mtime == doc.mtime:
-                            skip = True
-
-                    if not skip:
-                        common.mkdirs(doc.path)
-                        common.retrieve(config["clearspace-root"] + doc.filehref,
-                                        path, force = True, tries = tries)
-                        common.mkro(path)
-                        os.utime(path, (doc.mtime, doc.mtime))
-
-            updatedbs(db, keep, item["href"], path)
+            q.put((download, item, db, args, tries))
 
         if len(index.items) != step:
             break
+
+    q.join()
 
     for dirpath, dirnames, filenames in os.walk(".", topdown = False):
         # remove local files which are no longer found in clearspace

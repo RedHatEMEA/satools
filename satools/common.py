@@ -121,6 +121,7 @@ def load_config():
                "clearspace-root": None,
                "clearspace-username": None,
                "clearspace-password": None,
+               "clearspace-threads": "4",
                "clearspace-odponly": "1",
                "juno-base": os.environ["HOME"] + "/content/juno",
                "juno-home": os.environ["HOME"] + "/content/juno-home",
