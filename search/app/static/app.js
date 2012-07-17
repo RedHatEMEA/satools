@@ -6,7 +6,7 @@ Ext.require("Ext.toolbar.Paging");
 
 Ext.application({
     name: "Search",
-    appFolder: "",
+    appFolder: "static",
 
     controllers: [
 	"Results",

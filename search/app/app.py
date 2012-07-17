@@ -13,7 +13,8 @@ import web
 
 class Index(object):
     def GET(self):
-        raise web.seeother("/static/")
+        web.header("Content-Type", "text/html")
+        return open("static/index.html")
 
 class Search(object):
     validator = { "start": re.compile("^[0-9]*$"),
