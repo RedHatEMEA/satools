@@ -305,8 +305,18 @@ Ext.define("Juno.controller.SlidesController", {
 
     removeselected: function(dv) {
 	var nodes = dv.getSelectionModel().getSelection();
+	if(!nodes.length)
+	    return;
+
+	var idx = dv.store.indexOf(nodes[0]);
+	for(var n in nodes)
+	    idx = Math.min(idx, dv.store.indexOf(nodes[n]));
 	dv.store.remove(nodes);
 	this.resize(dv);
+	if(dv.store.getCount() != 0) {
+	    idx = Math.min(idx, dv.store.getCount() - 1);
+	    dv.select(dv.store.getAt(idx));
+	}
     },
     
     selectall: function(dv) {
