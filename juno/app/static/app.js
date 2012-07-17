@@ -48,7 +48,7 @@ function not_implemented() {
 
 Ext.application({
     name: "Juno",
-    appFolder: "",
+    appFolder: "static",
 
     controllers: [
 	"SearchController",

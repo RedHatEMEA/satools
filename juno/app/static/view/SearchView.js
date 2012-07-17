@@ -32,7 +32,7 @@ Ext.define("Juno.view.SearchView", {
 	    width: 10
 	}, {
 	    xtype: "label",
-	    html: "<a href='../help' target='_blank'>Help</a>"
+	    html: "<a href='static/help.html' target='_blank'>Help</a>"
 	}],
 	height: 50
     }, {
