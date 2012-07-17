@@ -68,6 +68,9 @@ Ext.define("Juno.controller.SlidesController", {
 	    "menuitem[itemid = 'sbmv_show']": {
 		click: this.sbmv_show
 	    },
+	    "menuitem[itemid = 'sbmv_download']": {
+		click: this.sbmv_download
+	    },
 	    "menuitem[itemid = 'pbmv_new']": {
 		click: this.pbmv_new
 	    },
@@ -258,6 +261,10 @@ Ext.define("Juno.controller.SlidesController", {
     sbmv_show: function(item, e, options) {
 	this.sbmv_find(item, e, options);
 	this.getController("SearchController").search("is:\"" + item.parentMenu.rec.data.preso + "\"");
+    },
+
+    sbmv_download: function(item, e, options) {
+	window.open("../dl/" + item.parentMenu.rec.data.preso, "_blank");
     },
 
     sbmv_zoom: function(item, e, options) {

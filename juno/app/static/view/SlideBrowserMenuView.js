@@ -17,11 +17,14 @@ Ext.define("Juno.view.SlideBrowserMenuView", {
 	    text: "Zoom slide...",
 	    itemid: "sbmv_zoom"
 	}, {
-	    text: "Find slide in filesystem",
+	    text: "Find presentation in filesystem",
 	    itemid: "sbmv_find"
 	}, {
 	    text: "Show presentation",
 	    itemid: "sbmv_show"
+	}, {
+	    text: "Download presentation...",
+	    itemid: "sbmv_download"
 	}]);
     }
 });
