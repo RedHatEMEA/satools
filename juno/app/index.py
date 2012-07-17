@@ -129,6 +129,9 @@ def needs_add(db, srcp, dstp):
     if not (os.path.isfile(srcp) and not os.path.islink(srcp)):
         return False
 
+    if os.path.split(srcp)[1][0] == ".":
+        return False
+
     mtime = os.stat(srcp)[stat.ST_MTIME]
 
     cu = db.execute("SELECT mtime FROM presos WHERE path = ?", (dstp, ))
@@ -144,6 +147,8 @@ def add_preso(db, srcp):
     if not needs_add(db, srcp, dstp): return
 
     log("Adding %s..." % srcp)
+
+    common.mkdirs(os.path.join("root", os.path.split(dstp)[0]))
 
     juno = odptools.odf.juno.juno()
 
@@ -214,17 +219,11 @@ def add_trees():
                 del dirnames[:]
                 continue
             
-            created = False
             if dstbase == "home":
                 common.mkdirs(os.path.join("root", common.Mapper.s2d(dirpath)))
-                created = True
 
             for f in sorted(filenames):
-                if f[0] != ".":
-                    if not created:
-                        common.mkdirs(os.path.join("root", common.Mapper.s2d(dirpath)))
-                        created = True
-                    q.put(os.path.join(dirpath, f))
+                q.put(os.path.join(dirpath, f))
 
     for p in procs:
         q.put("STOP")
