@@ -172,3 +172,6 @@ if __name__ == "__main__":
     q.join()
     if warnings:
         warn("%u warnings occurred." % warnings)
+
+    with open(".sync-done", "w") as f:
+        pass

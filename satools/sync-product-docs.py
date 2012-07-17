@@ -184,3 +184,6 @@ if __name__ == "__main__":
 
     if warnings:
         print >>sys.stderr, "WARNING: %u warnings occurred." % warnings
+
+    with open(".sync-done", "w") as f:
+        pass
