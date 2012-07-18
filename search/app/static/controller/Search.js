@@ -48,7 +48,7 @@ Ext.define("Search.controller.Search", {
 
 	store.setProxy({
 	    type: "ajax",
-	    url: "../s",
+	    url: "s",
 	    extraParams: { "q": this.getSearchfield().getSubmitValue() },
 	    reader: {
 		type: "json",

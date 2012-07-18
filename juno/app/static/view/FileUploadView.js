@@ -23,7 +23,7 @@ Ext.define("Juno.view.FileUploadView", {
 	    bodyPadding: 10,
 	    border: 0,
 	    itemId: "uploadform",
-	    url: "../upload",
+	    url: "upload",
 	    timeout: 500,
 	    items: [{
 		xtype: "filefield",

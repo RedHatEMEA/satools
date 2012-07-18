@@ -17,7 +17,7 @@ Ext.define("Juno.view.PresoBrowserMenuView", {
 	    text: "Save presentation as...",
 	    itemid: "pbmv_saveas"
 	}, {
-	    text: "Download presentation",
+	    text: "Download presentation...",
 	    itemid: "pbmv_download"
 	}, "-", {
 	    text: "Select all",

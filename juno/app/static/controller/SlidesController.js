@@ -264,7 +264,7 @@ Ext.define("Juno.controller.SlidesController", {
     },
 
     sbmv_download: function(item, e, options) {
-	window.open("../dl/" + item.parentMenu.rec.data.preso, "_blank");
+	window.open("dl/" + item.parentMenu.rec.data.preso, "_blank");
     },
 
     sbmv_zoom: function(item, e, options) {
@@ -283,7 +283,7 @@ Ext.define("Juno.controller.SlidesController", {
 	for(var i in data.items) {
 	    a.push(data.items[i].data.preso + "[" + data.items[i].data.slide + "]");
 	}
-	postToURL("../odp", {slides: a});
+	postToURL("odp", {slides: a});
     },
 
     pbmv_new: function(item, e, options) {
@@ -320,7 +320,7 @@ Ext.define("Juno.controller.SlidesController", {
 	    idx = Math.min(idx, dv.store.indexOf(nodes[n]));
 	dv.store.remove(nodes);
 	this.resize(dv);
-	if(dv.store.getCount() != 0) {
+	if(dv.store.getCount() !== 0) {
 	    idx = Math.min(idx, dv.store.getCount() - 1);
 	    dv.select(dv.store.getAt(idx));
 	}

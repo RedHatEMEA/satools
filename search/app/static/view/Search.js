@@ -25,6 +25,6 @@ Ext.define("Search.view.Search", {
 	width: 10
     }, {
 	xtype: "label",
-	html: "<a href='../help' target='_blank'>Help</a>"
+	html: "<a href='help' target='_blank'>Help</a>"
     }]
 });

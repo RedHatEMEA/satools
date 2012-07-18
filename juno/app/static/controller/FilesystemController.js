@@ -98,7 +98,7 @@ Ext.define("Juno.controller.FilesystemController", {
     fpmv_download:function() {
 	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
 
-	window.open("../dl/" + rec.data.id, "_blank");
+	window.open("dl/" + rec.data.id, "_blank");
     },
 
     do_search: function(verb) {
@@ -127,7 +127,7 @@ Ext.define("Juno.controller.FilesystemController", {
 	Ext.Msg.prompt(_["title"], "Subfolder name:", function(btn, text) {
 	    if(btn == "ok") {
 		Ext.Ajax.request({
-		    url: "../mkdir" + rec.data.id + "/" + text,
+		    url: "mkdir" + rec.data.id + "/" + text,
 		    method: "POST",
 		    callback: function(options, success, response) {
 			if(!success)
@@ -159,7 +159,7 @@ Ext.define("Juno.controller.FilesystemController", {
 	    fn: function(buttonId) {
 		if(buttonId == "yes") {
 		    Ext.Ajax.request({
-			url: "../rm" + rec.data.id,
+			url: "rm" + rec.data.id,
 			method: "POST",
 			callback: function(options, success, response) {
 			    if(success)
@@ -187,7 +187,7 @@ Ext.define("Juno.controller.FilesystemController", {
 	    fn: function(buttonId) {
 		if(buttonId == "yes") {
 		    Ext.Ajax.request({
-			url: "../rmdir" + rec.data.id,
+			url: "rmdir" + rec.data.id,
 			method: "POST",
 			callback: function(options, success, response) {
 			    if(success)

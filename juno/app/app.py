@@ -164,10 +164,10 @@ class Search:
 
         entries = []
         for row in c:
-            entries.append({"src": "../static/thumbs/%s/%03u.jpg" % (row["preso"], row["slide"]),
+            entries.append({"src": "static/thumbs/%s/%03u.jpg" % (row["preso"], row["slide"]),
                             "preso": "/" + row["preso"],
                             "slide": row["slide"],
-                            "png": "../static/slides/%s/%03u.png" % (row["preso"], row["slide"])
+                            "png": "static/slides/%s/%03u.png" % (row["preso"], row["slide"])
                             })
 
         web.header("Content-Type", "application/json")
@@ -209,7 +209,7 @@ class Upload:
 
         return json.dumps({"success": True})
 
-urls = ("/?", "Index",
+urls = ("/", "Index",
         "/dl/(.*)", "Download",
         "/mkdir/(.*)", "Mkdir",
         "/nodes", "Nodes",

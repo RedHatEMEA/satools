@@ -17,6 +17,14 @@
                     "name": "Observable.js"
                 },
                 {
+                    "path": "extjs/src/app/",
+                    "name": "Controller.js"
+                },
+                {
+                    "path": "extjs/src/app/",
+                    "name": "EventBus.js"
+                },
+                {
                     "path": "extjs/src/data/",
                     "name": "Operation.js"
                 },
@@ -181,16 +189,12 @@
                     "name": "ResultSet.js"
                 },
                 {
+                    "path": "extjs/src/util/",
+                    "name": "History.js"
+                },
+                {
                     "path": "extjs/src/data/",
                     "name": "Tree.js"
-                },
-                {
-                    "path": "extjs/src/app/",
-                    "name": "Controller.js"
-                },
-                {
-                    "path": "extjs/src/app/",
-                    "name": "EventBus.js"
                 },
                 {
                     "path": "extjs/src/util/",
@@ -375,6 +379,10 @@
                 {
                     "path": "extjs/src/",
                     "name": "Img.js"
+                },
+                {
+                    "path": "extjs/src/grid/",
+                    "name": "Scroller.js"
                 },
                 {
                     "path": "extjs/src/resizer/",
@@ -675,10 +683,6 @@
                 {
                     "path": "extjs/src/view/",
                     "name": "TableChunker.js"
-                },
-                {
-                    "path": "extjs/src/grid/",
-                    "name": "Scroller.js"
                 },
                 {
                     "path": "extjs/src/data/",

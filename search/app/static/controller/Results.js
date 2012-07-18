@@ -32,7 +32,7 @@ Ext.define("Search.controller.Results", {
 	} else {
 	    panel.getStore().setProxy({
 		type: "ajax",
-		url: "../m",
+		url: "m",
 		extraParams: {
 		    path: selections[0].data.path,
 		    offset: selections[0].data.offset,

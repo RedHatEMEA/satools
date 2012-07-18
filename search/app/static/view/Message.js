@@ -13,7 +13,7 @@ Ext.define("Search.view.Message", {
 	"List: {list}\n",
 	"Date: {[this.daterender(values.date)]}",
 	"<tpl for=\"attachments\">",
-	"\nAttachment: <a href=\"../a?path={parent.path}&offset={parent.offset}&len={parent.len}&index={index}\">{filename}</a>",
+	"\nAttachment: <a href=\"a?path={parent.path}&offset={parent.offset}&len={parent.len}&index={index}\">{filename}</a>",
 	"</tpl>",
 	"</b></div>\n",
 	"{body}",

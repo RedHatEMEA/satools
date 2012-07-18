@@ -195,7 +195,7 @@ def validate(q, regexps):
             return False
     return True
 
-urls = ("/?", "Index",
+urls = ("/", "Index",
         "/s", "Search",
         "/a", "Attachment",
         "/m", "Message",

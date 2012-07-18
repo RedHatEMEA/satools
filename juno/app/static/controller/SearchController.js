@@ -46,7 +46,7 @@ Ext.define("Juno.controller.SearchController", {
 	var s = this.getSlidebrowser().getStore();
 	s.setProxy({
 	    type: "ajax",
-	    url: "../s/" + sv,
+	    url: "s/" + sv,
 	    listeners: {
 		exception: function(_this, response, operation, options) {
 		    Ext.Msg.alert(_["title"], "Invalid search text");
