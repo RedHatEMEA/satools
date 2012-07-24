@@ -8,38 +8,6 @@ Ext.require("Ext.tree.Panel");
 Ext.require("Ext.util.History");
 Ext.require("Ext.Img");
 
-Ext.require("Ext.grid.Scroller", function() {
-    // http://www.sencha.com/forum/archive/index.php/t-142473.html
-    
-    Ext.override(Ext.grid.Scroller, {
-	afterRender: function() {
-	    var me = this;
-	    me.callParent();
-	    me.mon(me.scrollEl, "scroll", me.onElScroll, me);
-	    Ext.cache[me.el.id].skipGarbageCollection = true;
-	    Ext.EventManager.addListener(me.scrollEl, "scroll",
-					 me.onElScrollCheck, me);
-	    Ext.cache[me.scrollEl.id].skipGarbageCollection = true;
-	},
-	
-	wasScrolled: false,
-	
-	onElScroll: function(event, target) {
-	    this.wasScrolled = true;
-	    this.fireEvent("bodyscroll", event, target);
-	},
-	
-	onElScrollCheck: function(event, target, options) {
-	    var me = this;
-	    
-	    if (!me.wasScrolled)
-		me.mon(me.scrollEl, "scroll", me.onElScroll, me);
-	    
-	    me.wasScrolled = false;
-	}
-    });
-});
-
 var _ = { title: "SA tools presentation search" };
 
 function not_implemented() {
@@ -65,7 +33,7 @@ Ext.application({
 		title: "Filesystem",
 		collapsible: true,
 		split: true,
-		width: "22%"
+		width: "21%"
 	    }, {
 		items: [{
 		    xtype: "search",
