@@ -120,8 +120,9 @@ Ext.define("Juno.controller.FilesystemController", {
     },
 
     ffmv_mkdir: function() {
-	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
-	var store = this.getTreepanel().getStore();
+	var tp = this.getTreepanel();
+	var rec = tp.getSelectionModel().getSelection()[0];
+	var store = tp.getStore();
 	var tv = this.getTreeview();
 
 	Ext.Msg.prompt(_["title"], "Subfolder name:", function(btn, text) {
@@ -136,7 +137,7 @@ Ext.define("Juno.controller.FilesystemController", {
 			store.load({
 			    node: rec,
 			    callback: function(records, operation, success) {
-				tv.expand(rec, true);
+				tp.selectPath("/root" + rec.data.id + "/" + text, "text");
 			    }
 			});
 		    }
