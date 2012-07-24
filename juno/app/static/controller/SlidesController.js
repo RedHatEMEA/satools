@@ -88,6 +88,9 @@ Ext.define("Juno.controller.SlidesController", {
 	    },
 	    "menuitem[itemid = 'pbmv_remove']": {
 		click: this.pbmv_remove
+	    },
+	    "treepanel": {
+		afteritemexpand: this.afteritemexpand
 	    }
         });
         this.control({
@@ -95,6 +98,11 @@ Ext.define("Juno.controller.SlidesController", {
 		render: this.setupdropzone
 	    }
         });
+    },
+
+    afteritemexpand: function(node, idx, item, options) {
+	var tree = this.getTreepanel();
+	tree.getView().focusRow(tree.getSelectionModel().selected.getAt(0));
     },
 
     setupdragzone: function(dv) {
