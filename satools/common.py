@@ -126,6 +126,9 @@ def load_config():
                "juno-base": os.environ["HOME"] + "/content/juno",
                "juno-home": os.environ["HOME"] + "/content/juno-home",
                "juno-sync": [],
+               "gsa-base": os.environ["HOME"] + "/content/gsa",
+               "gsa-sync": [],
+               "gsa-url": "",
                }
 
     if not os.path.exists(configfile):
