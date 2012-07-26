@@ -69,11 +69,11 @@ def p_not_expr(p):
 
 def p_expr_after(p):
     """expr           : AFTER ":" INT "/" INT "/" INT"""
-    p[0] = Where("(mtime >= ?)", [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
+    p[0] = Where("(presomtime >= ?)", [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
 
 def p_expr_before(p):
     """expr           : BEFORE ":" INT "/" INT "/" INT"""
-    p[0] = Where("(mtime < ?)", [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
+    p[0] = Where("(presomtime < ?)", [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
 
 def p_expr_in(p):
     """expr           : IN ":" barestring"""

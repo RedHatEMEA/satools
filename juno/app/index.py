@@ -3,6 +3,7 @@
 from db import DB
 from satools import common
 import argparse
+import calendar
 import hashlib
 import multiprocessing
 import odptools
@@ -120,24 +121,37 @@ def createthumbs(juno, dstp, preso):
 
     return [["INSERT INTO slides VALUES(?, ?, ?)", args]]
 
-def insertpreso(srcp, dstp):
-    mtime = os.stat(srcp)[stat.ST_MTIME]
-    return [["REPLACE INTO presos VALUES(?, ?)",
-             [(dstp, mtime)]]]
+def getpresomtime(srcp, filemtime):
+    o = odptools.odf.Odp()
+    o.load(srcp, noparse = True)
+    try:
+        datestring = o.meta._meta()._date().text
+    except:
+        return filemtime
+
+    datestring = datestring.rstrip("Z").split(".")[0]
+    tm = time.strptime(datestring, "%Y-%m-%dT%H:%M:%S")
+    return calendar.timegm(tm)
+
+def insertpreso(srcp, dstp, slides):
+    filemtime = os.stat(srcp)[stat.ST_MTIME]
+    presomtime = getpresomtime(srcp, filemtime)
+    return [["REPLACE INTO presos VALUES(?, ?, ?, ?)",
+             [(dstp, presomtime, filemtime, slides)]]]
 
 def needs_add(db, srcp, dstp):
-    if not (os.path.isfile(srcp) and not os.path.islink(srcp)):
+    if not os.path.isfile(srcp) or os.path.islink(srcp):
         return False
 
     if os.path.split(srcp)[1][0] == ".":
         return False
 
-    mtime = os.stat(srcp)[stat.ST_MTIME]
+    filemtime = os.stat(srcp)[stat.ST_MTIME]
 
-    cu = db.execute("SELECT mtime FROM presos WHERE path = ?", (dstp, ))
+    cu = db.execute("SELECT filemtime FROM presos WHERE path = ?", (dstp, ))
     row = cu.fetchone()
 
-    if row and row["mtime"] == mtime:
+    if row and row["filemtime"] == filemtime:
         return False
 
     return odptools.odf.Odp.is_odp(srcp)
@@ -163,7 +177,7 @@ def add_preso(db, srcp):
     removepagenumbers(preso.getMasterPages())
     removepagenumbers(preso.getDrawPages())
 
-    sql = insertpreso(srcp, dstp)
+    sql = insertpreso(srcp, dstp, preso.getDrawPages().getCount())
     sql.extend(createthumbs(juno, dstp, preso))
     sql.extend(insertcontent(dstp, preso))
 

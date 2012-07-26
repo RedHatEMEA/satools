@@ -19,25 +19,27 @@ class DB(object):
 
         sql = [ """
             CREATE TABLE presos (path TEXT PRIMARY KEY NOT NULL,
-                                 mtime INTEGER NOT NULL);
+                                 presomtime INTEGER NOT NULL,
+                                 filemtime INTEGER NOT NULL,
+                                 slides INTEGER NOT NULL)
                 """, """
             CREATE TABLE slides (preso TEXT NOT NULL REFERENCES presos
                                    ON UPDATE CASCADE ON DELETE CASCADE,
                                  slide INTEGER NOT NULL,
                                  checksum TEXT NOT NULL,
-                                 UNIQUE (preso, slide));
+                                 UNIQUE (preso, slide))
                 """, """
-            CREATE VIRTUAL TABLE slides_fts USING fts4 (content);
+            CREATE VIRTUAL TABLE slides_fts USING fts4 (content)
                 """, """
             CREATE TRIGGER t_slides_fts_del AFTER DELETE ON slides
               BEGIN
                 DELETE FROM slides_fts WHERE docid = old.rowid;
-              END;
+              END
                 """, """
             CREATE TRIGGER t_slides_fts_up AFTER UPDATE ON slides
               BEGIN
                 UPDATE slides_fts SET docid = new.rowid WHERE docid = old.rowid;
-              END;
+              END
                 """ ]
 
         for s in map(lambda x: textwrap.dedent(x).strip(), sql):
