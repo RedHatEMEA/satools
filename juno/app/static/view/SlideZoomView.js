@@ -4,7 +4,6 @@ Ext.define("Juno.view.SlideZoomView", {
 
     modal: true,
     layout: "anchor",
-    resizable: false,
 
     listeners: {
 	keydown: {
