@@ -184,7 +184,7 @@ Ext.define("Juno.controller.SlidesController", {
     },
 
     idblclick: function(dv, rec, item, index, e, options) {
-	this.zoom(rec);
+	this.zoom(rec, dv);
     },
 
     rclick: function(dv, e, options) {
@@ -228,7 +228,7 @@ Ext.define("Juno.controller.SlidesController", {
 	}
 
 	if(e.keyCode == e.ENTER && !this.getSlidezoom()) {
-	    this.zoom(rec);
+	    this.zoom(rec, dv);
 	    e.preventDefault();
 	}
 
@@ -277,7 +277,7 @@ Ext.define("Juno.controller.SlidesController", {
 
     sbmv_zoom: function(item, e, options) {
 	item.parentMenu.dv.focus();
-	this.zoom(item.parentMenu.rec);
+	this.zoom(item.parentMenu.rec, this.parentMenu.dv);
     },
 
     sbmv_selectall: function(item, e, options) {
@@ -338,10 +338,11 @@ Ext.define("Juno.controller.SlidesController", {
 	dv.getSelectionModel().selectAll();
     },
 
-    zoom: function(rec) {
+    zoom: function(rec, dv) {
 	Ext.ComponentManager.create({
 	    xtype: "slidezoom",
 	    title: rec.data.preso + " (slide " + (rec.data.slide + 1) + ")",
+	    dv: dv,
 	    png: rec.data.png
 	}).show();
     }

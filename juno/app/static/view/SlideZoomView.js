@@ -12,7 +12,8 @@ Ext.define("Juno.view.SlideZoomView", {
 	    fn: function(e) {
 		if(e.keyCode == e.LEFT || e.keyCode == e.RIGHT) {
 		    var ctrl = _Juno.getController("SlidesController");
-		    var dv = ctrl.getSlidebrowser();
+		    var zoom = Ext.ComponentQuery.query("slidezoom")[0];
+		    var dv = zoom.dv;
 		    dv.getSelectionModel().onNavKey(e.keyCode == e.LEFT ? -1 : 1);
 		    rec = dv.getSelectionModel().getSelection()[0];
 		    item = dv.getNode(rec);
