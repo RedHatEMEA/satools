@@ -13,6 +13,7 @@ def sync(query, keep):
 
     for result in xml.xpath("//U/text()"):
         dest = result.split("//")[1]
+        dest = dest.replace("~", "")
         common.mkdirs(os.path.split(dest)[0])
         common.retrieve(result, dest)
         keep.add(dest)
