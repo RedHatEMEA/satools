@@ -65,5 +65,7 @@ Ext.application({
 	var sc = this.getController("SearchController");
 	Ext.util.History.on('change', sc.historysearch, sc);
 	sc.historysearch(Ext.util.History.getToken());
+
+	_Juno = this;
     }
 });
