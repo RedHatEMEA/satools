@@ -207,7 +207,7 @@ Ext.define("Juno.controller.SlidesController", {
     },
 
     keydown: function(dv, e, options) {
-	if(e.getCharCode() == 65 && e.ctrlKey) {
+	if(e.getCharCode() == 65 && e.ctrlKey && !this.getSlidezoom()) {
 	    this.selectall(dv);
 	    e.preventDefault();
 	}

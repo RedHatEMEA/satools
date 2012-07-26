@@ -6,6 +6,22 @@ Ext.define("Juno.view.SlideZoomView", {
     layout: "anchor",
     resizable: false,
 
+    listeners: {
+	keydown: {
+	    element: "el",
+	    fn: function(e) {
+		if(e.keyCode == e.LEFT || e.keyCode == e.RIGHT) {
+		    var ctrl = _Juno.getController("SlidesController");
+		    var dv = ctrl.getSlidebrowser();
+		    dv.getSelectionModel().onNavKey(e.keyCode == e.LEFT ? -1 : 1);
+		    rec = dv.getSelectionModel().getSelection()[0];
+		    item = dv.getNode(rec);
+		    ctrl.ikeydown(dv, rec, item, null, e, null);
+		}
+	    }
+	}
+    },
+
     constructor: function() {
 	this.callParent(arguments);
 	this.populate();
