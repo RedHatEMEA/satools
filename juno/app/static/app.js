@@ -46,7 +46,6 @@ Ext.application({
 		    title: "Presentation",
 		    autoScroll: true,
 		    collapsible: true,
-		    layout: "fit",
 		    height: 252,
 		    split: true
 		}],
