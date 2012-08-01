@@ -7,6 +7,7 @@ import mailbox
 import os
 import os.path
 import re
+import search
 import sqlite3
 import sys
 
@@ -19,14 +20,15 @@ class MailDB(object):
 
     def _create_tables(self):
         self.db.execute("CREATE TABLE IF NOT EXISTS messages"
-                        "(id INTEGER PRIMARY KEY NOT NULL, "
-                        " path TEXT NOT NULL, date INTEGER NOT NULL, "
-                        " offset INTEGER NOT NULL, length INTEGER NOT NULL)")
+                        "(id INTEGER PRIMARY KEY NOT NULL,"
+                        " list TEXT NOT NULL, path TEXT NOT NULL,"
+                        " date INTEGER NOT NULL, offset INTEGER NOT NULL,"
+                        " length INTEGER NOT NULL)")
 
         try:
             self.db.execute("CREATE VIRTUAL TABLE messages_fts USING fts4"
-                            "(list TEXT NOT NULL, from TEXT NOT NULL, "
-                            "subject TEXT NOT NULL, body TEXT NOT NULL)")
+                            "(from TEXT NOT NULL, subject TEXT NOT NULL,"
+                            " body TEXT NOT NULL)")
 
         except sqlite3.OperationalError:
             pass
@@ -44,30 +46,34 @@ class MailDB(object):
 
     def insert_record(self, path, date, offset, length, _list, _from, subject,
                       body):
-        c = self.db.execute("INSERT INTO messages('path', 'date', 'offset', "
-                            "'length') VALUES(?, ?, ?, ?)",
-                            (path, date, offset, length))
+        c = self.db.execute("INSERT INTO messages('list', 'path', 'date', "
+                            "'offset', 'length') VALUES(?, ?, ?, ?, ?)",
+                            (_list, path, date, offset, length))
         rowid = c.lastrowid
 
-        self.db.execute("INSERT INTO messages_fts('rowid', 'list', 'from', "
-                        "'subject', 'body') VALUES(?, ?, ?, ?, ?)",
-                        (rowid, _list.replace("-", ""), _from, subject, body))
+        self.db.execute("INSERT INTO messages_fts('rowid', 'from', "
+                        "'subject', 'body') VALUES(?, ?, ?, ?)",
+                        (rowid, _from, subject, body))
 
     def count(self, string):
+        w = search.build_where(string)
+
         c = self.db.execute("SELECT COUNT(*) "
                             "FROM messages, messages_fts "
                             "WHERE messages.rowid = messages_fts.rowid AND "
-                            "messages_fts.messages_fts MATCH ?", (string, ))
+                            "(%s)" % w.sql, w.args)
         return c.fetchone()[0]
 
     def search(self, string, offset = 0, limit = 1000):
+        w = search.build_where(string)
+        w.args.extend([offset, limit])
+
         return self.db.execute("SELECT subject, messages_fts.'from' AS 'from', "
                                "date, path, offset, length "
                                "FROM messages, messages_fts "
                                "WHERE messages.rowid = messages_fts.rowid AND "
-                               "messages_fts.messages_fts MATCH ? "
-                               "ORDER BY date DESC LIMIT ?, ?",
-                               (string, offset, limit))
+                               "(%s) ORDER BY date DESC LIMIT ?, ?" % w.sql,
+                               w.args)
 
 decoderegex = re.compile("=\?.*?\?=", flags = re.S)
 

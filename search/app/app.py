@@ -42,12 +42,16 @@ class Search(object):
         q["limit"] = min(int(q.get("limit", 50)), 1000 - q["start"])
         q["q"] = q.get("q", "")
 
-        # TODO: we're currently running 2 SQL queries here...
-        data["total"] = min(web.ctx.maildb.count(q["q"]), 1000)
-        
-        for row in web.ctx.maildb.search(q["q"], offset = q["start"],
-                                         limit = q["limit"]):
-            data["rows"].append(escape(result(row)))
+        try:
+            # TODO: we're currently running 2 SQL queries here...
+            data["total"] = min(web.ctx.maildb.count(q["q"]), 1000)
+
+            for row in web.ctx.maildb.search(q["q"], offset = q["start"],
+                                             limit = q["limit"]):
+                data["rows"].append(escape(result(row)))
+        except mailindex.search.SearchException, e:
+            data["success"] = False
+            data["error"] = str(e)
 
         return json.dumps(data)
 
