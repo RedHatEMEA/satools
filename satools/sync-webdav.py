@@ -8,6 +8,7 @@ import lxml.etree
 import lxml.builder
 import os
 import Queue
+import sys
 import threading
 import time
 import urllib
@@ -18,6 +19,7 @@ q = Queue.Queue()
 DAV = lxml.builder.ElementMaker(namespace = "DAV:", nsmap = {"D": "DAV:"})
 
 def ls(path, conn):
+    print >>sys.stderr, "ls %s" % path
     xml = DAV.propfind(DAV.prop(DAV.displayname, DAV.resourcetype,
                                 DAV.getcontentlength, DAV.getlastmodified))
     xml = lxml.etree.tostring(xml, encoding="utf-8", xml_declaration = True)
@@ -68,6 +70,8 @@ def walk(path, conn):
         yield f
 
 def download(url, dest, username, password):
+    print >>sys.stderr, "download %s" % url
+
     pm = urllib2.HTTPPasswordMgrWithDefaultRealm()
     pm.add_password(None, url, username, password)
     opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(pm))
