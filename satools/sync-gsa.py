@@ -16,6 +16,7 @@ def sync(query, keep):
         dest = dest.replace("~", "")
         common.mkdirs(os.path.split(dest)[0])
         common.retrieve(result, dest)
+        common.mkro(dest)
         keep.add(dest)
 
 if __name__ == "__main__":
