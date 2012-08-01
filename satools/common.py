@@ -246,7 +246,7 @@ def retrieve_m(url, data = None, tries = 1, opener = None):
                 return urllib2.urlopen(url, data)
             
         except urllib2.URLError, e:
-            if getattr(e, "code", 0) != 404:
+            if getattr(e, "code", 0) != 404 and i < tries - 1:
                 print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
                 time.sleep(10)
             else:
@@ -261,7 +261,7 @@ def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
                 else:
                     srcf = urllib2.urlopen(HeadRequest(url))
             except urllib2.URLError, e:
-                if getattr(e, "code", 0) != 404:
+                if getattr(e, "code", 0) != 404 and i < tries - 1:
                     print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
                     time.sleep(10)
                 else:
