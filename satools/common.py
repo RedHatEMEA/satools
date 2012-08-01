@@ -129,6 +129,8 @@ def load_config():
                "gsa-base": os.environ["HOME"] + "/content/gsa",
                "gsa-sync": [],
                "gsa-url": "",
+               "webdav-sync": [],
+               "webdav-threads": 4,
                }
 
     if not os.path.exists(configfile):
@@ -234,27 +236,33 @@ def sendfile_disk(srcf, path):
 
     rename(temppath, path)
 
-def retrieve_m(url, data = None, tries = 1):
+def retrieve_m(url, data = None, tries = 1, opener = None):
     print >>sys.stderr, "Retrieving %s..." % url
     for i in xrange(tries):
         try:
-            return urllib2.urlopen(url, data)
+            if opener:
+                return opener.open(url, data)
+            else:
+                return urllib2.urlopen(url, data)
             
         except urllib2.URLError, e:
             if getattr(e, "code", 0) != 404:
-                print >>sys.stderr, "URLError: %s, sleeping and retrying..." % e
+                print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
                 time.sleep(10)
             else:
                 raise e
 
-def retrieve(url, path, data = None, force = False, tries = 1):
+def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
     if os.path.exists(path) and not force:
         for i in xrange(tries):
             try:
-                srcf = urllib2.urlopen(HeadRequest(url))
+                if opener:
+                    srcf = opener.open(HeadRequest(url))
+                else:
+                    srcf = urllib2.urlopen(HeadRequest(url))
             except urllib2.URLError, e:
                 if getattr(e, "code", 0) != 404:
-                    print >>sys.stderr, "URLError: %s, sleeping and retrying..." % e
+                    print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
                     time.sleep(10)
                 else:
                     raise e
@@ -269,7 +277,7 @@ def retrieve(url, path, data = None, force = False, tries = 1):
                 return
 
     for i in xrange(tries):
-        srcf = retrieve_m(url, data, tries)
+        srcf = retrieve_m(url, data, tries, opener = opener)
         try:
             sendfile_disk(srcf, path)
             break
