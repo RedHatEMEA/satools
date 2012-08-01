@@ -82,8 +82,10 @@ Ext.define("Search.controller.Search", {
     },
 
     historysearch: function(s) {
-        if(s) s = decodeURIComponent(s);
-	this.getSearchfield().setValue(s);
-        this.click();
+        if(s) {
+	    s = decodeURIComponent(s);
+	    this.getSearchfield().setValue(s);
+            this.click();
+	}
     }
 });
