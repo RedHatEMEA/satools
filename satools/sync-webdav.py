@@ -70,14 +70,12 @@ def walk(path, conn):
         yield f
 
 def download(url, dest, username, password):
-    print >>sys.stderr, "download %s" % url
-
     pm = urllib2.HTTPPasswordMgrWithDefaultRealm()
     pm.add_password(None, url, username, password)
     opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(pm))
 
     common.mkdirs(os.path.split(dest)[0])
-    common.retrieve(url, dest, opener = opener)
+    common.retrieve(url, dest, opener = opener, tries = 10)
     common.mkro(dest)
 
 def worker():
