@@ -11,6 +11,11 @@ import time
 import urlparse
 import web
 
+class Favicon:
+    def GET(self):
+        web.header("Content-Type", "image/vnd.microsoft.icon")
+        return open("static/favicon.ico")
+
 class Index(object):
     def GET(self):
         web.header("Content-Type", "text/html")
@@ -196,6 +201,7 @@ def validate(q, regexps):
     return True
 
 urls = ("/", "Index",
+        "/favicon.ico", "Favicon",
         "/s", "Search",
         "/a", "Attachment",
         "/m", "Message",
