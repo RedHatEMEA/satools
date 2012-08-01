@@ -46,10 +46,13 @@ Ext.define("Search.controller.Search", {
 	var pagingtoolbar = this.getPagingtoolbar();
 	var store = results.getStore();
 
+        var sv = this.getSearchfield().getSubmitValue();
+        Ext.util.History.add(encodeURIComponent(sv));
+
 	store.setProxy({
 	    type: "ajax",
 	    url: "s",
-	    extraParams: { "q": this.getSearchfield().getSubmitValue() },
+	    extraParams: { "q": sv },
 	    reader: {
 		type: "json",
 		root: "rows",
@@ -76,5 +79,11 @@ Ext.define("Search.controller.Search", {
 		}
 	    }
 	});
+    },
+
+    historysearch: function(s) {
+        if(s) s = decodeURIComponent(s);
+	this.getSearchfield().setValue(s);
+        this.click();
     }
 });

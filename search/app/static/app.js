@@ -3,6 +3,7 @@ Ext.require("Ext.data.HasManyAssociation");
 Ext.require("Ext.form.Label");
 Ext.require("Ext.grid.column.Template");
 Ext.require("Ext.toolbar.Paging");
+Ext.require("Ext.util.History");
 
 Ext.application({
     name: "Search",
@@ -62,5 +63,10 @@ Ext.application({
 		flex: 1
 	    }]
 	});
+
+	Ext.util.History.init();
+	var sc = this.getController("Search");
+	Ext.util.History.on('change', sc.historysearch, sc);
+	sc.historysearch(Ext.util.History.getToken());
     }
 });
