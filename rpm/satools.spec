@@ -27,7 +27,7 @@ cp -a satools %{buildroot}/%{python_sitelib}
 %clean
 rm -rf %{buildroot}
 
-%post
+%posttrans
 for i in elluminate lgrep mailindex sync-clearspace sync-gsa sync-lists sync-product-docs sync-resourcelibrary sync-webdav
 do
   ln -sf %{python_sitelib}/satools/$i.py %{_bindir}/$i

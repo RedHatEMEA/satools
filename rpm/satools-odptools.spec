@@ -25,7 +25,7 @@ rm -rf  %{buildroot}/%{python_sitelib}/test
 %clean
 rm -rf %{buildroot}
 
-%post
+%posttrans
 for i in odp_cat odp_explode odp_lsfonts odp_render odp_to_text
 do
   ln -sf %{python_sitelib}/odptools/$i.py %{_bindir}/$i
