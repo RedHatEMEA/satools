@@ -11,7 +11,8 @@ class Where(object):
     def __init__(self, sql, args, merge = True):
         (self.sql, self.args, self.merge) = (sql, args, merge)
 
-reserved = ["AFTER", "BEFORE", "IN", "IS", "NEAR", "NOT", "OR", "PATH", "UNDER"]
+reserved = ["AFTER", "BEFORE", "IN", "IS", "NAME", "NEAR", "NOT", "OR", "PATH",
+            "UNDER"]
 tokens = ["INT", "QSTRING", "STRING"] + reserved
 
 def t_STRING(t):
@@ -22,7 +23,7 @@ def t_STRING(t):
 
 t_QSTRING = '"[^"]*"'
 t_ignore = " "
-literals = ('(', ')', "/", ':')
+literals = ("(", ")", "/", ":")
 
 def t_error(t):
     raise SearchException('Illegal character "%s"' % t.value[0])
@@ -48,6 +49,7 @@ def p_passthrough(p):
                       | IN
                       | INT
                       | IS
+                      | NAME
                       | PATH
                       | STRING
                       | UNDER"""
@@ -69,33 +71,35 @@ def p_not_expr(p):
 
 def p_expr_after(p):
     """expr           : AFTER ":" INT "/" INT "/" INT"""
-    p[0] = Where("(presomtime >= ?)", [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
+    p[0] = Where("(presomtime >= ?)",
+                 [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
 
 def p_expr_before(p):
     """expr           : BEFORE ":" INT "/" INT "/" INT"""
-    p[0] = Where("(presomtime < ?)", [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
+    p[0] = Where("(presomtime < ?)",
+                 [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
 
 def p_expr_in(p):
     """expr           : IN ":" barestring"""
-    p[3] = p[3].strip("/") + "/"
-    l = len(p[3])
-    p[0] = Where('(SUBSTR(preso, 1, ?) = ? AND SUBSTR(preso, ?) NOT LIKE "%/%")',
-                 [l, p[3], l + 1])
+    p[0] = Where("(dirname = ?)", [p[3].strip("/")])
 
 def p_expr_is(p):
     """expr           : IS ":" barestring"""
-    p[3] = p[3].lstrip("/")
-    p[0] = Where("(preso = ?)", [p[3]], False)
+    p[0] = Where("(preso = ?)", [p[3].lstrip("/")], False)
+
+def p_expr_name(p):
+    """expr           : NAME ":" barestring"""
+    p[0] = Where("(filename LIKE ?)", ["%" + p[3] + "%"])
 
 def p_expr_path(p):
     """expr           : PATH ":" barestring"""
-    p[3] = p[3].lstrip("/")
-    p[0] = Where("(preso LIKE ?)", ["%" + p[3] + "%"], False)
+    p[0] = Where("(preso LIKE ?)", ["%" + p[3].lstrip("/") + "%"])
 
 def p_expr_under(p):
     """expr           : UNDER ":" barestring"""
-    p[3] = p[3].strip("/") + "/"
-    p[0] = Where("(SUBSTR(preso, 1, ?) = ?)", [len(p[3]), p[3]])
+    p[3] = p[3].strip("/")
+    p[0] = Where("(dirname = ? OR SUBSTR(dirname, 1, ?) = ?)",
+                 [p[3], len(p[3]) + 1, p[3] + "/"])
 
 def p_expr_paren(p):
     """expr           : "(" or_expr ")" """

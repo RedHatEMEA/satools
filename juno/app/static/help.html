@@ -76,7 +76,8 @@
     <p>Once selected, a presentation file can be clicked in order
     to view its slides in the search results window. Alternatively,
     the original presentation file can be downloaded via the
-    context menu (right-click the presentation).</p>
+    context menu (right-click the presentation and select
+    <i>Download presentation...</i>).</p>
 
     <p>Functionality will soon be enabled to allow the user to log
     in, manage their own home folder and subfolders, and upload and
@@ -91,10 +92,18 @@
 
     <p>When a search is complete, thumbnails of search results
     appear underneath the search box. Double-click a thumbnail to
-    view a larger version of the slide in a popup window. To find a
-    presentation containing a particular slide, select <i>Find
-    slide in filesystem</i> from the context menu (right-click the
-    thumbnail).</p>
+    view a larger version of the slide in a popup window. Within
+    the popup window, the left and right keys move between search
+    results; press the <i>escape</i> key or click the popup window
+    to close it.</p>
+
+    <p>To find a presentation containing a particular slide of
+    interest, select <i>Find presentation in filesystem</i> from
+    the slide context menu (right-click the thumbnail). To view a
+    presentation containing a particular slide, select <i>Show
+    presentation</i>, and to directly download an original
+    presentation containing a particular slide, select <i>Download
+    presentation...</i>.</p>
 
     <h2><a name="creation" id="creation">Presentation
     creation</a></h2>
@@ -146,7 +155,8 @@
       <li>
         <p><b>Modifiers</b>. The following modifiers further
         restrict search results: <b>after:</b>, <b>before:</b>,
-        <b>in:</b>, <b>is:</b>, <b>path:</b>, <b>under:</b>.</p>
+        <b>in:</b>, <b>is:</b>, <b>name:</b>, <b>path:</b> and
+        <b>under:</b>.</p>
 
         <div style="margin-left: 2em">
           Return slides where the presentation was modified after
@@ -177,6 +187,13 @@
           that currently the quotes are mandatory):
 
           <p><b>is:"/path/to/presentation.odp"</b></p>
+        </div>
+
+        <div style="margin-left: 2em">
+          Return all slides where the filename contains the text
+          <i>platform</i>:
+
+          <p><b>name:platform</b></p>
         </div>
 
         <div style="margin-left: 2em">

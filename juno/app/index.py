@@ -135,9 +135,10 @@ def getpresomtime(srcp, filemtime):
 
 def insertpreso(srcp, dstp, slides):
     filemtime = os.stat(srcp)[stat.ST_MTIME]
+    (dstdir, dstfile) = os.path.split(dstp)
     presomtime = getpresomtime(srcp, filemtime)
-    return [["REPLACE INTO presos VALUES(?, ?, ?, ?)",
-             [(dstp, presomtime, filemtime, slides)]]]
+    return [["REPLACE INTO presos VALUES(?, ?, ?, ?, ?, ?)",
+             [(dstp, dstdir, dstfile, presomtime, filemtime, slides)]]]
 
 def needs_add(db, srcp, dstp):
     if not os.path.isfile(srcp) or os.path.islink(srcp):

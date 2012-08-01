@@ -47,6 +47,6 @@ search-lint:
 	cd search/app/static && jsl -nologo -nofilelisting -conf ../jsl.conf -process app.js -process 'controller/*.js' -process 'store/*.js' -process 'view/*.js'
 
 juno-tidy:
-	cd juno/app/templates && tidy -m -i --tidy-mark 0 help.html
+	cd juno/app/static && tidy -m -i --tidy-mark 0 help.html
 
 .PHONY: %.rpm all clean juno preprep-satools preprep-satools-juno preprep-satools-search rpm-base search

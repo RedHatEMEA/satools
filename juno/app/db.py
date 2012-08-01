@@ -19,6 +19,8 @@ class DB(object):
 
         sql = [ """
             CREATE TABLE presos (path TEXT PRIMARY KEY NOT NULL,
+                                 dirname TEXT NOT NULL,
+                                 filename TEXT NOT NULL,
                                  presomtime INTEGER NOT NULL,
                                  filemtime INTEGER NOT NULL,
                                  slides INTEGER NOT NULL)
