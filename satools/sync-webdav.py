@@ -35,7 +35,7 @@ def ls(path, conn):
     try:
         xml = lxml.etree.fromstring(data)
     except lxml.etree.XMLSyntaxError, e:
-        print "ERROR: %s" % e
+        print >>sys.stderr, "ERROR: %s" % e
         return ([], [])
 
     dirs = []
@@ -116,7 +116,7 @@ def sync_webdav(url, dest, username, password):
         for f in filenames:
             path = os.path.relpath(dirpath, ".") + "/" + f
             if not path.startswith("./.") and path not in keep:
-                print "WOULD UNLINK %s" % path
+                print >>sys.stderr, "WOULD UNLINK %s" % path
                 #os.unlink(path)
 
         if not os.listdir(dirpath):
