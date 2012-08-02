@@ -33,6 +33,12 @@ class MailDB(object):
         except sqlite3.OperationalError:
             pass
 
+        self.db.execute("CREATE INDEX IF NOT EXISTS i_messages_list_date ON "
+                        "messages(list, date)")
+
+        self.db.execute("CREATE INDEX IF NOT EXISTS i_messages_path ON "
+                        "messages(path)")
+
         self.db.commit()
 
     def close(self):
