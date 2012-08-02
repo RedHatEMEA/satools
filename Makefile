@@ -52,4 +52,7 @@ search-lint:
 juno-tidy:
 	cd juno/app/static && tidy -m -i --tidy-mark 0 help.html
 
+search-tidy:
+	cd search/app/templates && tidy -m -i --tidy-mark 0 help.html
+
 .PHONY: %.rpm all clean juno preprep-satools preprep-satools-juno preprep-satools-search rpm-base search

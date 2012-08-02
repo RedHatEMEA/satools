@@ -1,93 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+
 <html>
 <head>
-<title>SA tools list search &#8211; help</title>
-<style type="text/css">
-* { text-align:justify; font-family: sans-serif; }
-div { background-color: #dfe8f6; }
-div.container { position: absolute; left: 10%; width: 80%; background-color: #ffffff; border: 1px solid #b5b8c8; padding: 5px }
-</style>
+  <title>SA tools list search &ndash; help</title>
+  <style type="text/css">
+* { text-align:justify; font-family:
+    sans-serif; } div { background-color: #dfe8f6; } div.container
+    { position: absolute; left: 10%; width: 80%; background-color:
+    #ffffff; border: 1px solid #b5b8c8; padding: 5px }
+  </style>
 </head>
+
 <body>
-<div class="container">
-<h1>Welcome to SA tools list search!</h1>
-<h2>Contents</h2>
-<ul>
-<li><a href="#about">About SA tools list search</a></li>
-<li><a href="#how">How to search</a></li>
-<li><a href="#lists">Lists indexed on this server</a></li>
-</ul>
+  <div class="container">
+    <h1>Welcome to SA tools list search!</h1>
 
-<h2><a name="about">About SA tools list search</a></h2>
-<p>This is the help page for SA tools list search 0.4, written by Jim Minter. SA tools list search and all its command line tooling are open-sourced at <a href="https://github.com/RedHatUKI/satools">https://github.com/RedHatUKI/satools</a>. I hope they are useful to you. Questions, comments, feature requests, patches (hey, it is open source after all), pull requests and cake are all welcomed at <a href="mailto:jminter@redhat.com">jminter@redhat.com</a>.
+    <h2>Contents</h2>
 
-<h2><a name="how">How to search</a></h2>
-<p>SA tools list search queries are formed of one or more of the following three basic query types:</p>
+    <ul>
+      <li><a href="#about">About SA tools list search</a></li>
 
-<p><ul>
-<li><p><b>General word or prefix queries</b>. These return messages where any of the indexed text (i.e., the message body, subject and from fields and mailing list name) contains the given word, or in the case of a prefix query, any word which starts with the given prefix. Matching is case-insensitive only for non-extended latin characters (a-z), otherwise it is case sensitive, and the indexer does not strip accents.</p>
+      <li><a href="#how">How to search</a></li>
 
-<p><ul><div>Return messages containing the word <i>linux</i>:</p>
-<p><b>linux</b></div></ul></p>
+      <li><a href="#lists">Lists indexed on this server</a></li>
+    </ul>
 
-<p><ul><div>Return messages containing a word which starts with the prefix <i>lin</i>. This will match all messages that contain the word <i>linux</i>, but also those that contain the words <i>linear</i>, <i>linker</i>, <i>linguistic</i>, etc.:</p>
-<p><b>lin*</b></div></ul></p></li>
+    <h2><a name="about" id="about">About SA tools list
+    search</a></h2>
 
-<li><p><b>Field queries</b>. By default, a general query is executed over the message body, subject and from fields, and the mailing list name. You may restrict the search to a specific field by specifying a field name followed by a colon (i.e. <b>list:</b>, <b>from:</b>, <b>subject:</b> or <b>body:</b>) followed by a general query.</p>
+    <p>This is the help page for SA tools list search 0.4, written
+    by Jim Minter. SA tools list search and all its command line
+    tooling are open-sourced at <a href=
+    "https://github.com/RedHatUKI/satools">https://github.com/RedHatUKI/satools</a>.
+    I hope they are useful to you. Questions, comments, feature
+    requests, patches (hey, it is open source after all), pull
+    requests and cake are all welcomed at <a href=
+    "mailto:jminter@redhat.com">jminter@redhat.com</a>.</p>
 
-<p><ul><div>Return messages where the word <i>linux</i> appears in the message subject, and the word <i>problems</i> appears in the message body, subject or from fields, or mailing list name:</p>
-<p><b>subject:linux problems</b></div></ul></p>
+    <h2><a name="how" id="how">How to search</a></h2>
 
-<p><ul><div>Return messages from <i>jminter@redhat.com</i> where the word <i>linux</i> appears in the message subject:</p>
-<p><b>from:jminter@redhat.com subject:linux</b></div></ul></p>
+    <p>SA tools list search queries are formed of one or more of
+    the following three basic query types:</p>
 
-<p><ul><div>Return messages sent to list <i>foo-list</i> where the word <i>linux</i> appears in the message subject:</p>
-<p><b>list:foo-list subject:linux</b></div></ul></p></li>
+    <ul>
+      <li>
+        <p><b>General word or prefix queries</b>. These return
+        messages where any of the indexed text (i.e., the message
+        body, from and subject fields) contains the given word, or
+        in the case of a prefix query, any word which starts with
+        the given prefix. Matching is case-insensitive only for
+        non-extended latin characters (a-z), otherwise it is case
+        sensitive, and the indexer does not strip accents.</p>
 
-<li><p><b>Quoted queries</b>. These return messages containing the words matching the given general or prefix queries, in the specified order with no intervening words. Phrase queries are specified by enclosing one or more space-separated words or prefixes in double quotes.  Field queries may not be included in quoted queries.</p>
+        <div style="margin-left: 2em">
+          Return messages containing the word <i>linux</i>:
 
-<p><ul><div>Return messages that contain the phrase <i>linux applications</i>:</p>
-<p><b>&quot;linux applications&quot;</b></div></ul></p>
+          <p><b>linux</b></p>
+        </div>
 
-<p><ul><div>Return messages that contain a phrase matching <i>lin* app*</i>. As well as <i>linux applications</i>, this would match such common phrases as <i>linoleum appliances</i> or <i>link apprentices</i>, etc.:</p>
-<p><b>&quot;lin* app*&quot;</b></div></ul></p></li></ul></p>
+        <div style="margin-left: 2em">
+          <div>
+            Return messages containing a word which starts with the
+            prefix <i>lin</i>. This will match all messages that
+            contain the word <i>linux</i>, but also those that
+            contain the words <i>linear</i>, <i>linker</i>,
+            <i>linguistic</i>, etc.:
 
-<p>Basic queries of the above three types may be joined using the following four operators, in order of precedence (strongest first):</p>
+            <p><b>lin*</b></p>
+          </div>
+        </div>
+      </li>
 
-<p><ul>
-<li><p><b>The &quot;-&quot; operator</b>. This negates the sense of the general query which follows. Note that the &quot;-&quot; operator may not be used with field or phrase queries, and the overall sense of the query submitted must be positive.</p>
+      <li>
+        <p><b>Modifiers</b>. The following modifiers further
+        restrict search results: <b>body:</b>, <b>from:</b>,
+        <b>list:</b> and <b>subject:</b>.</p>
 
-<p><ul><div>Return messages that contain the word <i>linux</i> and not the word <i>windows</i>:</p>
-<p><b>linux -windows</b></div></ul></p>
+        <div style="margin-left: 2em">
+          Return messages where the word <i>linux</i> appears in
+          the message subject, and the word <i>problems</i> appears
+          in the message body, subject or from fields, or mailing
+          list name:
 
-<li><p><b>The NEAR operator</b>. Note that <b>NEAR</b> must be typed in capitals. This returns messages that contain the two given positive general or positive quoted queries within a certain proximity of eachother. By default the <b>NEAR</b> operator matches when there are 10 or fewer intervening words; a different limit N may be specified by specifying an operator of the form <b>NEAR/N</b>. The order in which the given words or phrases appear in the message does not have to be the same as the order in which they appear in the query.</p>
+          <p><b>subject:linux problems</b></p>
+        </div>
 
-<p><ul><div>Return messages containing the words <i>linux</i> and <i>kernel</i> with not more than 10 intervening words:</p>
-<p><b>linux NEAR kernel</b></div></ul></p>
+        <div style="margin-left: 2em">
+          Return messages from <i>jminter@redhat.com</i> where the
+          word <i>linux</i> appears in the message body:
 
-<p><ul><div>Return messages containing the words <i>linux</i> and <i>kernel</i> with not more than 5 intervening words:</p>
-<p><b>linux NEAR/5 kernel</b></div></ul></p>
+          <p><b>from:jminter@redhat.com body:linux</b></p>
+        </div>
 
-<p><ul><div>Return messages contain the phrase <i>operating system</i> and word <i>linux</i> with not more than 2 words separating the two:</p>
-<p><b>linux NEAR/2 &quot;operating system&quot;</b></div></ul></p>
+        <div style="margin-left: 2em">
+          Return messages sent to list <i>foo-list</i> where the
+          word <i>linux</i> appears in the message subject (note
+          that currently the quotes are mandatory if the list name
+          contains a hyphen):
 
-<li><p><b>The OR operator</b>. Note that <b>OR</b> must be typed in capitals. This returns messages that match at least one of the two given positive subqueries.</p>
+          <p><b>list:"foo-list" subject:linux</b></p>
+        </div>
+      </li>
 
-<p><ul><div>Return messages that contain the word <i>linux</i> or the word <i>windows</i>, or both:</p>
-<p><b>linux OR windows</b></div></ul></p>
+      <li>
+        <p><b>Quoted queries</b>. These return messages containing
+        words matching the given general word or prefix queries, in
+        the specified order with no intervening words. Phrase
+        queries are specified by enclosing one or more
+        space-separated words or prefixes in double quotes.
+        Modifiers may not be included in quoted queries.</p>
 
-<li><p><b>The implicit &quot;and&quot; operator</b>. This returns messages that match both of the given positive subqueries. As may by now be clear, the &quot;and&quot; operator is not actually given, but is implicitly understood when subqueries are concatenated.</p>
+        <div style="margin-left: 2em">
+          Return messages that contain the phrase <i>linux
+          applications</i>:
 
-<p><ul><div>Return messages sent to list <i>foo-list</i> where the word <i>linux</i> appears in the message subject:</p>
-<p><b>list:foo-list subject:linux</b></div></ul></p>
-</li></ul>
+          <p><b>"linux applications"</b></p>
+        </div>
 
-<p>Implementation detail: SA tools list search uses <a href="http://www.sqlite.org/fts3.html">SQLite full-text searching</a> to provide its results. The FTS query language is documented in full at <a href="http://www.sqlite.org/fts3.html#section_3">http://www.sqlite.org/fts3.html#section_3</a>; only an overview specific to searching mailing lists is given here. Note if referring to the SQLite documentation that SA tools list search uses the SQLite <i>standard query syntax</i>, not the <i>enhanced query syntax</i>.</p>
+        <div style="margin-left: 2em">
+          Return messages that contain a phrase matching <i>lin*
+          app*</i>. As well as <i>linux applications</i>, this
+          would match such common phrases as <i>linoleum
+          appliances</i> or <i>link apprentices</i>, etc.:
 
-<h2><a name="lists">Lists indexed on this server</a></h2>
-<p>This server hosts allows searching of messages sent since 01/01/$lists-start-year to the following lists:</p>
-<ul>$lists</ul>
-<p>$update</p>
+          <p><b>"lin* app*"</b></p>
+        </div>
+      </li>
+    </ul>
 
-</div>
+    <p>Basic queries of the above three types may be joined using
+    the following four operators, in order of precedence (strongest
+    first):</p>
+
+    <ul>
+      <li>
+        <p><b>The NEAR operator</b>. This returns messages that
+        contain the two given positive general or positive quoted
+        queries within a certain proximity of eachother. By default
+        the <b>NEAR</b> operator matches when there are 10 or fewer
+        intervening words; a different limit N may be specified by
+        specifying an operator of the form <b>NEAR/N</b>. The order
+        in which the given words or phrases appear in the message
+        does not have to be the same as the order in which they
+        appear in the query.</p>
+
+        <div style="margin-left: 2em">
+          Return messages containing the words <i>linux</i> and
+          <i>kernel</i> with not more than 10 intervening words:
+
+          <p><b>linux NEAR kernel</b></p>
+        </div>
+
+        <div style="margin-left: 2em">
+          Return messages containing the words <i>linux</i> and
+          <i>kernel</i> with not more than 5 intervening words:
+
+          <p><b>linux NEAR/5 kernel</b></p>
+        </div>
+
+        <div style="margin-left: 2em">
+          Return messages contain the phrase <i>operating
+          system</i> and word <i>linux</i> with not more than 2
+          words separating the two:
+
+          <p><b>linux NEAR/2 "operating system"</b></p>
+        </div>
+      </li>
+
+      <li>
+        <p><b>Parentheses</b>. These group query sub-expressions to
+        override operator precedence.</p>
+
+        <div style="margin-left: 2em">
+          Return messages that contain both the words <i>linux</i>
+          and <i>scalability</i>, or which contain the word
+          <i>performance</i>:
+
+          <p><b>linux scalability OR performance</b></p>
+        </div>
+
+        <div style="margin-left: 2em">
+          Return messages that contain the word <i>linux</i>, and
+          which also contain the word <i>scalability</i> or which
+          also contain the word <i>performance</i>:
+
+          <p><b>linux (scalability OR performance)</b></p>
+        </div>
+      </li>
+
+      <li>
+        <p><b>The NOT operator</b>. This negates the sense of the
+        query which follows.</p>
+
+        <div style="margin-left: 2em">
+          Return messages that contain the word <i>linux</i> and
+          not the word <i>windows</i>:
+
+          <p><b>linux NOT windows</b></p>
+        </div>
+      </li>
+
+      <li>
+        <p><b>The implicit and operator</b>. This returns messages
+        that match both of the given subqueries. As may by now be
+        clear, the and operator is not actually written, but is
+        implicitly understood when subqueries are concatenated.</p>
+
+        <div style="margin-left: 2em">
+          Return messages sent to list <i>foo-list</i> where the
+          word <i>linux</i> appears in the message subject:
+
+          <p><b>list:"foo-list" subject:linux</b></p>
+        </div>
+      </li>
+
+      <li>
+        <p><b>The OR operator</b>. This returns messages that match
+        at least one of the two given subqueries.</p>
+
+        <div style="margin-left: 2em">
+          Return messages that contain the word <i>linux</i> or the
+          word <i>windows</i>, or both:
+
+          <p><b>linux OR windows</b></p>
+        </div>
+      </li>
+    </ul>
+
+    <h2><a name="lists" id="lists">Lists indexed on this
+    server</a></h2>
+
+    <p>This server hosts allows searching of messages sent since
+    01/01/$lists-start-year to the following lists:</p>
+
+    <div style="margin-left: 2em">
+      $lists
+    </div>
+
+    <p>$update</p>
+  </div>
 </body>
 </html>

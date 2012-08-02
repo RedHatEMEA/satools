@@ -88,8 +88,9 @@
 
     <p>The search box allows full text search of all of the indexed
     presentation slides. Up to 500 slides are returned at any time,
-    with most recently saved presentations first. The query syntax and
-    search modifiers are documented <a href="#syntax">below</a>.</p>
+    with most recently saved presentations first. The query syntax
+    and search modifiers are documented <a href=
+    "#syntax">below</a>.</p>
 
     <p>When a search is complete, thumbnails of search results
     appear underneath the search box. Double-click a thumbnail to
@@ -256,31 +257,25 @@
         appear in the query.</p>
 
         <div style="margin-left: 2em">
-          <div>
-            Return slides containing the words <i>linux</i> and
-            <i>kernel</i> with not more than 10 intervening words:
+          Return slides containing the words <i>linux</i> and
+          <i>kernel</i> with not more than 10 intervening words:
 
-            <p><b>linux NEAR kernel</b></p>
-          </div>
+          <p><b>linux NEAR kernel</b></p>
         </div>
 
         <div style="margin-left: 2em">
-          <div>
-            Return slides containing the words <i>linux</i> and
-            <i>kernel</i> with not more than 5 intervening words:
+          Return slides containing the words <i>linux</i> and
+          <i>kernel</i> with not more than 5 intervening words:
 
-            <p><b>linux NEAR/5 kernel</b></p>
-          </div>
+          <p><b>linux NEAR/5 kernel</b></p>
         </div>
 
         <div style="margin-left: 2em">
-          <div>
-            Return slides contain the phrase <i>operating
-            system</i> and word <i>linux</i> with not more than 2
-            words separating the two:
+          Return slides contain the phrase <i>operating system</i>
+          and word <i>linux</i> with not more than 2 words
+          separating the two:
 
-            <p><b>linux NEAR/2 "operating system"</b></p>
-          </div>
+          <p><b>linux NEAR/2 "operating system"</b></p>
         </div>
       </li>
 
@@ -289,23 +284,19 @@
         override operator precedence.</p>
 
         <div style="margin-left: 2em">
-          <div>
-            Return slides that contain both the words <i>linux</i>
-            and <i>scalability</i>, or which contain the word
-            <i>performance</i>:
+          Return slides that contain both the words <i>linux</i>
+          and <i>scalability</i>, or which contain the word
+          <i>performance</i>:
 
-            <p><b>linux scalability OR performance</b></p>
-          </div>
+          <p><b>linux scalability OR performance</b></p>
         </div>
 
         <div style="margin-left: 2em">
-          <div>
-            Return slides that contain the word <i>linux</i>, and
-            which also contain the word <i>scalability</i> or which
-            also contain the word <i>performance</i>:
+          Return slides that contain the word <i>linux</i>, and
+          which also contain the word <i>scalability</i> or which
+          also contain the word <i>performance</i>:
 
-            <p><b>linux (scalability OR performance)</b></p>
-          </div>
+          <p><b>linux (scalability OR performance)</b></p>
         </div>
       </li>
 
@@ -314,12 +305,10 @@
         query which follows.</p>
 
         <div style="margin-left: 2em">
-          <div>
-            Return slides that contain the word <i>linux</i> and
-            not the word <i>windows</i>:
+          Return slides that contain the word <i>linux</i> and not
+          the word <i>windows</i>:
 
-            <p><b>linux NOT windows</b></p>
-          </div>
+          <p><b>linux NOT windows</b></p>
         </div>
       </li>
 
@@ -330,12 +319,10 @@
         implicitly understood when subqueries are concatenated.</p>
 
         <div style="margin-left: 2em">
-          <div>
-            Return slides containing the word <i>linux</i>,
-            modified after <i>1st February 2012</i>:
+          Return slides containing the word <i>linux</i>, modified
+          after <i>1st February 2012</i>:
 
-            <p><b>after:01/02/2012 linux</b></p>
-          </div>
+          <p><b>after:01/02/2012 linux</b></p>
         </div>
       </li>
 
@@ -344,12 +331,10 @@
         at least one of the two given subqueries.</p>
 
         <div style="margin-left: 2em">
-          <div>
-            Return slides that contain the word <i>linux</i> or the
-            word <i>windows</i>, or both:
+          Return slides that contain the word <i>linux</i> or the
+          word <i>windows</i>, or both:
 
-            <p><b>linux OR windows</b></p>
-          </div>
+          <p><b>linux OR windows</b></p>
         </div>
       </li>
     </ul>
