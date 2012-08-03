@@ -26,5 +26,11 @@ Ext.define("Search.view.Search", {
     }, {
 	xtype: "label",
 	html: "<a href='help' target='_blank'>Help</a>"
+    }, {
+	xtype: "label",
+	width: 10
+    }, {
+	xtype: "label",
+	html: "<a href='/' target='_blank'>More SA tools</a>"
     }]
 });
