@@ -122,6 +122,7 @@ if __name__ == "__main__":
     threads = int(config["clearspace-threads"])
     if threads > 1:
         common.progress = lambda x, y: None
+        common.progress_finish = lambda: None
 
     for i in range(threads):
         t = threading.Thread(target = worker, name = i)

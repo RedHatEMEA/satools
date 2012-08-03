@@ -3,6 +3,7 @@
 import base64
 import calendar
 import common
+import errno
 import httplib
 import lxml.etree
 import lxml.builder
@@ -15,11 +16,47 @@ import urllib
 import urllib2
 import urlparse
 
+class FileSet(object):
+    def __init__(self, root):
+        self.lock = threading.Lock()
+        self.dirs = set([".", root])
+        self.files = set()
+
+        while "/" in root:
+            root = root.rsplit("/")[0]
+            self.dirs.add(root)
+
+    def add_dir(self, dir_):
+        with self.lock:
+            self.dirs.add(dir_)
+
+    def add_file(self, file_):
+        with self.lock:
+            self.files.add(file_)
+
+class LockedList(object):
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.list = []
+
+    def append(self, x):
+        with self.lock:
+            self.list.append(x)
+
+class ListFailure(Exception):
+    pass
+
 q = Queue.Queue()
+tls = threading.local()
 DAV = lxml.builder.ElementMaker(namespace = "DAV:", nsmap = {"D": "DAV:"})
 
+consolelock = threading.Lock()
+def msg(s):
+    with consolelock:
+        print >>sys.stderr, s
+
 def ls(path, conn):
-    print >>sys.stderr, "ls %s" % path
+    msg("ls %s" % path)
     xml = DAV.propfind(DAV.prop(DAV.displayname, DAV.resourcetype,
                                 DAV.getcontentlength, DAV.getlastmodified))
     xml = lxml.etree.tostring(xml, encoding="utf-8", xml_declaration = True)
@@ -30,26 +67,27 @@ def ls(path, conn):
     data = response.read()
 
     if response.status != 207:
-        return ([], [])
+        msg("ERROR: ls %s: HTTP response %u" % (path, response.status))
+        raise ListFailure()
 
     try:
         xml = lxml.etree.fromstring(data)
     except lxml.etree.XMLSyntaxError, e:
-        print >>sys.stderr, "ERROR: %s" % e
-        return ([], [])
+        msg("ERROR: ls %s: XMLSyntaxError %s" % (path, e))
+        raise ListFailure()
 
     dirs = []
     files = []
 
     for response in xml.find("{DAV:}response").itersiblings("{DAV:}response"):
-        href = response.find("{DAV:}href").text
-        if response.find("{DAV:}propstat").find("{DAV:}prop").find("{DAV:}resourcetype").find("{DAV:}collection") is not None:
-            # a directory
-            dirs.append({"path": href})
-
-        elif href.endswith("/"):
-            # a symlink
+        href = response.find("{DAV:}href").text.rstrip("/")
+        if os.path.split(href)[0] != path:
+            # symlink to somewhere else, don't follow it
             continue
+
+        if response.find("{DAV:}propstat").find("{DAV:}prop").find("{DAV:}resourcetype").find("{DAV:}collection") is not None:
+            # a subdirectory
+            dirs.append({"path": href})
 
         else:
             size = int(response.find("{DAV:}propstat").find("{DAV:}prop").find("{DAV:}getcontentlength").text)
@@ -60,29 +98,90 @@ def ls(path, conn):
 
     return (sorted(dirs), sorted(files))
 
-def walk(path, conn):
-    (dirs, files) = ls(path, conn)
-    for d in dirs:
-        for f in walk(d["path"], conn):
-            yield f
-
-    for f in files:
-        yield f
-
 def download(url, dest, username, password):
     pm = urllib2.HTTPPasswordMgrWithDefaultRealm()
     pm.add_password(None, url, username, password)
     opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(pm))
 
     common.mkdirs(os.path.split(dest)[0])
-    common.retrieve(url, dest, opener = opener, tries = 10)
+    common.retrieve(url, dest, opener = opener, tries = 10, force = True)
     common.mkro(dest)
 
-def worker():
-    while True:
-        item = q.get()
+def worker(host, username, password):
+    tls.conn = httplib.HTTPSConnection(host)
+    tls.conn.auth = "Basic " + base64.b64encode("%s:%s" % (username, password))
+
+    for item in iter(q.get, "STOP"):
         item[0](*item[1:])
         q.task_done()
+
+def needs_download(dest, f):
+    try:
+        st = os.stat(dest)
+        if st.st_mtime == f["mtime"] and st.st_size == f["size"]:
+            return False
+
+    except OSError, e:
+        if e.errno == errno.ENAMETOOLONG:
+            msg("ERROR: sync_webdav %s: IOError %s" % (dest, e))
+            return False
+        elif e.errno != errno.ENOENT:
+            raise
+
+    return True
+
+def sync_dir(url, path, username, password):
+    try:
+        (dirs, files) = ls(path, tls.conn)
+    except ListFailure:
+        return
+
+    fileset.add_dir(urllib.unquote(path)[1:])
+
+    for d in dirs:
+        q.put((sync_dir, url, d["path"], username, password))
+
+    for f in files:
+        if config["webdav-odponly"] == "1" and not f["path"].endswith(".odp"):
+            continue
+
+        dest = urllib.unquote(f["path"])[1:]
+        fileset.add_file(dest)
+
+        if needs_download(dest, f):
+            downloadq.append((download, urlparse.urljoin(url, f["path"]), dest,
+                              username, password))
+
+def threads_create(numthreads, args):
+    threads = []
+    for i in range(numthreads):
+        t = threading.Thread(target = worker, args = args)
+        t.start()
+        threads.append(t)
+    return threads
+
+def threads_destroy(threads):
+    for t in threads:
+        q.put("STOP")
+
+    for t in threads:
+        t.join()
+
+def cleanup():
+    for dirpath, dirnames, filenames in os.walk("."):
+        dp = os.path.relpath(dirpath, ".")
+        if dp not in fileset.dirs:
+            del dirnames[:]
+            continue
+
+        for f in filenames:
+            path = os.path.join(dp, f)
+            if not path.startswith("./.") and path not in fileset.files:
+                os.unlink(path)
+
+    for dirpath, dirnames, filenames in os.walk(".", topdown = False):
+        if dirpath != "." and not os.listdir(dirpath):
+            os.rmdir(dirpath)
 
 def sync_webdav(url, dest, username, password):
     common.mkdirs(dest)
@@ -91,36 +190,27 @@ def sync_webdav(url, dest, username, password):
     lock = common.Lock(".lock")
 
     urlp = urlparse.urlparse(url)
-    conn = httplib.HTTPSConnection(urlp.netloc)
-    conn.auth = "Basic " + base64.b64encode("%s:%s" % (username, password))
 
-    keep = set()
-    for f in walk(urlp.path, conn):
-        dlurl = urlparse.urljoin(url, f["path"])
-        dest = urllib.unquote(f["path"])[1:]
+    global fileset
+    fileset = FileSet(urlp.path[1:])
 
-        keep.add(dest)
+    global downloadq
+    downloadq = LockedList()
 
-        try:
-            st = os.stat(dest)
-            if st.st_mtime == f["mtime"] and st.st_size == f["size"]:
-                continue
-        except OSError:
-            pass
+    threads = threads_create(int(config["webdav-threads"]),
+                             (urlp.netloc, username, password))
 
-        q.put((download, dlurl, dest, username, password))
-
+    q.put((sync_dir, url, urlp.path.rstrip("/"), username, password))
     q.join()
 
-    for dirpath, dirnames, filenames in os.walk(".", topdown = False):
-        for f in filenames:
-            path = os.path.relpath(dirpath, ".") + "/" + f
-            if not path.startswith("./.") and path not in keep:
-                print >>sys.stderr, "WOULD UNLINK %s" % path
-                #os.unlink(path)
+    msg("INFO: will download %u files" % len(downloadq.list))
 
-        if not os.listdir(dirpath):
-            os.rmdir(dirpath)
+    for d in downloadq.list:
+        q.put(d)
+
+    threads_destroy(threads)
+
+    cleanup()
 
     with open(".sync-done", "w") as f:
         pass
@@ -128,16 +218,12 @@ def sync_webdav(url, dest, username, password):
     lock.unlock()
 
 if __name__ == "__main__":
+    global config
     config = common.load_config()
 
-    threads = int(config["webdav-threads"])
-    if threads > 1:
+    if int(config["webdav-threads"]) > 1:
         common.progress = lambda x, y: None
-
-    for i in range(threads):
-        t = threading.Thread(target = worker, name = i)
-        t.daemon = True
-        t.start()
+        common.progress_finish = lambda: None
 
     for i in config["webdav-sync"]:
         sync_webdav(*i.split(" "))

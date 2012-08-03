@@ -130,7 +130,8 @@ def load_config():
                "gsa-sync": [],
                "gsa-url": "",
                "webdav-sync": [],
-               "webdav-threads": 4,
+               "webdav-threads": "4",
+               "webdav-odponly": "0",
                }
 
     if not os.path.exists(configfile):
@@ -190,6 +191,9 @@ def progress(current, total):
     print >>sys.stderr, "\r  [%s%s] %u%% (%u) " % \
         ("*" * (percent / 2), " " * (50 - (percent / 2)), percent, current),
 
+def progress_finish():
+    print >>sys.stderr
+
 def rename(srcpath, dstpath):
     unlink(dstpath)
     os.rename(srcpath, dstpath)
@@ -219,7 +223,7 @@ def sendfile(srcf, dstf):
         dstf.write(data)
 
     if total:
-        print >>sys.stderr
+        progress_finish()
 
         if current != total:
             raise ShortReadException()
@@ -250,7 +254,7 @@ def retrieve_m(url, data = None, tries = 1, opener = None):
                 print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
                 time.sleep(10)
             else:
-                raise e
+                raise
 
 def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
     if os.path.exists(path) and not force:
@@ -265,7 +269,7 @@ def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
                     print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
                     time.sleep(10)
                 else:
-                    raise e
+                    raise
 
         if "Last-Modified" in srcf.info() and "Content-Length" in srcf.info():
             mtime = calendar.timegm(time.strptime(srcf.info()["Last-Modified"],
@@ -285,7 +289,7 @@ def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
             if i < tries - 1:
                 print >>sys.stderr, "Short read, retrying..."
             else:
-                raise e
+                raise
         finally:
             srcf.close()
 
