@@ -212,8 +212,7 @@ def sync_webdav(url, dest, username, password):
 
     cleanup()
 
-    with open(".sync-done", "w") as f:
-        pass
+    common.write_sync_done()
 
     lock.unlock()
 

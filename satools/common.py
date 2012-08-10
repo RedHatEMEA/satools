@@ -104,6 +104,7 @@ def load_config():
                "product-docs-filter": [],
                "product-docs-locale": "en-US",
                "product-docs-type": "pdf",
+               "product-docs-threads": "4",
                "resourcelibrary-base": os.environ["HOME"] + "/content/resourcelibrary",
                "resourcelibrary-threads": "4",
                "elluminate-base": os.environ["HOME"] + "/content/elluminate",
@@ -312,3 +313,7 @@ def retrieve_tmpfile(url, data = None):
 def unlink(path):
     if os.path.exists(path):
         os.unlink(path)
+
+def write_sync_done():
+    with open(".sync-done", "w") as f:
+        pass
