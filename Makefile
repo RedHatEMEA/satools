@@ -55,4 +55,4 @@ juno-tidy:
 search-tidy:
 	cd search/app/templates && tidy -m -i --tidy-mark 0 help.html
 
-.PHONY: %.rpm all clean juno preprep-satools preprep-satools-juno preprep-satools-search rpm-base search
+.PHONY: %.rpm all clean juno preprep-satools preprep-satools-juno preprep-satools-search rpm-base satools search
