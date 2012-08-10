@@ -42,6 +42,7 @@ satools:
 
 search:
 	cd search/app/static && sencha build -p app.jsb3 -d .
+	cd search/app && python -c 'import app'
 
 juno-lint:
 	cd juno/app/static && jsl -nologo -nofilelisting -conf ../jsl.conf -process app.js -process 'controller/*.js' -process 'store/*.js' -process 'view/*.js'
