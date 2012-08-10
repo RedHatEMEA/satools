@@ -222,7 +222,7 @@ class Upload:
 urls = ("/", "Index",
         "/favicon.ico", "Favicon",
         "/dl/(.*)", "Download",
-        "/help", "Help"
+        "/help", "Help",
         "/mkdir/(.*)", "Mkdir",
         "/nodes", "Nodes",
         "/odp", "Odp",
