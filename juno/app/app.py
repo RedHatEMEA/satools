@@ -67,6 +67,11 @@ class Favicon:
         web.header("Content-Type", "image/vnd.microsoft.icon")
         return open("static/favicon.ico")
 
+class Help:
+    def GET(self):
+        web.header("Content-Type", "text/html")
+        return open("static/help.html")
+
 class Index:
     def GET(self):
         web.header("Content-Type", "text/html")
@@ -217,6 +222,7 @@ class Upload:
 urls = ("/", "Index",
         "/favicon.ico", "Favicon",
         "/dl/(.*)", "Download",
+        "/help", "Help"
         "/mkdir/(.*)", "Mkdir",
         "/nodes", "Nodes",
         "/odp", "Odp",
