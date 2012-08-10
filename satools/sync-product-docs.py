@@ -258,8 +258,7 @@ if __name__ == "__main__":
     threads = threads_create(int(config["product-docs-threads"]),
                              ("docs.redhat.com", ))
 
-    #q.put((get_products, "/docs/%s/products_menu.html" % args["locale"]))
-    q.put((get_versions, "/docs/en-US/CloudForms/versions_menu.html"))
+    q.put((get_products, "/docs/%s/products_menu.html" % args["locale"]))
     q.join()
 
     threads_destroy(threads)
