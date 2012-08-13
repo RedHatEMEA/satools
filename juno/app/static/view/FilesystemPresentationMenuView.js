@@ -16,10 +16,6 @@ Ext.define("Juno.view.FilesystemPresentationMenuView", {
 	}, {
 	    text: "Download presentation...",
 	    itemid: "fpmv_download"
-	}, {
-	    text: "Delete presentation",
-	    disabled: !this.data.can_write_parent,
-	    itemid: "fpmv_rm"
 	}]);
     }
 });

@@ -1179,11 +1179,6 @@
                     "path": "store/"
                 },
                 {
-                    "clsName": "Juno.view.FileUploadView",
-                    "name": "FileUploadView.js",
-                    "path": "view/"
-                },
-                {
                     "clsName": "Juno.view.FilesystemView",
                     "name": "FilesystemView.js",
                     "path": "view/"
@@ -1211,11 +1206,6 @@
                 {
                     "clsName": "Juno.controller.SlidesController",
                     "name": "SlidesController.js",
-                    "path": "controller/"
-                },
-                {
-                    "clsName": "Juno.controller.FileUploadController",
-                    "name": "FileUploadController.js",
                     "path": "controller/"
                 },
                 {
