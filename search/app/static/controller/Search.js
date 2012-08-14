@@ -49,6 +49,10 @@ Ext.define("Search.controller.Search", {
         var sv = this.getSearchfield().getSubmitValue();
         Ext.util.History.add(encodeURIComponent(sv));
 
+	store.removeAll();
+	if(!sv)
+	    return;
+
 	store.setProxy({
 	    type: "ajax",
 	    url: "s",
@@ -82,10 +86,9 @@ Ext.define("Search.controller.Search", {
     },
 
     historysearch: function(s) {
-        if(s) {
+        if(s)
 	    s = decodeURIComponent(s);
-	    this.getSearchfield().setValue(s);
-            this.click();
-	}
+	this.getSearchfield().setValue(s);
+        this.click();
     }
 });
