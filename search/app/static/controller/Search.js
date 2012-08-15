@@ -12,9 +12,6 @@ Ext.define("Search.controller.Search", {
 	}, {
 	    ref: "results",
 	    selector: "#myresults"
-	}, {
-	    ref: "pagingtoolbar",
-	    selector: "#mypagingtoolbar"
 	}
     ],
 
@@ -42,21 +39,26 @@ Ext.define("Search.controller.Search", {
     },
 
     click: function(_this, e, options) {
+        Ext.util.History.add(encodeURIComponent(this.getSearchfield().getSubmitValue()));
+    },
+
+    historysearch: function(s) {
+	if(s)
+	    s = decodeURIComponent(s);
+
 	var results = this.getResults();
-	var pagingtoolbar = this.getPagingtoolbar();
 	var store = results.getStore();
-
-        var sv = this.getSearchfield().getSubmitValue();
-        Ext.util.History.add(encodeURIComponent(sv));
-
 	store.removeAll();
-	if(!sv)
+	this.getSearchfield().setValue(s);
+
+	if(!s)
 	    return;
+
 
 	store.setProxy({
 	    type: "ajax",
 	    url: "s",
-	    extraParams: { "q": sv },
+	    extraParams: { "q": s },
 	    reader: {
 		type: "json",
 		root: "rows",
@@ -83,12 +85,5 @@ Ext.define("Search.controller.Search", {
 		}
 	    }
 	});
-    },
-
-    historysearch: function(s) {
-        if(s)
-	    s = decodeURIComponent(s);
-	this.getSearchfield().setValue(s);
-        this.click();
     }
 });

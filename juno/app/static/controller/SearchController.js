@@ -35,31 +35,7 @@ Ext.define("Juno.controller.SearchController", {
     },
 
     click: function() {
-	this.clear();
-
-	var sv = this.getSearchfield().getSubmitValue();
-        Ext.util.History.add(encodeURIComponent(sv));
-
-	if(!sv)
-	    return;
-
-	var s = this.getSlidebrowser().getStore();
-	s.setProxy({
-	    type: "ajax",
-	    url: "s/" + sv,
-	    listeners: {
-		exception: function(_this, response, operation, options) {
-		    Ext.Msg.alert(_["title"], "Invalid search text");
-		}
-	    }
-	});
-	s.load({
-	    scope: this,
- 	    callback: function(records, operation, success) {
-		if(success)
-		    this.getSlidebrowser().el.scrollTo("top", 0);
-	    }		    
-	});
+	this.search(this.getSearchfield().getSubmitValue());
     },
 
     clear: function() {
@@ -68,12 +44,35 @@ Ext.define("Juno.controller.SearchController", {
     },
 
     search: function(s) {
-	this.getSearchfield().setValue(s);
-	this.click();
+        Ext.util.History.add(encodeURIComponent(s));
     },
 
     historysearch: function(s) {
-	if(s) s = decodeURIComponent(s);
-	this.search(s);
+	if(s)
+	    s = decodeURIComponent(s);
+
+	this.clear();
+	this.getSearchfield().setValue(s);
+
+	if(!s)
+	    return;
+
+	var store = this.getSlidebrowser().getStore();
+	store.setProxy({
+	    type: "ajax",
+	    url: "s/" + s,
+	    listeners: {
+		exception: function(_this, response, operation, options) {
+		    Ext.Msg.alert(_["title"], "Invalid search text");
+		}
+	    }
+	});
+	store.load({
+	    scope: this,
+ 	    callback: function(records, operation, success) {
+		if(success)
+		    this.getSlidebrowser().el.scrollTo("top", 0);
+	    }		    
+	});
     }
 });
