@@ -51,10 +51,6 @@ Ext.define("Search.controller.Search", {
 	store.removeAll();
 	this.getSearchfield().setValue(s);
 
-	if(!s)
-	    return;
-
-
 	store.setProxy({
 	    type: "ajax",
 	    url: "s",
