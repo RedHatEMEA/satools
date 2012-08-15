@@ -23,7 +23,7 @@ Red Hat UK&I SA tools list search engine
 %install
 mkdir -p %{buildroot}/opt/satools/search/static/extjs
 cp -a search/app/{*.py,templates} %{buildroot}/opt/satools/search
-cp -a search/app/static/{app-all.js,app.css} %{buildroot}/opt/satools/search/static
+cp -a search/app/static/app-all.js %{buildroot}/opt/satools/search/static
 cp search/app/static/index-prod.html %{buildroot}/opt/satools/search/static/index.html
 cp search/app/static/extjs/ext.js %{buildroot}/opt/satools/search/static/extjs
 cp -a search/app/static/extjs/resources %{buildroot}/opt/satools/search/static/extjs
