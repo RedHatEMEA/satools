@@ -234,9 +234,6 @@ def add_trees():
                 del dirnames[:]
                 continue
             
-            if dstbase == "home":
-                common.mkdirs(os.path.join("root", common.Mapper.s2d(dirpath)))
-
             for f in sorted(filenames):
                 q.put(os.path.join(dirpath, f))
 
