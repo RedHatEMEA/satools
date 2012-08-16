@@ -231,7 +231,8 @@ Ext.define("Juno.controller.SlidesController", {
 
 	if(e.keyCode == e.LEFT || e.keyCode == e.RIGHT ||
 	   e.keyCode == e.UP || e.keyCode == e.DOWN) {
-	    item.scrollIntoViewIfNeeded();
+	    if("scrollIntoViewIfNeeded" in item)
+		item.scrollIntoViewIfNeeded();
 
 	    if(this.getSlidezoom()) {
 		this.getZoomimage().setSrc(rec.data.png);
