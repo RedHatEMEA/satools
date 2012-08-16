@@ -274,7 +274,7 @@ Ext.define("Juno.controller.SlidesController", {
 
     sbmv_zoom: function(item, e, options) {
 	item.parentMenu.dv.focus();
-	this.zoom(item.parentMenu.rec, this.parentMenu.dv);
+	this.zoom(item.parentMenu.rec, item.parentMenu.dv);
     },
 
     sbmv_selectall: function(item, e, options) {
