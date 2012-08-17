@@ -46,7 +46,6 @@ class LockedList(object):
 class ListFailure(Exception):
     pass
 
-q = Queue.Queue()
 tls = threading.local()
 DAV = lxml.builder.ElementMaker(namespace = "DAV:", nsmap = {"D": "DAV:"})
 
@@ -196,6 +195,9 @@ def sync_webdav(url, dest, username, password):
 
     global downloadq
     downloadq = LockedList()
+
+    global q
+    q = Queue.Queue()
 
     threads = threads_create(int(config["webdav-threads"]),
                              (urlp.netloc, username, password))
