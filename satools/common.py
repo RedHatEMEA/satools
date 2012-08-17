@@ -2,6 +2,7 @@
 
 import calendar
 import codecs
+import errno
 import fcntl
 import os
 import shutil
@@ -176,8 +177,11 @@ def load_config():
     return config
 
 def mkdirs(path):
-    if not os.path.isdir(path):
+    try:
         os.makedirs(path)
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
 
 def mkro(path):
     st = os.stat(path)
@@ -317,3 +321,6 @@ def unlink(path):
 def write_sync_done():
     with open(".sync-done", "w") as f:
         pass
+
+# http://bugs.python.org/issue7980
+time.strptime("0", "%S")

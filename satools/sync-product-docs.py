@@ -41,7 +41,6 @@ q = Queue.Queue()
 tls = threading.local()
 warnings = 0
 fileset = LockedSet()
-urlset = LockedSet()
 
 consolelock = threading.Lock()
 def msg(s):
@@ -115,21 +114,21 @@ def match_filter(filters, path):
     return True
 
 def download(url, dest):
-    if urlset.tas(url):
+    if fileset.tas(dest):
         return
 
-    fileset.add(dest)
     common.mkdirs(os.path.split(dest)[0])
 
     try:
         common.retrieve(url, dest)
-        common.mkro(dest)
 
-        if args["type"] == "html-single" and url.endswith(".html"):
+        if args["type"] == "html-single" and dest.endswith(".html"):
             get_deps_html(url, dest)
 
-        if args["type"] == "html-single" and url.endswith(".css"):
+        if args["type"] == "html-single" and dest.endswith(".css"):
             get_deps_css(url, dest)
+
+        common.mkro(dest)
        
     except urllib2.HTTPError, e:
         if e.code == 403 or e.code == 404:
@@ -137,41 +136,63 @@ def download(url, dest):
         else:
             raise
 
+def update_url(url, home):
+    urlp = urlparse.urlparse(url)
+    if not urlp.path or urlp.path[0] != "/": return url
+    return os.path.relpath(urlp.path[1:], home)
+
+def update_url_css(m, home):
+    return "url(\"%s\")" % update_url(m.group(1), home)
+
 def get_deps_css(url, dest):
     with open(dest) as f:
         css = f.read()
 
     rx = re.compile('url\("?([^)]+?)"?\)')
-    urls = set()
     for m in rx.finditer(css):
-        urls.add(m.group(1))
+        _url = urlparse.urljoin(url, m.group(1))
+        urlp = urlparse.urlparse(_url)
+        if urlp.netloc and urlp.netloc != "access.redhat.com": continue
 
-    for u in urls:
-        q.put((download, urlparse.urljoin(url, u),
-               os.path.normpath(os.path.join(os.path.split(dest)[0], u))))
+        q.put((download, _url, os.path.normpath(urlp.path[1:])))
+
+    with open(dest, "w") as f:
+        css = rx.sub(lambda url: update_url_css(url, os.path.split(dest)[0]),
+                     css)
+        f.write(css)
+
+def update_url_html(url, home):
+    newurl = update_url(url, home)
+    parent = url.getparent()
+    if parent.tag in ("img", "input", "script"):
+        parent.set("src", newurl)
+    elif parent.tag in ("link", ):
+        parent.set("href", newurl)
+    elif parent.tag in ("object", ):
+        parent.set("data", newurl)
 
 def get_deps_html(url, dest):
     html = lxml.html.parse(dest)
-    urls = set()
-    urls.update(html.xpath("//img/@src"))
-    urls.update(html.xpath("//link/@href"))
-    urls.update(html.xpath("//object/@data"))
-    urls.update(html.xpath("//script/@src"))
+    for u in html.xpath("//img/@src | //input/@src | //link/@href | //object/@data | //script/@src"):
+        _url = urlparse.urljoin(url, u)
+        urlp = urlparse.urlparse(_url)
+        if urlp.netloc and urlp.netloc != "access.redhat.com": continue
 
-    for u in urls:
-        q.put((download, urlparse.urljoin(url, u),
-               os.path.normpath(os.path.join(os.path.split(dest)[0], u))))
+        q.put((download, _url, os.path.normpath(urlp.path[1:])))
+
+        update_url_html(u, os.path.split(dest)[0])
+
+    html.write(dest)
             
-def get_formats(path):
+def get_books(path):
     xml = get(path)
     for href in xml.xpath("//a[text()='%(type)s']/@href" % args):
-        urlp = urlparse.urlparse(href)
-        dest = urlp.path[1:]
+        dest = href[1:]
 
         if args["type"] != "html-single":
             # don't munge html-single paths as it breaks HTML relative paths
             (d, f) = os.path.split(dest)
-            d = d.split("/", 2)[2]  # remove ^docs/<locale>
+            d = d.split("/", 3)[3]  # remove ^knowledge/docs/<locale>
             d = d.rsplit("/", 2)[0] # remove <type>/<book name>$
             d = d.replace("_", " ")
             dest = os.path.join(d, f)
@@ -179,31 +200,12 @@ def get_formats(path):
         if not match_filter(filters, dest):
             continue
 
-        q.put((download, href, dest))
-
-def get_books(path):
-    xml = get(path)
-    for href in xml.xpath("//a/@href"):
-        urlp = urlparse.urlparse(href)
-        path = urlp.path.replace("/index.html", "/format_menu.html")
-        path = path.replace("/html/", "/")
-        q.put((get_formats, path))
-        if args["type"] == "html-single":
-            q.put((get, path.replace("/format_menu.html", "/lang_menu.html")))
-
-def get_versions(path):
-    xml = get(path)
-    for href in xml.xpath("//a/@href"):
-        urlp = urlparse.urlparse(href)
-        path = urlp.path.replace("/index.html", "/books_menu.html")
-        q.put((get_books, path))
+        q.put((download, "https://access.redhat.com" + href, dest))
 
 def get_products(path):
     xml = get(path)
-    for href in xml.xpath("//a/@href"):
-        urlp = urlparse.urlparse(href)
-        path = urlp.path.replace("/index.html", "/versions_menu.html")
-        q.put((get_versions, path))
+    for href in xml.xpath("//a[starts-with(@href,'/knowledge/docs/')]/@href"):
+        q.put((get_books, href + "?locale=" + args["locale"]))
 
 def get(path):
     msg(path)
@@ -211,14 +213,7 @@ def get(path):
     response = tls.conn.getresponse()
     data = response.read()
 
-    if response.status == 200:
-        if args["type"] == "html-single":
-            common.mkdirs(os.path.split(path[1:])[0])
-            with open(path[1:], "w") as f:
-                f.write(data)
-            fileset.add(path[1:])
-
-    else:
+    if response.status != 200:
         warn("WARNING: get %s: HTTP response %u" % (path, response.status))
         data = "<html/>"
 
@@ -256,9 +251,9 @@ if __name__ == "__main__":
         common.progress_finish = lambda: None
 
     threads = threads_create(int(config["product-docs-threads"]),
-                             ("docs.redhat.com", ))
+                             ("access.redhat.com", ))
 
-    q.put((get_products, "/docs/%s/products_menu.html" % args["locale"]))
+    q.put((get_products, "/knowledge/docs/"))
     q.join()
 
     threads_destroy(threads)
