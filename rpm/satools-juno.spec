@@ -52,6 +52,7 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 /
 %doc README.rst
+%config(noreplace) /etc/httpd/conf.d/satools-juno.conf
 
 %changelog
 

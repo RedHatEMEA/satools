@@ -48,6 +48,7 @@ rm -rf %{buildroot}
 %files
 /
 %doc README.rst
+%config(noreplace) /etc/httpd/conf.d/satools-search.conf
 
 %changelog
 
