@@ -1,8 +1,16 @@
 #!/usr/bin/python -ttu
 
+import argparse
 import common
 import lxml.etree
 import os
+
+def parse_args():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-q", action = "store_true", dest = "quiet",
+                    help = "quiet mode")
+
+    return vars(ap.parse_args())
 
 def sync(query, keep):
     xml = common.retrieve_m(config["gsa-url"] + "?client=internal&output=xml&num=1000&filter=0&q=" + query)
@@ -22,6 +30,11 @@ def sync(query, keep):
 if __name__ == "__main__":
     global config
     config = common.load_config()
+    args = parse_args()
+
+    if args["quiet"]:
+        common.progress = lambda x, y: None
+        common.progress_finish = lambda: None
 
     common.mkdirs(config["gsa-base"])
     os.chdir(config["gsa-base"])
