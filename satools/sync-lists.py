@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import argparse
 import attachments
 import common
 import gzip
@@ -14,6 +15,13 @@ import urllib2
 
 # TODO: single list update
 
+def parse_args():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-q", action = "store_true", dest = "quiet",
+                    help = "quiet mode")
+
+    return vars(ap.parse_args())
+
 def isgzip(f):
     bytes = f.read(2)
     f.seek(0)
@@ -24,6 +32,11 @@ if __name__ == "__main__":
     warnings = 0
     global config
     config = common.load_config()
+    args = parse_args()
+
+    if args["quiet"]:
+        common.progress = lambda x, y: None
+        common.progress_finish = lambda: None
 
     if not config["lists-sync"]:
         print >>sys.stderr, "Please configure lists in $HOME/.satools before running %s." % sys.argv[0]
