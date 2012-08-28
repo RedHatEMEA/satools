@@ -17,14 +17,8 @@ Ext.application({
 
     launch: function() {
 	Ext.create("Ext.container.Viewport", {
-	    layout: {
-		type: "hbox",
-		align: "stretch"
-	    },
+	    layout: "absolute",
 	    items: [{
-		border: 0,
-		flex: 1
-	    }, {
 		layout: {
 		    type: "vbox",
 		    align: "stretch"
@@ -57,10 +51,8 @@ Ext.application({
 		    flex: 1
 		}],
 		border: 0,
-		flex: 8
-	    },{
-		border: 0,
-		flex: 1
+		x: "10%",
+		anchor: (navigator.userAgent.toLowerCase().indexOf("firefox") > -1) ? "90% 100%" : "80% 100%"
 	    }]
 	});
 
