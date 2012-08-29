@@ -73,7 +73,7 @@ class Index:
 class Nodes:
     def GET(self):
         web.header("Content-Type", "application/json")
-        q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
+        q = dict(urlparse.parse_qsl(str(web.ctx.query[1:])))
         return tell(q["node"])
 
 class Odp:
