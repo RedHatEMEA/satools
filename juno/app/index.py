@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -ttu
 
 from db import DB
 from satools import common
@@ -233,7 +233,8 @@ def add_trees():
     for sync in config["juno-sync"]:
         (srcbase, dstbase) = sync.rsplit(" ", 1)
         for dirpath, dirnames, filenames in os.walk(srcbase):
-            if os.path.split(dirpath)[1][0] == ".":
+            if dirpath in config["juno-sync-ignore"] or \
+                    os.path.split(dirpath)[1][0] == ".":
                 del dirnames[:]
                 continue
             
@@ -349,8 +350,6 @@ def doqueries(db, sql):
 
 def parse_args():
     ap = argparse.ArgumentParser()
-    ap.add_argument("-p", dest = "path",
-                    help = "index single presentation")
     ap.add_argument("-c", action="store_false", dest = "addtrees",
                     help = "clean %s" % config["juno-base"])
     ap.add_argument("-w", dest = "workers", default = 4, type = int,
@@ -365,23 +364,14 @@ if __name__ == "__main__":
     common.mkdirs(config["juno-base"])
     os.chdir(config["juno-base"])
 
-    if args["path"]:
-        global workerid
-        workerid = 0
+    lock = common.Lock(".lock")
 
-        db = DB(".db")
-        add_preso(db, args["path"])
-        db.close()
+    os.nice(10)
 
-    else:
-        lock = common.Lock(".lock")
+    db = DB(".db")
+    check_fs(db)
+    check_db(db)
+    db.close()
 
-        os.nice(10)
-
-        db = DB(".db")
-        check_fs(db)
-        check_db(db)
-        db.close()
-
-        if args["addtrees"]:
-            add_trees()
+    if args["addtrees"]:
+        add_trees()
