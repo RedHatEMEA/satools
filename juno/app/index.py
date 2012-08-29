@@ -166,28 +166,31 @@ def add_preso(db, srcp):
     common.mkdirs(os.path.join("root", os.path.split(dstp)[0]))
 
     juno = odptools.odf.juno.juno()
+    try:
+        preso = juno.desktop.loadComponentFromURL \
+            (juno.mkpath(srcp), "_blank", 0,
+             (juno.PropertyValue("Hidden", True),
+              juno.PropertyValue("ReadOnly", True),
+              juno.PropertyValue("FilterName", "impress8")))
 
-    preso = juno.desktop.loadComponentFromURL \
-        (juno.mkpath(srcp), "_blank", 0,
-         (juno.PropertyValue("Hidden", True),
-          juno.PropertyValue("ReadOnly", True),
-          juno.PropertyValue("FilterName", "impress8")))
+        preso.storeToURL(juno.mkpath(os.path.join(os.getcwd(), "root", dstp)),
+                         ())
 
-    preso.storeToURL(juno.mkpath(os.path.join(os.getcwd(), "root", dstp)), ())
+        removepagenumbers(preso.getMasterPages())
+        removepagenumbers(preso.getDrawPages())
 
-    removepagenumbers(preso.getMasterPages())
-    removepagenumbers(preso.getDrawPages())
+        sql = insertpreso(srcp, dstp, preso.getDrawPages().getCount())
+        sql.extend(createthumbs(juno, dstp, preso))
+        sql.extend(insertcontent(dstp, preso))
 
-    sql = insertpreso(srcp, dstp, preso.getDrawPages().getCount())
-    sql.extend(createthumbs(juno, dstp, preso))
-    sql.extend(insertcontent(dstp, preso))
+        log("Committing and disconnecting...")
 
-    log("Committing and disconnecting...")
+        doqueries(db, sql)
 
-    preso.dispose()
-    juno.disconnect()
+        preso.dispose()
 
-    doqueries(db, sql)
+    finally:
+        juno.disconnect()
 
 def del_preso(db, srcp):
     log("Removing %s..." % srcp)
