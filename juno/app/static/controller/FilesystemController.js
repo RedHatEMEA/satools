@@ -22,6 +22,7 @@ Ext.define("Juno.controller.FilesystemController", {
     init: function() {
         this.control({
             "filesystem": {
+		afteritemexpand: this.afteritemexpand,
 		itemclick: this.tv_click,
 		itemcontextmenu: this.tv_rclick
             },
@@ -47,6 +48,13 @@ Ext.define("Juno.controller.FilesystemController", {
 		click: this.ffmv_collapse
 	    }
         });
+    },
+
+    afteritemexpand: function(node, idx, item, options) {
+	var tree = this.getTreepanel();
+	var selNode = tree.getSelectionModel().selected.getAt(0);
+	if(node.contains(selNode))
+	    tree.getView().focusRow(selNode);
     },
 
     tv_render: function() {
