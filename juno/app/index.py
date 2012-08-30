@@ -157,8 +157,7 @@ def needs_add(db, srcp, dstp):
 
     return odptools.odf.Odp.is_odp(srcp)
 
-def add_preso(db, srcp):
-    dstp = common.Mapper.s2d(srcp)
+def add_preso(db, srcp, dstp):
     if not needs_add(db, srcp, dstp): return
 
     log("Adding %s..." % srcp)
@@ -192,10 +191,8 @@ def add_preso(db, srcp):
     finally:
         juno.disconnect()
 
-def del_preso(db, srcp):
+def del_preso(db, srcp, dstp):
     log("Removing %s..." % srcp)
-
-    dstp = common.Mapper.s2d(srcp)
 
     doqueries(db, [["DELETE FROM presos WHERE path = ?", [(dstp, )]]])
 
@@ -211,13 +208,13 @@ def worker(me, q):
     workerid = me
 
     db = DB(".db")
-    for srcp in iter(q.get, "STOP"):
+    for (srcp, dstp) in iter(q.get, "STOP"):
         try:
-            add_preso(db, srcp)
+            add_preso(db, srcp, dstp)
         except Exception, e:
             log("WARNING: add_preso failed (%s), skipping..." %
                 str(e).replace("\n", ""))
-            del_preso(db, srcp)
+            del_preso(db, srcp, dstp)
 
     db.close()
 
@@ -239,7 +236,9 @@ def add_trees():
                 continue
             
             for f in sorted(filenames):
-                q.put(os.path.join(dirpath, f))
+                srcp = os.path.join(dirpath, f)
+                dstp = dstbase + srcp[len(srcbase):]
+                q.put((srcp, dstp))
 
     for p in procs:
         q.put("STOP")
@@ -288,10 +287,9 @@ def check_fs_2(db, fs, slideregexp = None):
 
             os.unlink(os.path.join(dirpath, f))
 
-    if fs != "root/home":
-        for dirpath, dirnames, filenames in os.walk(fs, topdown = False):
-            if not os.listdir(dirpath):
-                os.rmdir(dirpath)
+    for dirpath, dirnames, filenames in os.walk(fs, topdown = False):
+        if not os.listdir(dirpath):
+            os.rmdir(dirpath)
 
 def check_fs_1(db, fs, slideregexp = None):
     (dirpath, dirnames, filenames) = os.walk(fs).next()

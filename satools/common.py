@@ -77,19 +77,10 @@ class Lock(object):
 class Mapper(object):
     @staticmethod
     def init(config):
-        Mapper._s2d = {}
         Mapper._d2s = {}
         for sync in config["juno-sync"]:
             (srcbase, dstbase) = sync.rsplit(" ", 1)
-            Mapper._s2d[srcbase] = dstbase
             Mapper._d2s[dstbase] = srcbase
-
-    @staticmethod
-    def s2d(path):
-        for head in Mapper._s2d:
-            if path.startswith(head):
-                return Mapper._s2d[head] + path[len(head):]
-        raise Exception("mapping not found")
 
     @staticmethod
     def d2s(path):
