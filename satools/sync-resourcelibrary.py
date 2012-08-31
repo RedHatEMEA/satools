@@ -55,10 +55,12 @@ def download_item(item, extension, tries = 1):
 def download_item_page(item, tries = 1):
     try:
         html = common.retrieve_m(item.pageurl, tries = tries)
-        xml = lxml.html.soupparser.fromstring(html)
     except urllib2.HTTPError, e:
         warn("can't load item page %s (#%u, %s, %s) (%s), continuing..." % \
                  (item.pageurl, item.number, item.title, item.type_, e))
+        return
+
+    xml = lxml.html.soupparser.fromstring(html)
 
     try:
         if item.type_ == "Videos":
@@ -86,8 +88,10 @@ def warn(s):
 def worker():
     while True:
         items = q.get()
-        items[0](*items[1:])
-        q.task_done()
+        try:
+            items[0](*items[1:])
+        finally:
+            q.task_done()
 
 if __name__ == "__main__":
     config = common.load_config()
