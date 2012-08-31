@@ -53,7 +53,7 @@ Ext.define("Juno.controller.FilesystemController", {
     afteritemexpand: function(node, idx, item, options) {
 	var tree = this.getTreepanel();
 	var selNode = tree.getSelectionModel().selected.getAt(0);
-	if(node.contains(selNode))
+	if(selNode && node.contains(selNode))
 	    tree.getView().focusRow(selNode);
     },
 
