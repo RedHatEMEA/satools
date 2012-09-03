@@ -60,6 +60,7 @@ def extract(path):
                             f.close()
                 
                             common.rename(temppath, p)
+                            common.mkro(p)
 
                 except UnicodeEncodeError:
                     pass
