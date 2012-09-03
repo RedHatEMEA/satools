@@ -52,7 +52,7 @@ rm -rf %{buildroot}
 
 %changelog
 
-* Fri Mar 23 2012 Jim Minter <jminter@redhat.com> 0.4
+* Mon Sep 03 2012 Jim Minter <jminter@redhat.com> 0.4
 
 * Mon Mar 19 2012 Jim Minter <jminter@redhat.com> 0.3
 
