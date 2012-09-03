@@ -117,11 +117,6 @@ if __name__ == "__main__":
         common.progress = lambda x, y: None
         common.progress_finish = lambda: None
 
-    for i in range(threads):
-        t = threading.Thread(target = worker, name = i)
-        t.daemon = True
-        t.start()
-
     tries = 10
     # Initialise cookie store
     common.retrieve_m("http://www.redhat.com/resourcelibrary/results",
@@ -173,6 +168,11 @@ if __name__ == "__main__":
             break
 
     print >>sys.stderr, "INFO: %u items parsed." % i
+
+    for i in range(threads):
+        t = threading.Thread(target = worker, name = i)
+        t.daemon = True
+        t.start()
 
     q.join()
     if warnings:
