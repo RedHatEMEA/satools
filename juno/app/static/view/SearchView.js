@@ -2,8 +2,7 @@ Ext.define("Juno.view.SearchView", {
     alias: "widget.search",
     extend: "Ext.panel.Panel",
     layout: {
-	type: "vbox",
-	align: "stretch"
+	type: "absolute"
     },
     items: [{
 	xtype: "panel",
@@ -39,13 +38,13 @@ Ext.define("Juno.view.SearchView", {
 	}, {
 	    xtype: "label",
 	    html: "<a href='/' target='_blank'>More SA tools</a>"
-	}],
-	height: 50
+	}]
     }, {
 	xtype: "panel",
 	autoScroll: true,
 	items: [ { xtype: "slidebrowser" } ],
-	flex: 1,
+	y: "9%",
+	anchor: "99.5% 90.5%",
 	border: 0
     }]
 });

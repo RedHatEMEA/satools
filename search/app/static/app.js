@@ -20,41 +20,27 @@ Ext.application({
 	Ext.create("Ext.container.Viewport", {
 	    layout: "absolute",
 	    items: [{
-		layout: {
-		    type: "vbox",
-		    align: "stretch"
-		},
-		items: [{
-		    border: 0,
-		    flex: 1
-		}, {
-		    xtype: "search"
-		}, {
-		    border: 0,
-		    flex: 1
-		}, {
-		    xtype: "results",
-		    itemId: "myresults",
-		    flex: 12
-		}, {
-		    border: 0,
-		    flex: 1
-		}, {
-		    xtype: "panel",
-		    layout: "fit",
-		    items: [{
-			xtype: "message",
-			itemId: "mypanel"
-		    }],
-		    flex: 20
-		}, {
-		    border: 0,
-		    flex: 1
-		}],
-		border: 0,
+		xtype: "search",
 		x: "10%",
-		anchor: (navigator.userAgent.toLowerCase().indexOf("firefox") > -1) ? "90% 100%" : "80% 100%"
-	    }]
+		y: "2%",
+		anchor: (navigator.userAgent.toLowerCase().indexOf("firefox") > -1) ? "90% 10%" : "80% 8%"
+	    }, {
+		xtype: "results",
+		itemId: "myresults",
+		x: "10%",
+		y: "12%",
+		anchor: (navigator.userAgent.toLowerCase().indexOf("firefox") > -1) ? "90% 49%" : "80% 37.5%"
+	    }, {
+                xtype: "panel",
+		layout: "fit",
+                   items: [{
+                       xtype: "message",
+                       itemId: "mypanel"
+                   }],
+		x: "10%",
+		y: "50.5%",
+		anchor: (navigator.userAgent.toLowerCase().indexOf("firefox") > -1) ? "90% 98%" : "80% 52.5%"
+            }]
 	});
 
 	Ext.util.History.init();
