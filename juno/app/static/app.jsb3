@@ -364,6 +364,16 @@
                     "path": "extjs/src/layout/container/"
                 },
                 {
+                    "clsName": "Ext.layout.container.Anchor",
+                    "name": "Anchor.js",
+                    "path": "extjs/src/layout/container/"
+                },
+                {
+                    "clsName": "Ext.layout.container.Absolute",
+                    "name": "Absolute.js",
+                    "path": "extjs/src/layout/container/"
+                },
+                {
                     "clsName": "Ext.layout.container.Auto",
                     "name": "Auto.js",
                     "path": "extjs/src/layout/container/"
@@ -377,11 +387,6 @@
                     "clsName": "Ext.layout.component.Dock",
                     "name": "Dock.js",
                     "path": "extjs/src/layout/component/"
-                },
-                {
-                    "clsName": "Ext.layout.container.Anchor",
-                    "name": "Anchor.js",
-                    "path": "extjs/src/layout/container/"
                 },
                 {
                     "clsName": "Ext.layout.container.boxOverflow.Scroller",

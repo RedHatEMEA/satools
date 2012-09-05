@@ -2,6 +2,7 @@ Ext.require("Ext.container.Viewport");
 Ext.require("Ext.data.TreeStore");
 Ext.require("Ext.form.Label");
 Ext.require("Ext.form.Panel");
+Ext.require("Ext.layout.container.Absolute");
 Ext.require("Ext.layout.container.Accordion");
 Ext.require("Ext.layout.container.Border");
 Ext.require("Ext.tree.Panel");
