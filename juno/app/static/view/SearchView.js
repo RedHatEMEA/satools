@@ -43,8 +43,8 @@ Ext.define("Juno.view.SearchView", {
 	xtype: "panel",
 	autoScroll: true,
 	items: [ { xtype: "slidebrowser" } ],
-	y: "9%",
-	anchor: "99.5% 90.5%",
+	y: "40",
+	anchor: "-5 -5",
 	border: 0
     }]
 });
