@@ -25,12 +25,12 @@ def want(path):
 
 def download(opener, href, dest):
     common.mkdirs(os.path.split(dest)[0])
-    common.retrieve(href, dest, opener = opener)
+    common.retrieve(href, dest, opener = opener, tries = 10)
     common.mkro(dest)
 
 def read_events(opener, url):
     try:
-        html = common.retrieve_m(url, opener = opener).read()
+        html = common.retrieve_m(url, opener = opener, tries = 10).read()
     except urllib2.HTTPError, e:
         if e.code == 403:
             print >>sys.stderr, "WARNING: %s, continuing..." % e
@@ -51,7 +51,7 @@ def read_events(opener, url):
 
 def read_project_list(opener):
     url = config["pt-root"] + "projects-emea/project-list"
-    html = common.retrieve_m(url, opener = opener).read()
+    html = common.retrieve_m(url, opener = opener, tries = 10).read()
     html = lxml.html.fromstring(html)
 
     for _url in html.xpath("//a[text()='events']/@href"):
@@ -60,7 +60,7 @@ def read_project_list(opener):
 
 def login(opener):
     url = config["pt-root"] + "register/"
-    html = common.retrieve_m(url, opener = opener).read()
+    html = common.retrieve_m(url, opener = opener, tries = 10).read()
     html = lxml.html.fromstring(html)
 
     params = {}
@@ -70,7 +70,7 @@ def login(opener):
     params["email"] = config["pt-username"]
     params["password"] = config["pt-password"]
 
-    common.retrieve_m(url, urllib.urlencode(params), opener = opener)
+    common.retrieve_m(url, urllib.urlencode(params), opener = opener, tries = 10)
 
 if __name__ == "__main__":
     global config

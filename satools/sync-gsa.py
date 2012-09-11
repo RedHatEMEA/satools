@@ -13,7 +13,7 @@ def parse_args():
     return vars(ap.parse_args())
 
 def sync(query, keep):
-    xml = common.retrieve_m(config["gsa-url"] + "?client=internal&output=xml&num=1000&filter=0&q=" + query)
+    xml = common.retrieve_m(config["gsa-url"] + "?client=internal&output=xml&num=1000&filter=0&q=" + query, tries = 10)
     xml = lxml.etree.parse(xml)
 
     if int(xml.xpath("//M/text()")[0]) == 1000:
@@ -23,7 +23,7 @@ def sync(query, keep):
         dest = result.split("//")[1]
         dest = dest.replace("~", "")
         common.mkdirs(os.path.split(dest)[0])
-        common.retrieve(result, dest)
+        common.retrieve(result, dest, tries = 10)
         common.mkro(dest)
         keep.add(dest)
 
