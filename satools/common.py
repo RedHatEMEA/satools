@@ -243,7 +243,12 @@ def sendfile_disk(srcf, path):
     rename(temppath, path)
 
 def retrieve_m(url, data = None, tries = 1, opener = None):
-    print >>sys.stderr, "Retrieving %s..." % url
+    myurl = url
+    try:
+        myurl = url.get_full_url()
+    except:
+        pass
+    print >>sys.stderr, "Retrieving %s..." % myurl
     for i in xrange(tries):
         try:
             if opener:

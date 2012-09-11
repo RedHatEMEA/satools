@@ -74,8 +74,9 @@ if __name__ == "__main__":
 
             if not path in db or not os.path.isfile(path):
                 common.mkdirs(os.path.split(path)[0])
+                req = urllib2.Request(url + "/" + href, credentials, {"Accept-Encoding": "gzip"})
                 try:
-                    f = common.retrieve_tmpfile(url + "/" + href, credentials)
+                    f = common.retrieve_tmpfile(req)
                 except urllib2.HTTPError, e:
                     if e.code == 403:
                         print >>sys.stderr, "WARNING: %s, continuing..." % e
