@@ -89,11 +89,13 @@ def p_expr_is(p):
 
 def p_expr_name(p):
     """expr           : NAME ":" barestring"""
-    p[0] = Where("(filename LIKE ?)", ["%" + p[3] + "%"])
+    s = p[3].replace("$", "$$").replace("_", "$_").replace("%", "$%")
+    p[0] = Where("(filename LIKE ? ESCAPE '$')", ["%" + s + "%"])
 
 def p_expr_path(p):
     """expr           : PATH ":" barestring"""
-    p[0] = Where("(preso LIKE ?)", ["%" + p[3].lstrip("/") + "%"])
+    s = p[3].replace("$", "$$").replace("_", "$_").replace("%", "$%")
+    p[0] = Where("(preso LIKE ? ESCAPE '$')", ["%" + s.lstrip("/") + "%"])
 
 def p_expr_under(p):
     """expr           : UNDER ":" barestring"""
