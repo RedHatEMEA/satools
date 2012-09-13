@@ -262,7 +262,7 @@ Ext.define("Juno.controller.SlidesController", {
     },
 
     sbmv_download: function(item, e, options) {
-	window.open("dl" + item.parentMenu.rec.data.preso.replace(/#/g, "%23").replace(/\?/g, "%3F"), "_blank");
+	window.open("dl" + item.parentMenu.rec.data.preso.replace(/\t/g, "%09").replace(/#/g, "%23").replace(/\?/g, "%3F"), "_blank");
     },
 
     sbmv_zoom: function(item, e, options) {

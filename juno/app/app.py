@@ -106,7 +106,7 @@ class Search:
 
         entries = []
         for row in c:
-            p = row["preso"].replace('"', "%22").replace("#", "%23").replace('?', "%3F")
+            p = row["preso"].replace("\t", "%09").replace('"', "%22").replace("#", "%23").replace('?', "%3F")
             entries.append({"src": "static/thumbs/%s/%03u.jpg" % (p, row["slide"]),
                             "preso": "/" + row["preso"],
                             "slide": row["slide"],

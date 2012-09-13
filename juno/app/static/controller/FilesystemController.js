@@ -94,7 +94,7 @@ Ext.define("Juno.controller.FilesystemController", {
     fpmv_download:function() {
 	var rec = this.getTreepanel().getSelectionModel().getSelection()[0];
 
-	window.open("dl" + rec.data.id.replace(/#/g, "%23").replace(/\?/g, "%3F"), "_blank");
+	window.open("dl" + rec.data.id.replace(/\t/g, "%09").replace(/#/g, "%23").replace(/\?/g, "%3F"), "_blank");
     },
 
     do_search: function(verb) {
