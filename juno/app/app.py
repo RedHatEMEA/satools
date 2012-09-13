@@ -53,7 +53,7 @@ class Download:
         web.header("Content-Type", "application/vnd.oasis.opendocument.presentation")
         web.header("Content-disposition", "attachment; filename=\"%s\"" % path.rsplit("/", 1)[1])
         
-        return open(path)
+        return open(path.encode("utf-8"))
 
 class Favicon:
     def GET(self):
@@ -106,10 +106,11 @@ class Search:
 
         entries = []
         for row in c:
-            entries.append({"src": "static/thumbs/%s/%03u.jpg" % (row["preso"], row["slide"]),
+            p = row["preso"].replace('"', "%22").replace("#", "%23").replace('?', "%3F")
+            entries.append({"src": "static/thumbs/%s/%03u.jpg" % (p, row["slide"]),
                             "preso": "/" + row["preso"],
                             "slide": row["slide"],
-                            "png": "static/slides/%s/%03u.png" % (row["preso"], row["slide"])
+                            "png": "static/slides/%s/%03u.png" % (p, row["slide"])
                             })
 
         web.header("Content-Type", "application/json")
