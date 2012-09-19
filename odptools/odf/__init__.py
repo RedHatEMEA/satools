@@ -244,10 +244,11 @@ class Odp(Odf):
                 self._buildmpstyle(mpstyle)
 
     def _fixparagraphsummation(self):
-        if self._setting("ParagraphSummation").text == "true":
-            conv(self)
-            self._setting("ParagraphSummation").text = "false"
-            return True
+        if self._setting("ParagraphSummation") is not None:
+            if self._setting("ParagraphSummation").text == "true":
+                conv(self)
+                self._setting("ParagraphSummation").text = "false"
+                return True
         return False
 
 def equal(x, y):
@@ -368,7 +369,7 @@ def resolvestyleref(dst, src, ctx, e, a, refname):
         #       (coalescing)
         # TODO: equality must include root
 
-        if refname in src._mpstyles:
+        if a == DRAW_master_page_name and refname in src._mpstyles:
             clonempstyle(dst, src, src._mpstyles[refname])
             (_ctx, tag, name) = dst.getstylemap(src, "styles", deftag, refname)
             newstyle = dst.getstyle(ctx, tag, name)[1]
