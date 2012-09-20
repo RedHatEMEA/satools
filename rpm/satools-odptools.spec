@@ -26,13 +26,13 @@ rm -rf  %{buildroot}/%{python_sitelib}/test
 rm -rf %{buildroot}
 
 %posttrans
-for i in odp_cat odp_explode odp_lsfonts odp_render odp_to_text
+for i in odp_cat odp_explode odp_lsfonts odp_render odf_to_text odp_to_text
 do
   ln -sf %{python_sitelib}/odptools/$i.py %{_bindir}/$i
 done
 
 %postun
-for i in odp_cat odp_explode odp_lsfonts odp_render odp_to_text
+for i in odp_cat odp_explode odp_lsfonts odp_render odf_to_text odp_to_text
 do
   rm -f %{_bindir}/$i
 done
