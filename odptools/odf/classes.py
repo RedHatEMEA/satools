@@ -93,6 +93,9 @@ class MANIFEST_manifest(lxml.etree.ElementBase):
         return [e for e in self.iterchildren(ns.MANIFEST_file_entry) if e.get(ns.MANIFEST_full_path).startswith(full_path)]
 
 class OFFICE_body(lxml.etree.ElementBase):
+    def _text(self):
+        return self.iterchildren(ns.OFFICE_text).next()
+
     def _presentation(self):
         return self.iterchildren(ns.OFFICE_presentation).next()
 

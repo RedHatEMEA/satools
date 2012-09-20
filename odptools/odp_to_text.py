@@ -18,4 +18,4 @@ def cb(src, p):
 
 odf.utils.set_encoding()
 args = parse_args()
-odf.utils.iter_pages([args.src], cb, progress = False)
+odf.utils.iter_pages([args.src], cb, progress = False, noparse = True)

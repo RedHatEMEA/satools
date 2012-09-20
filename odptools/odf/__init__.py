@@ -200,6 +200,9 @@ class Odf(object):
 
         return True
 
+class Odt(Odf):
+    mimetype = "application/vnd.oasis.opendocument.text"
+
 class Odp(Odf):
     mimetype = "application/vnd.oasis.opendocument.presentation"
 

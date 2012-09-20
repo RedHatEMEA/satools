@@ -5,7 +5,7 @@ import codecs
 import re
 import sys
 
-def iter_pages(srcstrs, callback, progress = True, **kwargs):
+def iter_pages(srcstrs, callback, progress = True, noparse = False, **kwargs):
     for srcstr in srcstrs:
         rangestr = "[-]"
 
@@ -13,7 +13,7 @@ def iter_pages(srcstrs, callback, progress = True, **kwargs):
         if m: (srcstr, rangestr) = (m.group(1), m.group(2))
 
         src = __init__.Odp()
-        src.load(srcstr)
+        src.load(srcstr, noparse = noparse)
         pages = src.content._body()._presentation()._pages()
         ranges = parserangestr(rangestr, len(pages))
 
