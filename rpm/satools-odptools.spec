@@ -1,6 +1,6 @@
 Name:		satools-odptools
 Version:	0.4
-Release:	2
+Release:	3
 Summary:	Red Hat UK&I SA tools ODP tools
 License:	GPL
 URL:		https://github.com/RedHatUKI/satools
