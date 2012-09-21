@@ -271,6 +271,7 @@ def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
                     srcf = opener.open(HeadRequest(url))
                 else:
                     srcf = urllib2.urlopen(HeadRequest(url))
+                break
             except urllib2.URLError, e:
                 if getattr(e, "code", 0) != 404 and i < tries - 1:
                     print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
