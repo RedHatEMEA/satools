@@ -54,7 +54,7 @@ def parse_args():
 
     return vars(ap.parse_args())
 
-def download(item, db, args, tries):
+def download(item, db, tries):
     if item["href"] in db:
         path = db.get(item["href"])
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
         f.close()
 
         for item in index.items:
-            q.put((download, item, db, args, tries))
+            q.put((download, item, db, tries))
 
         if len(index.items) != step:
             break
