@@ -55,7 +55,7 @@ def parse_args():
     return vars(ap.parse_args())
 
 def download(item, db, args, tries):
-    if item["href"] in db and not args["all"]:
+    if item["href"] in db:
         path = db.get(item["href"])
 
     else:
@@ -109,6 +109,10 @@ if __name__ == "__main__":
     os.chdir(config["clearspace-base"])
 
     lock = common.Lock(".lock")
+
+    if args["all"]:
+        common.unlink(".sync-db")
+
     db = common.DB(".sync-db")
     db.cmpfn = lambda x, y: cmp(int(x.split("-")[1]), int(y.split("-")[1]))
 
