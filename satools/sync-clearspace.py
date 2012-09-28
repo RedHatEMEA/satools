@@ -9,6 +9,7 @@ import Queue
 import re
 import threading
 import time
+import traceback
 import urllib2
 
 q = Queue.Queue()
@@ -90,7 +91,10 @@ def want(path):
 def worker():
     while True:
         items = q.get()
-        items[0](*items[1:])
+        try:
+            items[0](*items[1:])
+        except Exception, e:
+            traceback.print_exc()
         q.task_done()
 
 def updatedbs(db, keep, href, path):
