@@ -28,13 +28,13 @@ cp -a satools %{buildroot}/%{python_sitelib}
 rm -rf %{buildroot}
 
 %posttrans
-for i in elluminate lgrep mailindex sync-clearspace sync-gsa sync-lists sync-product-docs sync-pt sync-resourcelibrary sync-webdav
+for i in elluminate lgrep mailindex sync-clearspace sync-gsa sync-lists sync-product-docs sync-pt sync-resourcelibrary sync-rhn-channel-dumps sync-webdav
 do
   ln -sf %{python_sitelib}/satools/$i.py %{_bindir}/$i
 done
 
 %postun
-for i in elluminate lgrep mailindex sync-clearspace sync-gsa sync-lists sync-product-docs sync-pt sync-resourcelibrary sync-webdav
+for i in elluminate lgrep mailindex sync-clearspace sync-gsa sync-lists sync-product-docs sync-pt sync-resourcelibrary sync-rhn-channel-dumps sync-webdav
 do
   rm -f %{_bindir}/$i
 done

@@ -105,13 +105,18 @@ class Search:
         c = web.ctx.db.execute(w.sql, w.args)
 
         entries = []
+        oldpreso = None
         for row in c:
             p = row["preso"].replace("\t", "%09").replace('"', "%22").replace("#", "%23").replace('?', "%3F")
-            entries.append({"src": "static/thumbs/%s/%03u.jpg" % (p, row["slide"]),
-                            "preso": "/" + row["preso"],
-                            "slide": row["slide"],
-                            "png": "static/slides/%s/%03u.png" % (p, row["slide"])
-                            })
+            e = {"src": "static/thumbs/%s/%03u.jpg" % (p, row["slide"]),
+                 "preso": "/" + row["preso"],
+                 "slide": row["slide"],
+                 "png": "static/slides/%s/%03u.png" % (p, row["slide"]),
+                 "title": ""
+                 }
+            if oldpreso != e["preso"]:
+                e["title"] = oldpreso = e["preso"]
+            entries.append(e)
 
         web.header("Content-Type", "application/json")
         return json.dumps(entries)
