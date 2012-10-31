@@ -129,7 +129,7 @@ def needs_download(dest, f):
 
     return True
 
-def sync_dir(url, path, username, password):
+def sync_dir(url, path, username, password, odponly):
     try:
         (dirs, files) = ls(path, tls.conn)
     except ListFailure:
@@ -138,10 +138,10 @@ def sync_dir(url, path, username, password):
     fileset.add_dir(urllib.unquote(path)[1:])
 
     for d in dirs:
-        q.put((sync_dir, url, d["path"], username, password))
+        q.put((sync_dir, url, d["path"], username, password, odponly))
 
     for f in files:
-        if config["webdav-odponly"] == "1" and not f["path"].endswith(".odp"):
+        if odponly == 1 and not f["path"].endswith(".odp"):
             continue
 
         dest = urllib.unquote(f["path"])[1:]
@@ -182,7 +182,7 @@ def cleanup():
         if dirpath != "." and not os.listdir(dirpath):
             os.rmdir(dirpath)
 
-def sync_webdav(url, dest, username, password):
+def sync_webdav(url, dest, username, password, odponly):
     common.mkdirs(dest)
     os.chdir(dest)
 
@@ -202,7 +202,8 @@ def sync_webdav(url, dest, username, password):
     threads = threads_create(int(config["webdav-threads"]),
                              (urlp.netloc, username, password))
 
-    q.put((sync_dir, url, urlp.path.rstrip("/"), username, password))
+    q.put((sync_dir, url, urlp.path.rstrip("/"), username, password,
+           int(odponly)))
     q.join()
 
     msg("INFO: will download %u files" % len(downloadq.list))

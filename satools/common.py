@@ -135,7 +135,6 @@ def load_config():
                "rhn-password": None,
                "webdav-sync": [],
                "webdav-threads": "4",
-               "webdav-odponly": "0",
                }
 
     if not os.path.exists(configfile):
