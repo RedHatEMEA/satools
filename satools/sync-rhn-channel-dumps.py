@@ -112,9 +112,11 @@ if __name__ == "__main__":
     for t in threads:
         t.join()
 
-    for f in os.listdir("."):
-        if f not in fileset.s and not os.path.isdir(f) and not f.startswith("."):
-            os.unlink(f)
+    if fileset.s:
+        # protect against wiping the directory when login fails
+        for f in os.listdir("."):
+            if f not in fileset.s and not os.path.isdir(f) and not f.startswith("."):
+                os.unlink(f)
 
-    with open(".sync-done", "w") as f:
-        pass
+        with open(".sync-done", "w") as f:
+            pass
