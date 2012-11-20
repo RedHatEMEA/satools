@@ -136,8 +136,8 @@ def attachment(path, offset, _len, index):
             part.get_payload(decode = True))
 
 def result(row):
-    return { "subject": row["subject"].decode("utf-8"),
-             "from": row["from"].decode("utf-8"),
+    return { "subject": row["subject"].decode("utf-8", errors = "ignore"),
+             "from": row["from"].decode("utf-8", errors = "ignore"),
              "date": row["date"],
              "path": row["path"],
              "offset": row["offset"],
@@ -187,7 +187,8 @@ def escape(data):
             try:
                 data[key] = cgi.escape(unicode(data[key]))
             except UnicodeDecodeError:
-                data[key] = cgi.escape(data[key].decode("utf-8"))
+                data[key] = cgi.escape(data[key].decode("utf-8",
+                                                        errors = "ignore"))
         
     return data
 
