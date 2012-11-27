@@ -1,0 +1,27 @@
+#!/usr/bin/python
+
+import re
+import time
+
+def getstats():
+    rv = {}
+    f = open("/proc/diskstats")
+    for line in f:
+        line = line.split()
+        rv[line[2]] = (int(line[5]), int(line[9]))
+
+    return rv
+
+if __name__ == "__main__":
+    rx = re.compile("^[hsv]d[a-z]$")
+    old = getstats()
+    while True:
+        time.sleep(2)
+        new = getstats()
+
+        disks = sorted([d for d in set(old) & set(new) if rx.match(d)])
+        for d in disks:
+            print "%s: R: %6.2f Mbps  W: %6.2f Mbps" % \
+                (d, (new[d][0] - old[d][0]) * 0.002048,
+                 (new[d][1] - old[d][1]) * 0.002048)
+        old = new

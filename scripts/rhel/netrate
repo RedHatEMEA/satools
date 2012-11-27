@@ -1,0 +1,47 @@
+#!/usr/bin/python
+
+import sys
+import time
+
+ifaces = ["ppp0", "wlan0", "eth0", "eth1"]
+
+def is_up(iface):
+    try:
+        f = open("/sys/class/net/%s/flags" % iface)
+    except IOError:
+        return False
+
+    flags = int(f.read(), 16)
+    return flags & 1
+
+def detect():
+    for iface in ifaces:
+        if is_up(iface): return iface
+
+def get(iface):
+    f = open("/proc/net/dev")
+    for i in range(2): f.readline()
+    for line in f:
+        (name, data) = line.strip().split(":")
+        if name == iface:
+            data = [int(x) for x in data.split()]
+            return(data[1], data[9], data[0], data[8])
+
+if __name__ == "__main__":
+    if len(sys.argv) == 2:
+        iface = sys.argv[1]
+    else:
+        iface = detect()
+
+    print "Interface %s:" % iface
+    (oldrxp, oldtxp, oldrxb, oldtxb) = get(iface)
+    while True:
+        time.sleep(2)
+        (rxp, txp, rxb, txb) = get(iface)
+        print "RX: %0.2f Mbps (%d pps)  TX: %0.2f Mbps (%d pps)" % \
+            ((rxb - oldrxb) / 250000.0,
+             (rxp - oldrxp) / 2.0,
+             (txb - oldtxb) / 250000.0,
+             (txp - oldtxp) / 2.0)
+
+        (oldrxp, oldtxp, oldrxb, oldtxb) = (rxp, txp, rxb, txb)
