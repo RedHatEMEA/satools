@@ -7,6 +7,7 @@
 import argparse
 import os
 import sys
+import urllib
 import xmlrpclib
 
 def parse_args():
@@ -34,10 +35,8 @@ if __name__ == "__main__":
     for i, pkg in enumerate(pkgs):
       filename = client.packages.getDetails(key, pkg["id"])["file"]
       print >>sys.stderr, "[%u/%u] %s" % (i + 1, len(pkgs), filename)
-
-      f = open(os.path.join(c, filename), "w")
-      f.write(client.packages.getPackage(key, pkg["id"]).data)
-      f.close()
+      urllib.urlretrieve(client.packages.getPackageUrl(key, pkg["id"]),
+                         os.path.join(c, filename))
 
   client.auth.logout(key)
 
