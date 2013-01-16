@@ -30,7 +30,7 @@ rpm-base: clean
 clean:
 	find -name '*.pyc' -print0 | xargs -i -0 rm -f '{}'
 	rm -f juno/app/static/app-all.js juno/app/static/all-classes.js
-	rm -f juno/app/parsetab.py search/app/parsetab.py
+	rm -f juno/app/parsetab.py satools/parsetab.py search/app/parsetab.py
 	rm -f search/app/static/app-all.js search/app/static/all-classes.js
 
 juno:
