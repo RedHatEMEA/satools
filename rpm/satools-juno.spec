@@ -50,7 +50,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-/
+/opt/satools/juno
 %doc README.rst
 %config(noreplace) /etc/httpd/conf.d/satools-juno.conf
 

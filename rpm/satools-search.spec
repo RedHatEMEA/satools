@@ -46,7 +46,7 @@ rm -rf %{buildroot}
 /sbin/service httpd reload
 
 %files
-/
+/opt/satools/search
 %doc README.rst
 %config(noreplace) /etc/httpd/conf.d/satools-search.conf
 

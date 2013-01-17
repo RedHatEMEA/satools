@@ -41,7 +41,7 @@ done
 
 %files
 %defattr(-,root,root,-)
-%{python_sitelib}
+%{python_sitelib}/satools
 %doc README.rst
 
 %changelog

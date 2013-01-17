@@ -39,7 +39,7 @@ done
 
 %files
 %defattr(-,root,root,-)
-%{python_sitelib}
+%{python_sitelib}/odptools
 %doc README.rst
 
 %changelog
