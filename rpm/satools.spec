@@ -6,7 +6,7 @@ License:	GPL
 URL:		https://github.com/RedHatUKI/satools
 Source:		satools.tar.gz
 BuildArch:	noarch
-Requires:	mimehandler(application/x-java-jnlp-file), python-BeautifulSoup, python-lxml, python-ply
+Requires:	mimehandler(application/x-java-jnlp-file), python-argparse, python-BeautifulSoup, python-lxml, python-ply
 BuildRequires:	redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
