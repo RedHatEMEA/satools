@@ -4,6 +4,7 @@ from satools import common
 import hashlib
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import tempfile
@@ -20,15 +21,17 @@ class juno:
 
         self.tempdir = tempfile.mkdtemp()
 
-        subprocess.Popen(("/usr/bin/soffice",
-                          "--accept=pipe,name=%s;urp;StarOffice.ServiceManager" % junopipename,
-                          "--headless",
-                          "-env:UserInstallation=%s" % juno.mkpath(self.tempdir)),
-                         stderr = file("/dev/null", "w"),
-                         close_fds = True)
+        self.proc = subprocess.Popen(("/usr/bin/soffice",
+                                      "--accept=pipe,name=%s;urp;StarOffice.ServiceManager" % junopipename,
+                                      "--headless",
+                                      "-env:UserInstallation=%s" % juno.mkpath(self.tempdir)),
+                                     stderr = file("/dev/null", "w"),
+                                     preexec_fn = os.setpgrp,
+                                     close_fds = True)
 
-        if not self.waitConnect(junosocket, 10):
-            raise Exception("soffice socket not found after 10 seconds, giving up")
+        if not self.waitConnect(junosocket, 30):
+            os.killpg(self.proc.pid, signal.SIGKILL)
+            raise Exception("soffice socket not found after 30 seconds, giving up")
       
         l_ctx = uno.getComponentContext()
         res = l_ctx.ServiceManager.createInstance("com.sun.star.bridge.UnoUrlResolver")
@@ -97,6 +100,7 @@ class juno:
         self.desktop.terminate()
         if self.waitBind(self.masterSocketName(), 30):
             shutil.rmtree(self.tempdir)
+        os.killpg(self.proc.pid, signal.SIGKILL)
 
     @staticmethod
     def socketName(name):
