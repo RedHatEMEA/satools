@@ -177,17 +177,17 @@ def threads_destroy(threads):
 
 def cleanup():
     for dirpath, dirnames, filenames in os.walk("."):
-        deldirs = []
+        nowalkdirs = []
         for d in dirnames:
             path = os.path.join(dirpath, d)[2:]
             if path in fileset.ignoredirs:
-                deldirs.append(d)
+                nowalkdirs.append(d)
 
             elif path not in fileset.dirs:
-                deldirs.append(d)
+                nowalkdirs.append(d)
                 common.rmtree(path)
 
-        dirnames[:] = [d for d in dirnames if d not in deldirs]
+        dirnames[:] = [d for d in dirnames if d not in nowalkdirs]
 
         for f in filenames:
             path = os.path.join(dirpath, f)[2:]
