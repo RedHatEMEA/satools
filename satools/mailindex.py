@@ -11,6 +11,9 @@ import search
 import sqlite3
 import sys
 
+def version(x, y, z):
+    return x * 10000 + y * 100 + z
+
 class MailDB(object):
     def __init__(self, dbpath):
         self.db = sqlite3.connect(dbpath)
@@ -26,9 +29,14 @@ class MailDB(object):
                         " length INTEGER NOT NULL)")
 
         try:
-            self.db.execute("CREATE VIRTUAL TABLE messages_fts USING fts4"
-                            "(from TEXT NOT NULL, subject TEXT NOT NULL,"
-                            " body TEXT NOT NULL)")
+            if version(*sqlite3.sqlite_version_info) >= version(3, 7, 4):
+                self.db.execute("CREATE VIRTUAL TABLE messages_fts USING fts4"
+                                "(from TEXT NOT NULL, subject TEXT NOT NULL,"
+                                " body TEXT NOT NULL)")
+            else:
+                self.db.execute("CREATE VIRTUAL TABLE messages_fts USING fts3"
+                                "(from TEXT NOT NULL, subject TEXT NOT NULL,"
+                                " body TEXT NOT NULL)")
 
         except sqlite3.OperationalError:
             pass
