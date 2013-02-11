@@ -35,7 +35,6 @@ class FileSet(object):
 
     def ignore_dir(self, dir_):
         with self.lock:
-            self.dirty = True
             self.ignoredirs.add(dir_)
 
     def add_file(self, file_):
@@ -181,7 +180,7 @@ def cleanup():
         deldirs = []
         for d in dirnames:
             path = os.path.join(dirpath, d)[2:]
-            if path in fileset.deldirs:
+            if path in fileset.ignoredirs:
                 deldirs.append(d)
 
             elif path not in fileset.dirs:
