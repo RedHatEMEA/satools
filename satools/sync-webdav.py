@@ -19,19 +19,28 @@ import urlparse
 class FileSet(object):
     def __init__(self, root):
         self.lock = threading.Lock()
-        self.dirs = set([".", root])
+        self.dirs = set([root])
         self.files = set()
+        self.ignoredirs = set()
+        self.dirty = False
 
         while "/" in root:
-            root = root.rsplit("/")[0]
+            root = root.rsplit("/", 1)[0]
             self.dirs.add(root)
 
     def add_dir(self, dir_):
         with self.lock:
+            self.dirty = True
             self.dirs.add(dir_)
+
+    def ignore_dir(self, dir_):
+        with self.lock:
+            self.dirty = True
+            self.ignoredirs.add(dir_)
 
     def add_file(self, file_):
         with self.lock:
+            self.dirty = True
             self.files.add(file_)
 
 class LockedList(object):
@@ -133,6 +142,7 @@ def sync_dir(url, path, username, password, odponly):
     try:
         (dirs, files) = ls(path, tls.conn)
     except ListFailure:
+        fileset.ignore_dir(urllib.unquote(path)[1:])
         return
 
     fileset.add_dir(urllib.unquote(path)[1:])
@@ -168,19 +178,22 @@ def threads_destroy(threads):
 
 def cleanup():
     for dirpath, dirnames, filenames in os.walk("."):
-        dp = os.path.relpath(dirpath, ".")
-        if dp not in fileset.dirs:
-            del dirnames[:]
-            continue
+        deldirs = []
+        for d in dirnames:
+            path = os.path.join(dirpath, d)[2:]
+            if path in fileset.deldirs:
+                deldirs.append(d)
+
+            elif path not in fileset.dirs:
+                deldirs.append(d)
+                common.rmtree(path)
+
+        dirnames[:] = [d for d in dirnames if d not in deldirs]
 
         for f in filenames:
-            path = os.path.join(dp, f)
-            if not path.startswith("./.") and path not in fileset.files:
+            path = os.path.join(dirpath, f)[2:]
+            if not path.startswith(".") and path not in fileset.files:
                 os.unlink(path)
-
-    for dirpath, dirnames, filenames in os.walk(".", topdown = False):
-        if dirpath != "." and not os.listdir(dirpath):
-            os.rmdir(dirpath)
 
 def sync_webdav(url, dest, username, password, odponly):
     common.mkdirs(dest)
@@ -213,7 +226,8 @@ def sync_webdav(url, dest, username, password, odponly):
 
     threads_destroy(threads)
 
-    cleanup()
+    if fileset.dirty:
+        cleanup()
 
     common.write_sync_done()
 
