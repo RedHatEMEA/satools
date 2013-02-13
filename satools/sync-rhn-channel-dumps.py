@@ -66,7 +66,7 @@ class Iso(object):
 
         if remaining > 0:
             # download terminated early, retry
-            fileset.remove(iso.name)
+            fileset.remove(self.name)
             return
 
         if not self.verify():
