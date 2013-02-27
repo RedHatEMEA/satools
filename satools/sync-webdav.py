@@ -5,8 +5,9 @@ import calendar
 import common
 import errno
 import httplib
-import lxml.etree
 import lxml.builder
+import lxml.etree
+import lxml.html
 import os
 import Queue
 import sys
@@ -103,7 +104,43 @@ def ls(path, conn):
 
             files.append({"path": href, "size": size, "mtime": mtime})
 
-    return (sorted(dirs), sorted(files))
+    return (dirs, files)
+
+def ls_alfresco(path, conn):
+    msg("ls %s" % path)
+    conn.request("GET", path, None, {"Authorization": conn.auth})
+    response = conn.getresponse()
+    data = response.read()
+
+    if response.status != 200:
+        msg("ERROR: ls_alfresco %s: HTTP response %u" % (path, response.status))
+        raise ListFailure()
+
+    try:
+        xml = lxml.html.fromstring(data)
+    except lxml.etree.XMLSyntaxError, e:
+        msg("ERROR: ls_alfresco %s: XMLSyntaxError %s" % (path, e))
+        raise ListFailure()
+
+    dirs = []
+    files = []
+
+    for row in xml.xpath("//table[@class='listingTable']//tr")[1:]:
+        if len(row) != 4:  # "[Up a level]"
+            continue
+
+        href = row[0][0].get("href")
+
+        if not row[1].text.strip():  # no indicated Size
+            dirs.append({"path": href})
+        elif row[2].text.strip():    # indicated Type
+            mtime = row[3].text.strip()
+            mtime = calendar.timegm(time.strptime(mtime, "%a, %d %b %Y %H:%M:%S GMT"))
+
+            files.append({"path": href, "mtime": mtime})
+        # otherwise it's a link to another directory or another file; ignored
+
+    return (dirs, files)
 
 def download(url, dest, username, password):
     pm = urllib2.HTTPPasswordMgrWithDefaultRealm()
@@ -125,7 +162,8 @@ def worker(host, username, password):
 def needs_download(dest, f):
     try:
         st = os.stat(dest)
-        if st.st_mtime == f["mtime"] and st.st_size == f["size"]:
+        if st.st_mtime == f["mtime"] and \
+                ("size" not in f or st.st_size == f["size"]):
             return False
 
     except OSError, e:
@@ -137,9 +175,12 @@ def needs_download(dest, f):
 
     return True
 
-def sync_dir(url, path, username, password, odponly):
+def sync_dir(url, path, username, password, odponly, alfresco):
     try:
-        (dirs, files) = ls(path, tls.conn)
+        if alfresco:
+            (dirs, files) = ls_alfresco(path, tls.conn)
+        else:
+            (dirs, files) = ls(path, tls.conn)
     except ListFailure:
         fileset.ignore_dir(urllib.unquote(path)[1:])
         return
@@ -147,7 +188,7 @@ def sync_dir(url, path, username, password, odponly):
     fileset.add_dir(urllib.unquote(path)[1:])
 
     for d in dirs:
-        q.put((sync_dir, url, d["path"], username, password, odponly))
+        q.put((sync_dir, url, d["path"], username, password, odponly, alfresco))
 
     for f in files:
         if odponly == 1 and not f["path"].endswith(".odp"):
@@ -194,7 +235,7 @@ def cleanup():
             if not path.startswith(".") and path not in fileset.files:
                 os.unlink(path)
 
-def sync_webdav(url, dest, username, password, odponly):
+def sync_webdav(url, dest, username, password, odponly, alfresco):
     common.mkdirs(dest)
     os.chdir(dest)
 
@@ -215,7 +256,7 @@ def sync_webdav(url, dest, username, password, odponly):
                              (urlp.netloc, username, password))
 
     q.put((sync_dir, url, urlp.path.rstrip("/"), username, password,
-           int(odponly)))
+           int(odponly), int(alfresco)))
     q.join()
 
     msg("INFO: will download %u files" % len(downloadq.list))
