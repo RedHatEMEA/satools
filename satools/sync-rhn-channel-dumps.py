@@ -1,6 +1,7 @@
 #!/usr/bin/python -tt
 
 import argparse
+import calendar
 import common
 import hashlib
 import lxml.html
@@ -78,6 +79,11 @@ class Iso(object):
 
         common.rename(self.tempname, self.name)
         common.mkro(self.name)
+
+        if "Last-Modified" in response.headers:
+            mtime = calendar.timegm(time.strptime(response.headers["Last-Modified"],
+                                                  "%a, %d %b %Y %H:%M:%S %Z"))
+            os.utime(self.name, (mtime, mtime))
 
     def verify(self):
         md5 = hashlib.md5()
