@@ -40,7 +40,6 @@ rm -rf %{buildroot}
 /bin/chmod 0701 /home/satools
 
 %post
-/bin/ln -s /home/satools/content/juno/root /opt/satools/juno/static 2>/dev/null
 /bin/ln -s /home/satools/content/juno/slides /opt/satools/juno/static 2>/dev/null
 /bin/ln -s /home/satools/content/juno/thumbs /opt/satools/juno/static 2>/dev/null
 /sbin/service httpd reload
