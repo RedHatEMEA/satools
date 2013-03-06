@@ -221,7 +221,7 @@ Ext.define("Juno.controller.SlidesController", {
 	    e.preventDefault();
 	}
 
-	if(e.keyCode == e.LEFT || e.keyCode == e.RIGHT ||
+	if(e.keyCode == e.LEFT || e.keyCode == e.RIGHT || e.keyCode == e.SPACE ||
 	   e.keyCode == e.UP || e.keyCode == e.DOWN) {
 	    if("scrollIntoViewIfNeeded" in item)
 		item.scrollIntoViewIfNeeded();
