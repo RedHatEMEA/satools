@@ -19,6 +19,7 @@ def parse_args():
     ap = argparse.ArgumentParser()
     ap.add_argument("-q", action = "store_true", dest = "quiet",
                     help = "quiet mode")
+    ap.add_argument("list", nargs = "?")
 
     return vars(ap.parse_args())
 
@@ -55,6 +56,9 @@ if __name__ == "__main__":
         
         url = line[0].rstrip("/")
         _list = url.split("/")[-1]
+
+        if "list" in args and _list != args["list"]:
+            continue
 
         credentials = None
         if len(line) == 3:
