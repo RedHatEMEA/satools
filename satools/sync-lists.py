@@ -49,6 +49,9 @@ if __name__ == "__main__":
     lock = common.Lock(".lock")
     db = common.DB(".sync-db")
 
+    if not args["list"]:
+        thunderbird.init()
+
     now = time.gmtime()
 
     for line in config["lists-sync"]:
@@ -57,7 +60,7 @@ if __name__ == "__main__":
         url = line[0].rstrip("/")
         _list = url.split("/")[-1]
 
-        if "list" in args and _list != args["list"]:
+        if args["list"] and _list != args["list"]:
             continue
 
         credentials = None

@@ -24,7 +24,7 @@ def init():
     config["thunderbird-base"] = base(spd(config["thunderbird-folder"]))
 
 def isrunning():
-    return subprocess.call(["pidof", "thunderbird-bin"],
+    return subprocess.call(["pidof", "thunderbird"],
                            stdout = open("/dev/null")) == 0
 
 def rmpath(path):
@@ -61,5 +61,3 @@ def link(path):
     if config["thunderbird-base"] is not None:
         mkpath(os.path.split(path)[0])
         os.link(path, base(halfspd(path)))
-
-init()
