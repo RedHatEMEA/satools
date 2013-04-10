@@ -3,7 +3,7 @@ Version:	0.4
 Release:	4
 Summary:	Red Hat UK&I SA tools
 License:	GPL
-URL:		https://github.com/RedHatUKI/satools
+URL:		https://github.com/RedHatEMEA/satools
 Source:		satools.tar.gz
 BuildArch:	noarch
 Requires:	mimehandler(application/x-java-jnlp-file), python-argparse, python-BeautifulSoup, python-lxml, python-ply, python-requests

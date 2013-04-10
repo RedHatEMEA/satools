@@ -3,7 +3,7 @@ Version:	0.4
 Release:	4
 Summary:	Red Hat UK&I SA tools presentation search engine
 License:	GPL
-URL:		https://github.com/RedHatUKI/satools
+URL:		https://github.com/RedHatEMEA/satools
 Source:		satools-juno.tar.gz
 BuildArch:	noarch
 Requires:	httpd, mod_wsgi, python-imaging, python-webpy, satools-odptools = %{version}-%{release}
