@@ -9,7 +9,7 @@ Ext.define("Juno.view.SlideZoomView", {
 	keydown: {
 	    element: "el",
 	    fn: function(e) {
-		if(e.keyCode == e.LEFT || e.keyCode == e.RIGHT) {
+		if(e.keyCode == e.LEFT || e.keyCode == e.RIGHT || e.keyCode == e.SPACE) {
 		    var ctrl = _Juno.getController("SlidesController");
 		    var zoom = Ext.ComponentQuery.query("slidezoom")[0];
 		    var dv = zoom.dv;
