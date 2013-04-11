@@ -16,12 +16,16 @@ reserved = ["AFTER", "BEFORE", "IN", "IS", "NAME", "NEAR", "NOT", "OR", "PATH",
 tokens = ["INT", "QSTRING", "STRING"] + reserved
 
 def t_STRING(t):
-    '[^" ()/:-]+'
+    '[^" ()/:]+'
     if t.value.upper() in reserved: t.type = t.value.upper()
     if t.value.isdigit(): t.type = "INT"
     return t
 
-t_QSTRING = '"[^"]*"'
+def t_QSTRING(t):
+    '"[^"]*"'
+    t.value = t.value[1:-1]
+    return t
+
 t_ignore = " "
 literals = ("(", ")", "/", ":")
 
@@ -39,18 +43,16 @@ def p_passthrough(p):
        or_expr        : and_expr
        and_expr       : not_expr
        not_expr       : expr
-       match_expr     : string
+       match_expr     : qstring
        near_op        : NEAR
-       string         : basestring
-                      | QSTRING
-       barestring     : basestring
-       basestring     : AFTER
+       string         : AFTER
                       | BEFORE
                       | IN
                       | INT
                       | IS
                       | NAME
                       | PATH
+                      | QSTRING
                       | STRING
                       | UNDER"""
     p[0] = p[1]
@@ -80,25 +82,25 @@ def p_expr_before(p):
                  [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
 
 def p_expr_in(p):
-    """expr           : IN ":" barestring"""
+    """expr           : IN ":" string"""
     p[0] = Where("(dirname = ?)", [p[3].strip("/")])
 
 def p_expr_is(p):
-    """expr           : IS ":" barestring"""
+    """expr           : IS ":" string"""
     p[0] = Where("(preso = ?)", [p[3].lstrip("/")], False)
 
 def p_expr_name(p):
-    """expr           : NAME ":" barestring"""
+    """expr           : NAME ":" string"""
     s = p[3].replace("$", "$$").replace("_", "$_").replace("%", "$%")
     p[0] = Where("(filename LIKE ? ESCAPE '$')", ["%" + s + "%"])
 
 def p_expr_path(p):
-    """expr           : PATH ":" barestring"""
+    """expr           : PATH ":" string"""
     s = p[3].replace("$", "$$").replace("_", "$_").replace("%", "$%")
     p[0] = Where("(preso LIKE ? ESCAPE '$')", ["%" + s.lstrip("/") + "%"])
 
 def p_expr_under(p):
-    """expr           : UNDER ":" barestring"""
+    """expr           : UNDER ":" string"""
     p[3] = p[3].strip("/")
     p[0] = Where("(dirname = ? OR SUBSTR(dirname, 1, ?) = ?)",
                  [p[3], len(p[3]) + 1, p[3] + "/"])
@@ -112,16 +114,16 @@ def p_expr_match(p):
     p[0] = Where("(slides.rowid IN (SELECT docid FROM slides_fts WHERE slides_fts MATCH ?))", [p[1]])
 
 def p_match_expr(p):
-    """match_expr     : match_expr near_op string"""
+    """match_expr     : match_expr near_op qstring"""
     p[0] = " ".join(p[1:])
+
+def p_qstring(p):
+    """qstring        : string"""
+    p[0] = '"' + p[1] + '"'
 
 def p_near_op(p):
     """near_op        : NEAR "/" INT"""
     p[0] = "".join(p[1:])
-
-def p_barestring_qstring(p):
-    """barestring     : QSTRING"""
-    p[0] = p[1][1:-1]
 
 lexer = ply.lex.lex()
 ply.yacc.yacc(debug = 0)

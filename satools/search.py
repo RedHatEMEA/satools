@@ -14,12 +14,16 @@ reserved = ["BODY", "FROM", "LIST", "NEAR", "NOT", "OR", "SUBJECT"]
 tokens = ["INT", "QSTRING", "STRING"] + reserved
 
 def t_STRING(t):
-    '[^" ()/:-]+'
+    '[^" ()/:]+'
     if t.value.upper() in reserved: t.type = t.value.upper()
     if t.value.isdigit(): t.type = "INT"
     return t
 
-t_QSTRING = '"[^"]*"'
+def t_QSTRING(t):
+    '"[^"]*"'
+    t.value = t.value[1:-1]
+    return t
+
 t_ignore = " "
 literals = ("(", ")", "/", ":")
 
@@ -37,15 +41,13 @@ def p_passthrough(p):
        or_expr        : and_expr
        and_expr       : not_expr
        not_expr       : expr
-       match_expr     : string
+       match_expr     : qstring
        near_op        : NEAR
-       string         : basestring
-                      | QSTRING
-       barestring     : basestring
-       basestring     : BODY
+       string         : BODY
                       | FROM
                       | INT
                       | LIST
+                      | QSTRING
                       | STRING
                       | SUBJECT"""
     p[0] = p[1]
@@ -63,19 +65,19 @@ def p_not_expr(p):
     p[0] = Where("(NOT %s)" % p[2].sql, p[2].args)
 
 def p_expr_body(p):
-    """expr           : BODY ":" string"""
+    """expr           : BODY ":" qstring"""
     p[0] = Where("(messages.rowid IN (SELECT docid FROM messages_fts WHERE body MATCH ?))", [p[3]])
 
 def p_expr_from(p):
-    """expr           : FROM ":" string"""
+    """expr           : FROM ":" qstring"""
     p[0] = Where("(messages.rowid IN (SELECT docid FROM messages_fts WHERE messages_fts.'from' MATCH ?))", [p[3]])
 
 def p_expr_list(p):
-    """expr           : LIST ":" barestring"""
+    """expr           : LIST ":" string"""
     p[0] = Where("(messages.list = ?)", [p[3]])
 
 def p_expr_path(p):
-    """expr           : SUBJECT ":" string"""
+    """expr           : SUBJECT ":" qstring"""
     p[0] = Where("(messages.rowid IN (SELECT docid FROM messages_fts WHERE subject MATCH ?))", [p[3]])
 
 def p_expr_paren(p):
@@ -90,13 +92,13 @@ def p_match_expr(p):
     """match_expr     : match_expr near_op string"""
     p[0] = " ".join(p[1:])
 
+def p_qstring(p):
+    """qstring        : string"""
+    p[0] = '"' + p[1] + '"'
+
 def p_near_op(p):
     """near_op        : NEAR "/" INT"""
     p[0] = "".join(p[1:])
-
-def p_barestring_qstring(p):
-    """barestring     : QSTRING"""
-    p[0] = p[1][1:-1]
 
 lexer = ply.lex.lex()
 ply.yacc.yacc(debug = 0)
