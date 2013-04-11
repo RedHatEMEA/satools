@@ -3,6 +3,7 @@
 import calendar
 import ply.lex
 import ply.yacc
+import time
 
 class SearchException(Exception):
     pass
@@ -16,7 +17,7 @@ reserved = ["AFTER", "BEFORE", "IN", "IS", "NAME", "NEAR", "NOT", "OR", "PATH",
 tokens = ["INT", "QSTRING", "STRING"] + reserved
 
 def t_STRING(t):
-    '[^" ()/:]+'
+    '[^" ():]+'
     if t.value.upper() in reserved: t.type = t.value.upper()
     if t.value.isdigit(): t.type = "INT"
     return t
@@ -27,7 +28,7 @@ def t_QSTRING(t):
     return t
 
 t_ignore = " "
-literals = ("(", ")", "/", ":")
+literals = ("(", ")", ":")
 
 def t_error(t):
     raise SearchException('Illegal character "%s"' % t.value[0])
@@ -72,14 +73,14 @@ def p_not_expr(p):
     p[0] = Where("(NOT %s)" % p[2].sql, p[2].args)
 
 def p_expr_after(p):
-    """expr           : AFTER ":" INT "/" INT "/" INT"""
+    """expr           : AFTER ":" string"""
     p[0] = Where("(presomtime >= ?)",
-                 [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
+                 [calendar.timegm(time.strptime(p[3], "%d/%m/%Y"))])
 
 def p_expr_before(p):
-    """expr           : BEFORE ":" INT "/" INT "/" INT"""
+    """expr           : BEFORE ":" string"""
     p[0] = Where("(presomtime < ?)",
-                 [calendar.timegm((int(p[7]), int(p[5]), int(p[3]), 0, 0, 0))])
+                 [calendar.timegm(time.strptime(p[3], "%d/%m/%Y"))])
 
 def p_expr_in(p):
     """expr           : IN ":" string"""
@@ -122,8 +123,8 @@ def p_qstring(p):
     p[0] = '"' + p[1] + '"'
 
 def p_near_op(p):
-    """near_op        : NEAR "/" INT"""
-    p[0] = "".join(p[1:])
+    """near_op        : NEAR "(" INT ")" """
+    p[0] = p[1] + "/" + p[3]
 
 lexer = ply.lex.lex()
 ply.yacc.yacc(debug = 0)

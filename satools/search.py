@@ -14,7 +14,7 @@ reserved = ["BODY", "FROM", "LIST", "NEAR", "NOT", "OR", "SUBJECT"]
 tokens = ["INT", "QSTRING", "STRING"] + reserved
 
 def t_STRING(t):
-    '[^" ()/:]+'
+    '[^" ():]+'
     if t.value.upper() in reserved: t.type = t.value.upper()
     if t.value.isdigit(): t.type = "INT"
     return t
@@ -25,7 +25,7 @@ def t_QSTRING(t):
     return t
 
 t_ignore = " "
-literals = ("(", ")", "/", ":")
+literals = ("(", ")", ":")
 
 def t_error(t):
     raise SearchException('Illegal character "%s"' % t.value[0])
@@ -97,8 +97,8 @@ def p_qstring(p):
     p[0] = '"' + p[1] + '"'
 
 def p_near_op(p):
-    """near_op        : NEAR "/" INT"""
-    p[0] = "".join(p[1:])
+    """near_op        : NEAR "(" INT ")" """
+    p[0] = p[1] + "/" + p[3]
 
 lexer = ply.lex.lex()
 ply.yacc.yacc(debug = 0)

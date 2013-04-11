@@ -137,10 +137,10 @@
         queries within a certain proximity of eachother. By default
         the <b>NEAR</b> operator matches when there are 10 or fewer
         intervening words; a different limit N may be specified by
-        specifying an operator of the form <b>NEAR/N</b>. The order
-        in which the given words or phrases appear in the message
-        does not have to be the same as the order in which they
-        appear in the query.</p>
+        specifying an operator of the form <b>NEAR(N)</b>. The
+        order in which the given words or phrases appear in the
+        message does not have to be the same as the order in which
+        they appear in the query.</p>
 
         <div style="margin-left: 2em">
           Return messages containing the words <i>linux</i> and
@@ -153,7 +153,7 @@
           Return messages containing the words <i>linux</i> and
           <i>kernel</i> with not more than 5 intervening words:
 
-          <p><b>linux NEAR/5 kernel</b></p>
+          <p><b>linux NEAR(5) kernel</b></p>
         </div>
 
         <div style="margin-left: 2em">
@@ -161,7 +161,7 @@
           system</i> and word <i>linux</i> with not more than 2
           words separating the two:
 
-          <p><b>linux NEAR/2 "operating system"</b></p>
+          <p><b>linux NEAR(2) "operating system"</b></p>
         </div>
       </li>
 
