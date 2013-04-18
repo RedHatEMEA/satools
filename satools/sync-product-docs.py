@@ -192,7 +192,7 @@ def get_books(path):
         if args["type"] != "html-single":
             # don't munge html-single paths as it breaks HTML relative paths
             (d, f) = os.path.split(dest)
-            d = d.split("/", 3)[3]  # remove ^knowledge/docs/<locale>
+            d = d.split("/", 3)[3]  # remove ^site/documentation/<locale>
             d = d.rsplit("/", 2)[0] # remove <type>/<book name>$
             d = d.replace("_", " ")
             dest = os.path.join(d, f)
@@ -204,7 +204,7 @@ def get_books(path):
 
 def get_products(path):
     xml = get(path)
-    for href in xml.xpath("//a[starts-with(@href,'/knowledge/docs/')]/@href"):
+    for href in xml.xpath("//a[starts-with(@href,'/site/documentation/')]/@href"):
         q.put((get_books, href + "?locale=" + args["locale"]))
 
 def get(path):
@@ -253,7 +253,7 @@ if __name__ == "__main__":
     threads = threads_create(int(config["product-docs-threads"]),
                              ("access.redhat.com", ))
 
-    q.put((get_products, "/knowledge/docs/"))
+    q.put((get_products, "/site/documentation/"))
     q.join()
 
     threads_destroy(threads)
