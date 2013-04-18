@@ -1,6 +1,6 @@
 Name:		satools-juno
 Version:	0.4
-Release:	5
+Release:	6
 Summary:	Red Hat UK&I SA tools presentation search engine
 License:	GPL
 URL:		https://github.com/RedHatEMEA/satools
