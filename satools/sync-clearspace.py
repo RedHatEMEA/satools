@@ -16,7 +16,7 @@ import urllib
 
 retries = 10
 step = 50
-q = Queue.Queue(step)
+q = Queue.Queue(step * 5)
 lock = threading.Lock()
 files = set()
 tls = threading.local()
