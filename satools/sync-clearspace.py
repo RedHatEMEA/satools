@@ -70,29 +70,22 @@ class Document(HTML):
     if insert:
       self.path.insert(1, insert)
 
+    self.downloads = []
 
-class AttachDocument(Document):
-  def __init__(self, data):
-    super(AttachDocument, self).__init__(data)
+    # handle potential binary document
+    hrefs = self.xml.xpath("//span[@class='jive-wiki-body-file-info']/a/@href")
+    if len(hrefs):
+      dlpath = self.path + [urllib.unquote(hrefs[0].split("/")[-1]).decode("utf-8")]
+      self.downloads.append(Download(hrefs[0], "/".join(dlpath)))
 
+    # handle potential attachment document
     title = self.xml.xpath("//div[@class='jive-content-title']/h2")[0]
     self.path += [title[0].tail.strip()]
 
     hrefs = self.xml.xpath("//div[@class='jive-attachments']//a/@href")
-    self.downloads = []
     for href in hrefs:
       dlpath = self.path + [urllib.unquote(href.split("/")[-1]).decode("utf-8")]
       self.downloads.append(Download(href, "/".join(dlpath)))
-
-
-class BinaryDocument(Document):
-  def __init__(self, data):
-    super(BinaryDocument, self).__init__(data)
-
-    href = self.xml.xpath("//span[@class='jive-wiki-body-file-info']/a/@href")[0]
-    dlpath = self.path + [urllib.unquote(href.split("/")[-1]).decode("utf-8")]
-
-    self.downloads = [Download(href, "/".join(dlpath))]
 
 
 class Index(HTML):
@@ -122,7 +115,7 @@ def get(href, **kwargs):
       if i == retries - 1:
         raise
       
-      log("%s, sleeping..." % e.message
+      log("%s, sleeping..." % e.message)
       time.sleep(10)
 
   return r
@@ -211,8 +204,7 @@ def main():
   tls.s = requests.Session()
 
   for i in users():
-    iter_index("/view-documents.jspa?start=%(offset)u&range=%(step)u&numResults=%(step)u&tags=&containerType=14&containerID=1&targetUser=%(user)u&filter=collab", {"user": i}, AttachDocument)
-    iter_index("/view-documents.jspa?start=%(offset)u&range=%(step)u&numResults=%(step)u&tags=&containerType=14&containerID=1&targetUser=%(user)u&filter=presentations", {"user": i}, BinaryDocument)
+    iter_index("/view-documents.jspa?start=%(offset)u&numResults=%(step)u&targetUser=%(user)u", {"user": i}, Document)
 
   q.join()
 
