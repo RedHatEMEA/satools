@@ -18,6 +18,7 @@ retries = 10
 step = 50
 q = Queue.Queue(step * 5)
 lock = threading.Lock()
+docs = set()
 files = set()
 tls = threading.local()
 
@@ -76,7 +77,8 @@ class Document(HTML):
     hrefs = self.xml.xpath("//span[@class='jive-wiki-body-file-info']/a/@href")
     if len(hrefs):
       dlpath = self.path + [urllib.unquote(hrefs[0].split("/")[-1]).decode("utf-8")]
-      self.downloads.append(Download(hrefs[0], "/".join(dlpath)))
+      if hrefs[0][0] == "/":
+        self.downloads.append(Download(hrefs[0], "/".join(dlpath)))
 
     # handle potential attachment document
     title = self.xml.xpath("//div[@class='jive-content-title']/h2")[0]
@@ -85,7 +87,8 @@ class Document(HTML):
     hrefs = self.xml.xpath("//div[@class='jive-attachments']//a/@href")
     for href in hrefs:
       dlpath = self.path + [urllib.unquote(href.split("/")[-1]).decode("utf-8")]
-      self.downloads.append(Download(href, "/".join(dlpath)))
+      if href[0] == "/":
+        self.downloads.append(Download(href, "/".join(dlpath)))
 
 
 class Index(HTML):
@@ -120,9 +123,14 @@ def get(href, **kwargs):
 
   return r
 
-def download(cls, href):
+def download(href):
+  with lock:
+    if href in docs:
+      return
+    docs.add(href)
+
   r = get(href)
-  doc = cls(r.text)
+  doc = Document(r.text)
 
   for dl in doc.downloads:
     if not dl.path.lower().endswith(".odp"):
@@ -147,7 +155,7 @@ def worker():
       log(str(items) + "\n" + traceback.format_exc())
     q.task_done()
 
-def iter_index(basehref, d, cls):
+def iter_index(basehref, d):
   d["step"] = step
   for i in itertools.count(step = step):
     d["offset"] = i
@@ -155,7 +163,7 @@ def iter_index(basehref, d, cls):
     index = Index(r.text)
 
     for href in index.hrefs:
-      q.put((download, cls, href))
+      q.put((download, href))
 
     if len(index.hrefs) != step:
       break
@@ -204,7 +212,7 @@ def main():
   tls.s = requests.Session()
 
   for i in users():
-    iter_index("/view-documents.jspa?start=%(offset)u&numResults=%(step)u&targetUser=%(user)u", {"user": i}, Document)
+    iter_index("/view-documents.jspa?start=%(offset)u&numResults=%(step)u&targetUser=%(user)u", {"user": i})
 
   q.join()
 
