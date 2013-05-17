@@ -196,7 +196,6 @@ def log(s):
 def main():
   global config
   config = common.load_config()
-  config["clearspace-base"] = os.environ["HOME"] + "/docspace-2" # TODO: remove
 
   common.mkdirs(config["clearspace-base"])
   os.chdir(config["clearspace-base"])
