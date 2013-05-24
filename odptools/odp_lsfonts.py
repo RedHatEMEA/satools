@@ -10,6 +10,7 @@ odf.utils.set_encoding()
 def parse_args():
     ap = argparse.ArgumentParser()
     ap.add_argument("src", help = "source ODP filename")
+    ap.add_argument("-e", "--excludefont", help = "exclude a font from the list", required = False, metavar = "font", action = "append", default = [])
 
     return ap.parse_args()
 
@@ -31,8 +32,9 @@ def iterate_pages(fonts, pages, prefix = ""):
                     portions = para.createEnumeration()
                     while portions.hasMoreElements():
                         portion = portions.nextElement()
-                        print "    [%-15.15s] %s" % (portion.CharFontName,
-                                                     portion.getString())
+			
+			if portion.CharFontName not in args.excludefont:
+	                        print "    [%-15.15s] %s" % (portion.CharFontName, portion.getString())
                         fonts.add(portion.CharFontName)
 
 def deinit():
