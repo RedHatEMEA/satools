@@ -1,6 +1,6 @@
 Name:		satools
 Version:	0.4
-Release:	6
+Release:	7
 Summary:	Red Hat UK&I SA tools
 License:	GPL
 URL:		https://github.com/RedHatEMEA/satools
