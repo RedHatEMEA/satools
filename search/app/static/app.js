@@ -23,13 +23,13 @@ Ext.application({
 		xtype: "search",
 		x: "10%",
 		y: "2%",
-		anchor: (navigator.userAgent.toLowerCase().indexOf("firefox") > -1) ? "90% 10%" : "80% 8%"
+		anchor: "90% 10%"
 	    }, {
 		xtype: "results",
 		itemId: "myresults",
 		x: "10%",
 		y: "12%",
-		anchor: (navigator.userAgent.toLowerCase().indexOf("firefox") > -1) ? "90% 49%" : "80% 37.5%"
+		anchor: "90% 49%"
 	    }, {
                 xtype: "panel",
 		layout: "fit",
@@ -39,7 +39,7 @@ Ext.application({
                    }],
 		x: "10%",
 		y: "50.5%",
-		anchor: (navigator.userAgent.toLowerCase().indexOf("firefox") > -1) ? "90% 98%" : "80% 52.5%"
+		anchor: "90% 98%"
             }]
 	});
 
