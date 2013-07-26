@@ -52,7 +52,7 @@ class Iso(object):
     def download(self):
         f = open(self.tempname, "a")
         size = os.fstat(f.fileno())[stat.ST_SIZE]
-        response = requests.get(self.href, prefetch = False,
+        response = requests.get(self.href, stream = True,
                                 headers = {"Range": "bytes=%u-" % size})
         remaining = int(response.headers["Content-Length"])
         r = response.raw
