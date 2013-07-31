@@ -92,9 +92,14 @@ if __name__ == "__main__":
                     raise
                     
                 if isgzip(f):
-                    g = gzip.GzipFile(fileobj = f, mode = "r")
-                    common.sendfile_disk(g, path)
-                    g.close()
+                    try:
+                        g = gzip.GzipFile(fileobj = f, mode = "r")
+                        common.sendfile_disk(g, path)
+                        g.close()
+                    except IOError, e:
+                        print >>sys.stderr, "WARNING: %s, continuing..." % e
+                        warnings += 1
+                        continue
                 else:
                     common.sendfile_disk(f, path)
                 f.close()
