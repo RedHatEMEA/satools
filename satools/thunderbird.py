@@ -58,6 +58,6 @@ def mkpath(path):
         pass
 
 def link(path):
-    if config["thunderbird-base"] is not None:
+    if "config" in globals() and config["thunderbird-base"] is not None:
         mkpath(os.path.split(path)[0])
         os.link(path, base(halfspd(path)))
