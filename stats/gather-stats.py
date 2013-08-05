@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import calendar
+import gzip
 import os
 import re
 import time
@@ -10,7 +11,7 @@ def accesslogs():
     for f in [f for f in sorted(os.listdir(path)) if "access_log" in f]:
         yield "/".join((path, f))
 
-rx = re.compile("^([^ ]+) ([^ ]+) ([^ ]+) \[([^\]]+)\] \"([^\"]+)\" ([^ ]+) ([^ ]+)")
+rx = re.compile("^([^ ]+) ([^ ]+) ([^ ]+) \[([^\]]+)\] \"(.*?)\" ([^ ]+) ([^ ]+)")
 fields = ("ip", "ident", "user", "date", "request", "code", "size")
 
 def match(line):
@@ -128,9 +129,13 @@ Base.aggs.append(JUD())
 
 if __name__ == "__main__":
     for log in accesslogs():
-        with open(log) as f:
-            for l in f:
-                ll = match(l)
-                Base._aggregate(ll)
+        if log[-3:] == ".gz":
+            f = gzip.open(log)
+        else:
+            f = open(log)
+        for l in f:
+            ll = match(l)
+            Base._aggregate(ll)
+        f.close()
 
     Base.report()
