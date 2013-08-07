@@ -28,7 +28,7 @@ def isgzip(f):
     bytes = f.read(2)
     f.seek(0)
 
-    return bytes == "\x1F\x8B"
+    return bytes == b"\x1F\x8B"
 
 if __name__ == "__main__":
     warnings = 0
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         credentials = None
         if len(line) == 3:
             credentials = urllib.parse.urlencode(dict(zip(("username", "password"),
-                                                          line[1:3])))
+                                                          line[1:3]))).encode("utf-8")
 
         index = common.retrieve_m(url, credentials)
         index_xml = lxml.html.parse(index).getroot()

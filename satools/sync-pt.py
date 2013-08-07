@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3 -u
 
 from satools import common
 import http.cookiejar
@@ -42,7 +42,7 @@ def read_events(opener, url):
     
     path = html.xpath("//div[@id='breadcrumbs']//li[last()]//text()")[0].strip()
     for _url in html.xpath("//a[starts-with(@href, 'download/attachments/')]/@href"):
-        dest = urllib.parse.unquote(_url).decode("utf-8")
+        dest = urllib.parse.unquote(_url)
         dest = path + "/" + "-".join(dest.rsplit("/", 2)[1:])
         _url = urllib.parse.urljoin(url, _url)
 
@@ -70,7 +70,8 @@ def login(opener):
     params["email"] = config["pt-username"]
     params["password"] = config["pt-password"]
 
-    common.retrieve_m(url, urllib.parse.urlencode(params), opener = opener, tries = 10)
+    common.retrieve_m(url, urllib.parse.urlencode(params).encode("utf-8"),
+                      opener = opener, tries = 10)
 
 if __name__ == "__main__":
     global config

@@ -7,6 +7,7 @@ import fcntl
 import os
 import shutil
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -15,7 +16,6 @@ configfile = os.environ["HOME"] + "/.satools"
 
 class DB(object):
     def __init__(self, path):
-        self.cmpfn = None
         self.readdb(path)
 
     def readdb(self, path):
@@ -37,7 +37,7 @@ class DB(object):
         temppath = mktemppath(self.path)
     
         with codecs.open(temppath, "w", "utf-8") as f:
-            for key in sorted(self.entries.keys(), self.cmpfn):
+            for key in sorted(self.entries.keys()):
                 if self.entries[key]:
                     print("%s=%s" % (key, self.get(key)), file = f)
                 else:
@@ -228,7 +228,7 @@ def sendfile(srcf, dstf):
             progress(current, total)
 
         if not data: break
-        
+
         dstf.write(data)
 
     if total:
@@ -240,7 +240,7 @@ def sendfile(srcf, dstf):
 def sendfile_disk(srcf, path):
     temppath = mktemppath(path)
 
-    dstf = open(temppath, "w")
+    dstf = open(temppath, "wb")
     sendfile(srcf, dstf)
 
     dstf.flush()
@@ -314,7 +314,7 @@ def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
         os.utime(path, (mtime, mtime))
 
 def retrieve_tmpfile(url, data = None):
-    dstf = os.tmpfile()
+    dstf = tempfile.TemporaryFile()
 
     srcf = retrieve_m(url, data)
     sendfile(srcf, dstf)

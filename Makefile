@@ -22,7 +22,7 @@ preprep-satools-odptools: rpm-base
 	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools.tar.gz" Makefile README.rst rpm/satools-odptools.spec odptools
 
 preprep-satools-search: rpm-base
-	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools-search.tar.gz" contrib/extjs-4.1.1 Makefile README.rst rpm/satools-search.spec search
+	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools-search.tar.gz" contrib/extjs-4.1.1 Makefile README.rst rpm/satools-search.spec satools search
 
 rpm-base: clean
 	mkdir -p "$(TOPDIR)/SOURCES"
@@ -34,15 +34,15 @@ clean:
 	rm -f search/app/static/app-all.js search/app/static/all-classes.js
 
 juno:
-	cd juno/app && python search.py
+	cd juno/app && python3 search.py
 	cd juno/app/static && sencha build -p app.jsb3 -d .
 
 satools:
-	cd satools && python search.py
+	cd satools && python3 search.py
 
 search:
 	cd search/app/static && sencha build -p app.jsb3 -d .
-	cd search/app && python -c 'import app'
+	cd search/app && PYTHONPATH=$(PWD) python3 -c 'import app'
 
 juno-lint:
 	cd juno/app/static && jsl -nologo -nofilelisting -conf ../jsl.conf -process app.js -process 'controller/*.js' -process 'store/*.js' -process 'view/*.js'

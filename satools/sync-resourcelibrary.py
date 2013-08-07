@@ -17,6 +17,24 @@ q = queue.Queue()
 threadlock = threading.Lock()
 warnings = 0
 
+class LockedSet(object):
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.s = set()
+
+    def tas(self, x):
+        with self.lock:
+            if x in self.s:
+                return False
+            self.s.add(x)
+            return True
+
+    def remove(self, x):
+        with self.lock:
+            self.s.remove(x)
+
+fileset = LockedSet()
+
 class Item:
     def ignore_url(self, url):
         if url.startswith("https://engage.redhat.com/") or \
@@ -44,6 +62,9 @@ class Item:
 def download_item(item, extension, tries = 1):
     dstfile = os.path.join(item.type_, item.pageurl.split("/")[-1]) + extension
 
+    if not fileset.tas(dstfile):
+        return
+
     common.mkdirs(item.type_)
     try:
         print("\r[%u]" % item.number, end=' ', file = sys.stderr)
@@ -61,7 +82,7 @@ def download_item_page(item, tries = 1):
                  (item.pageurl, item.number, item.title, item.type_, e))
         return
 
-    xml = lxml.html.fromstring(html)
+    xml = lxml.html.fromstring(html.read())
 
     try:
         if item.type_ == "Videos":
@@ -127,7 +148,7 @@ if __name__ == "__main__":
     indexurl = "http://www.redhat.com/resourcelibrary/results?portal:componentId=bf73926d-2aa3-4b8b-bf8d-a1f6f56b8469&portal:type=action&actionType=orderBy&orderBy=Date-Desc&resultPerPage=100"
     while True:
         html = common.retrieve_m(indexurl, tries = tries)
-        xml = lxml.html.fromstring(html)
+        xml = lxml.html.fromstring(html.read())
 
         for indexitem in xml.xpath("//div[@id='sidebar-left-events']"):
             indexitem = copy.deepcopy(indexitem)

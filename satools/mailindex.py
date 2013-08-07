@@ -104,7 +104,10 @@ def parse_args():
 
 def _decode(a):
     a = list(a)
-    if a[1] is None: return a[0]
+    if a[1] is None:
+        if isinstance(a[0], bytes):
+            a[0] = a[0].decode("utf-8")
+        return a[0]
     # It appears that Chinese e-mails commonly erroneously mark their charset as
     # gb2312, when in fact they are in gb18030.  The former is a strict subset
     # of the latter.

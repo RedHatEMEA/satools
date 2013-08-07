@@ -57,7 +57,7 @@ class Document(HTML):
     super(Document, self).__init__(data)
 
     details = self.xml.xpath("//div[@class='jive-content-header-details']")[0]
-    text = lxml.etree.tostring(details, method = "text", encoding = "UTF-8")
+    text = lxml.etree.tostring(details, method = "text", encoding = "unicode")
     r = re.search("Last Modified:.*?\n(.*?)\nby", text, re.S)
     self.mtime = time.mktime(time.strptime(r.group(1), "%b %d, %Y %I:%M %p"))
 
@@ -76,7 +76,7 @@ class Document(HTML):
     # handle potential binary document
     hrefs = self.xml.xpath("//span[@class='jive-wiki-body-file-info']/a/@href")
     if len(hrefs):
-      dlpath = self.path + [urllib.parse.unquote(hrefs[0].split("/")[-1]).decode("utf-8")]
+      dlpath = self.path + [urllib.parse.unquote(hrefs[0].split("/")[-1])]
       if hrefs[0][0] == "/":
         self.downloads.append(Download(hrefs[0], "/".join(dlpath)))
 
@@ -86,7 +86,7 @@ class Document(HTML):
 
     hrefs = self.xml.xpath("//div[@class='jive-attachments']//a/@href")
     for href in hrefs:
-      dlpath = self.path + [urllib.parse.unquote(href.split("/")[-1]).decode("utf-8")]
+      dlpath = self.path + [urllib.parse.unquote(href.split("/")[-1])]
       if href[0] == "/":
         self.downloads.append(Download(href, "/".join(dlpath)))
 
@@ -220,4 +220,8 @@ def main():
   common.write_sync_done()
 
 if __name__ == "__main__":
+  # https://github.com/kennethreitz/requests/issues/1379
+  import http.cookiejar
+  http.cookiejar.is_third_party = lambda request: False
+
   main()

@@ -38,12 +38,12 @@ def parse_args():
     return ap.parse_args()
 
 def fetchjars(xml):
-    for ref in sorted(xml.xpath("//@href")):
+    for ref in sorted(xml.xpath("//jar/@href | //nativelib/@href")):
         common.retrieve(xml.get("codebase") + "/" + ref, JARS + "/" + ref)
 
 def getjnlpurl(url):
     f = common.retrieve_m(url)
-    m = re.search("LaunchURL = \"(.*?)\"", f.read())
+    m = re.search("LaunchURL = \"(.*?)\"", f.read().decode("utf-8"))
     f.close()
 
     t = urllib.parse.splittype(url)
@@ -122,7 +122,7 @@ def save(args):
 
     xml.set("codebase", "file://" + config["elluminate-base"] + "/" + JARS)
 
-    f = open(jnlpfile, "w")
+    f = open(jnlpfile, "wb")
     f.write(lxml.etree.tostring(xml, xml_declaration = True))
     f.close()
 

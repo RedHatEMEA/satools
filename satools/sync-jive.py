@@ -125,7 +125,7 @@ def cleanup():
   for dirpath, dirnames, filenames in os.walk(".", topdown = False):
     for f in filenames:
       path = os.path.normpath(os.path.join(dirpath, f))
-      if path.decode("utf-8") not in files and path[0] != ".":
+      if path not in files and path[0] != ".":
         os.unlink(path)
 
     if not os.listdir(dirpath):
@@ -185,5 +185,9 @@ def main(username, password):
 
 
 if __name__ == "__main__":
+  # https://github.com/kennethreitz/requests/issues/1379
+  import http.cookiejar
+  http.cookiejar.is_third_party = lambda request: False
+
   args = parse_args()
   main(args.username, args.password)

@@ -50,7 +50,7 @@ class Iso(object):
         return False
 
     def download(self):
-        f = open(self.tempname, "a")
+        f = open(self.tempname, "ab")
         size = os.fstat(f.fileno())[stat.ST_SIZE]
         response = requests.get(self.href, stream = True,
                                 headers = {"Range": "bytes=%u-" % size})
@@ -155,6 +155,10 @@ def worker():
                 break
 
 if __name__ == "__main__":
+    # https://github.com/kennethreitz/requests/issues/1379
+    import http.cookiejar
+    http.cookiejar.is_third_party = lambda request: False
+
     config = common.load_config()
     args = parse_args()
 

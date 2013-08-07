@@ -152,7 +152,7 @@ def download(url, dest, username, password):
 
 def worker(host, username, password):
     tls.conn = http.client.HTTPSConnection(host)
-    tls.conn.auth = "Basic " + base64.b64encode("%s:%s" % (username, password))
+    tls.conn.auth = "Basic " + base64.b64encode(("%s:%s" % (username, password)).encode("utf-8")).decode("utf-8")
 
     for item in iter(q.get, "STOP"):
         item[0](*item[1:])

@@ -30,10 +30,10 @@ if __name__ == "__main__":
 
     common.mkdirs(os.path.split(config["lgrep-mailbox"])[0])
     common.unlink(config["lgrep-mailbox"])
-    mbox = open(config["lgrep-mailbox"], "w")
+    mbox = open(config["lgrep-mailbox"], "wb")
 
     for row in maildb.search(query):
-        f = open(os.sep.join((args["base"], row["path"])))
+        f = open(os.sep.join((args["base"], row["path"].decode("utf-8"))), "rb")
         f.seek(row["offset"])
         mbox.write(f.read(row["length"]))
         f.close()

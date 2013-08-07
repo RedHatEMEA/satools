@@ -46,14 +46,10 @@ class DRAW_page(lxml.etree.ElementBase):
         if rv[-2:] != "cm": raise Exception("unexpected units")
         return float(rv[:-2])
 
-    @staticmethod
-    def _child_cmp(a, b):
-        return cmp(DRAW_page._read_dim(a, "y"), DRAW_page._read_dim(b, "y")) \
-            or cmp(DRAW_page._read_dim(a, "x"), DRAW_page._read_dim(b, "x"))
-
     def as_text(self):
         children = [c for c in self.iterchildren()]
-        children = sorted(children, cmp = DRAW_page._child_cmp)
+        children = sorted(children, key = lambda c: DRAW_page._read_dim(c, "x"))
+        children = sorted(children, key = lambda c: DRAW_page._read_dim(c, "y"))
 
         t = []
         for c in children:
