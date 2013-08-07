@@ -1,17 +1,17 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import common
-import cookielib
+import http.cookiejar
 import lxml.html
 import os
-import Queue
+import queue
 import sys
 import threading
-import urllib
-import urllib2
-import urlparse
+import urllib.error
+import urllib.parse
+import urllib.request
 
-q = Queue.Queue()
+q = queue.Queue()
 
 def worker():
     while True:
@@ -31,9 +31,9 @@ def download(opener, href, dest):
 def read_events(opener, url):
     try:
         html = common.retrieve_m(url, opener = opener, tries = 10).read()
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
         if e.code == 403:
-            print >>sys.stderr, "WARNING: %s, continuing..." % e
+            print("WARNING: %s, continuing..." % e, file = sys.stderr)
             return
         else:
             raise
@@ -42,9 +42,9 @@ def read_events(opener, url):
     
     path = html.xpath("//div[@id='breadcrumbs']//li[last()]//text()")[0].strip()
     for _url in html.xpath("//a[starts-with(@href, 'download/attachments/')]/@href"):
-        dest = urllib.unquote(_url).decode("utf-8")
+        dest = urllib.parse.unquote(_url).decode("utf-8")
         dest = path + "/" + "-".join(dest.rsplit("/", 2)[1:])
-        _url = urlparse.urljoin(url, _url)
+        _url = urllib.parse.urljoin(url, _url)
 
         if want(dest):
             q.put((download, opener, _url, dest))
@@ -55,7 +55,7 @@ def read_project_list(opener):
     html = lxml.html.fromstring(html)
 
     for _url in html.xpath("//a[text()='events']/@href"):
-        _url = urlparse.urljoin(url, _url)
+        _url = urllib.parse.urljoin(url, _url)
         q.put((read_events, opener, _url))
 
 def login(opener):
@@ -70,7 +70,7 @@ def login(opener):
     params["email"] = config["pt-username"]
     params["password"] = config["pt-password"]
 
-    common.retrieve_m(url, urllib.urlencode(params), opener = opener, tries = 10)
+    common.retrieve_m(url, urllib.parse.urlencode(params), opener = opener, tries = 10)
 
 if __name__ == "__main__":
     global config
@@ -81,8 +81,8 @@ if __name__ == "__main__":
 
     lock = common.Lock(".lock")
 
-    cj = cookielib.CookieJar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    cj = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
 
     threads = int(config["pt-threads"])
     if threads > 1:

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import odf.juno
@@ -59,8 +59,8 @@ def render(src, dst_template, offset, mimetype, omitinvisible, omitnumbers, prog
     pagect = pages.getCount()
     for i in range(0, pagect):
         if progress:
-            print >>sys.stderr, "\r[%s] %s: %d/%d" % \
-                (odf.utils.spinner(offset), src, i + 1, pagect),
+            print("\r[%s] %s: %d/%d" % \
+                (odf.utils.spinner(offset), src, i + 1, pagect), end=' ', file = sys.stderr)
 
         page = pages.getByIndex(i)
         if omitinvisible and not page.Visible: continue
@@ -71,7 +71,7 @@ def render(src, dst_template, offset, mimetype, omitinvisible, omitnumbers, prog
         offset += 1
 
     if progress:
-        print >>sys.stderr, "\r   "
+        print("\r   ", file = sys.stderr)
 
     preso.dispose()
 

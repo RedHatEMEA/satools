@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import common
 import os
@@ -13,8 +13,7 @@ def init():
         return
 
     if isrunning():
-        print >>sys.stderr, \
-            "thunderbird.py: thunderbird is running, disabling plugin"
+        print("thunderbird.py: thunderbird is running, disabling plugin", file = sys.stderr)
         config["thunderbird-base"] = None
         return
 
@@ -37,11 +36,11 @@ def base(path):
 
 def spd(path):
     if path == "": return ""
-    return "/".join(map(lambda x: x + ".sbd", path.split("/")))
+    return "/".join([e + ".sbd" for e in path.split("/")])
 
 def halfspd(path):
     (parent, child) = os.path.split(path)
-    return "/".join(map(lambda x: x + ".sbd", parent.split("/"))) + "/" + child
+    return "/".join([e + ".sbd" for e in parent.split("/")]) + "/" + child
 
 def mkpath(path):
     if os.path.exists(base(spd(path))):

@@ -1,22 +1,22 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import common
 import json
 import lxml.html
 import os
-import Queue
+import queue
 import requests
 import sys
 import threading
 import time
 import traceback
-import urlparse
+import urllib.parse
 
 
 files = set()
 lock = threading.Lock()
-q = Queue.Queue(200)
+q = queue.Queue(200)
 tls = threading.local()
 
 
@@ -134,7 +134,7 @@ def cleanup():
 
 def log(s):
   with lock:
-    print >>sys.stderr, s
+    print(s, file = sys.stderr)
 
 
 def login(username, password):
@@ -142,18 +142,18 @@ def login(username, password):
   r = tls.s.get(url)
   r = lxml.html.fromstring(r.text)
 
-  url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
+  url = urllib.parse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   r = tls.s.post(url, form)
   r = lxml.html.fromstring(r.text)
 
-  url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
+  url = urllib.parse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   form.update({ "j_username": username, "j_password": password })
   r = tls.s.post(url, form)
   r = lxml.html.fromstring(r.text)
 
-  url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
+  url = urllib.parse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   r = tls.s.post(url, form)
 

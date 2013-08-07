@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from satools import common
 from db import DB
@@ -8,7 +8,7 @@ import os
 import search
 import shutil
 import tempfile
-import urlparse
+import urllib.parse
 import web
 
 def error(message):
@@ -31,7 +31,7 @@ def tell(path):
 
     path = os.path.join(base, safepath(path))
 
-    dirpath, dirnames, filenames = os.walk(path).next()
+    dirpath, dirnames, filenames = next(os.walk(path))
     for i in sorted(dirnames):
         subpath = "/" + os.path.relpath(os.path.join(path, i), base)
         entries.append({ "text": i,
@@ -73,16 +73,16 @@ class Index:
 class Nodes:
     def GET(self):
         web.header("Content-Type", "application/json")
-        q = dict(urlparse.parse_qsl(str(web.ctx.query[1:])))
+        q = dict(urllib.parse.parse_qsl(str(web.ctx.query[1:])))
         return tell(q["node"])
 
 class Odp:
     def POST(self):
         tmp = tempfile.mkdtemp()
 
-        dct = urlparse.parse_qs(web.data())
+        dct = urllib.parse.parse_qs(web.data())
         # TODO: security, single slide not in array, make odp_cat work...
-        odptools.odp_cat.cat(map(lambda x: config["juno-base"] + "/root" + x, dct["slides"]), tmp + "/mypreso.odp")
+        odptools.odp_cat.cat([config["juno-base"] + "/root" + s for s in dct["slides"]], tmp + "/mypreso.odp")
 
         web.header("Content-Type", "application/vnd.oasis.opendocument.presentation")
         web.header("Content-disposition", "attachment; filename=mypreso.odp")
@@ -95,7 +95,7 @@ class Search:
     def GET(self, query):
         try:
             w = search.build_where(query)
-        except search.SearchException, e:
+        except search.SearchException as e:
             return error(e)
 
         if w.merge:

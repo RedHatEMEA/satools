@@ -1,11 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import email.utils
 import common
 import mailbox
 import os
-import os.path
 import re
 import search
 import sqlite3
@@ -124,10 +123,10 @@ def __decode(data):
 def decode(data):
     if data is None: return data
     data = decoderegex.sub(__decode, data)
-    return " ".join(map(_decode, email.header.decode_header(data)))
+    return " ".join([_decode(h) for h in email.header.decode_header(data)])
 
 def index(base, _list, path):
-    print >>sys.stderr, "Indexing %s..." % path
+    print("Indexing %s..." % path, file = sys.stderr)
 
     maildb = MailDB(base + "/.index")
 

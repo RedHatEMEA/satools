@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import common
@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     execpath = config["lgrep-exec"]
     if execpath is None:
-        print >>sys.stderr, "Please configure your MUA in $HOME/.satools before running %s." % sys.argv[0]
+        print("Please configure your MUA in $HOME/.satools before running %s." % sys.argv[0], file = sys.stderr)
         sys.exit(1)
 
     query = " ".join(args["querystring"])
@@ -51,5 +51,5 @@ if __name__ == "__main__":
         os.execvp(execpath[0], execpath)
 
     except OSError:
-        print >>sys.stderr, "Failed to exec \"%s\", please edit $HOME/.satools." % path
+        print("Failed to exec \"%s\", please edit $HOME/.satools." % path, file = sys.stderr)
         sys.exit(1)

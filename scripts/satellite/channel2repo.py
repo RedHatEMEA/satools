@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Based on channel2repo.py by Rhys Oxenham <roxenham@redhat.com>
 # example usage (e.g. for RHEV 3.1 beta + CloudForms v1 w/deps)
@@ -7,8 +7,8 @@
 import argparse
 import os
 import sys
-import urllib
-import xmlrpclib
+import urllib.request
+import xmlrpc.client
 
 def parse_args():
   ap = argparse.ArgumentParser()
@@ -23,19 +23,19 @@ def parse_args():
 if __name__ == "__main__":
   args = parse_args()
 
-  client = xmlrpclib.Server("http://%s/rpc/api" % args.hostname)
+  client = xmlrpc.client.Server("http://%s/rpc/api" % args.hostname)
   key = client.auth.login(args.username, args.password)
 
   for c in args.channel:
-    print >>sys.stderr, "Dumping channel %s..." % c
+    print("Dumping channel %s..." % c, file = sys.stderr)
     if not os.path.exists(c):
       os.mkdir(c)
 
     pkgs = client.channel.software.listLatestPackages(key, c)
     for i, pkg in enumerate(pkgs):
       filename = client.packages.getDetails(key, pkg["id"])["file"]
-      print >>sys.stderr, "[%u/%u] %s" % (i + 1, len(pkgs), filename)
-      urllib.urlretrieve(client.packages.getPackageUrl(key, pkg["id"]),
+      print("[%u/%u] %s" % (i + 1, len(pkgs), filename), file = sys.stderr)
+      urllib.request.urlretrieve(client.packages.getPackageUrl(key, pkg["id"]),
                          os.path.join(c, filename))
 
   client.auth.logout(key)

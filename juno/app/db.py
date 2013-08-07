@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from satools import common
 import argparse
@@ -44,8 +44,8 @@ class DB(object):
               END
                 """ ]
 
-        for s in map(lambda x: textwrap.dedent(x).strip(), sql):
-            self.execute(s)
+        for s in sql:
+            self.execute(textwrap.dedent(s).strip())
 
         self.commit()
 

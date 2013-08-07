@@ -1,4 +1,4 @@
-#!/usr/bin/python -ttu
+#!/usr/bin/python3 -u
 
 from db import DB
 from satools import common
@@ -211,7 +211,7 @@ def worker(me, q):
     for (srcp, dstp) in iter(q.get, "STOP"):
         try:
             add_preso(db, srcp, dstp)
-        except Exception, e:
+        except Exception as e:
             log("WARNING: add_preso failed (%s), skipping..." %
                 str(e).replace("\n", ""))
             del_preso(db, srcp, dstp)
@@ -292,7 +292,7 @@ def check_fs_2(db, fs, slideregexp = None):
             os.rmdir(dirpath)
 
 def check_fs_1(db, fs, slideregexp = None):
-    (dirpath, dirnames, filenames) = os.walk(fs).next()
+    (dirpath, dirnames, filenames) = next(os.walk(fs))
 
     for d in dirnames:
         if os.path.islink(d) or d not in common.Mapper._d2s:
@@ -307,7 +307,7 @@ def check_fs_1(db, fs, slideregexp = None):
 
 
 def check_fs(db):
-    (dirpath, dirnames, filenames) = os.walk(".").next()
+    (dirpath, dirnames, filenames) = next(os.walk("."))
 
     for d in dirnames:
         if os.path.islink(d) or d not in ("root", "slides", "thumbs"):
@@ -338,7 +338,7 @@ def check_db(db):
         if not os.path.exists(slidesp) or not os.path.exists(thumbsp):
             args.add(row["preso"])
 
-    args = map(lambda x:(x, ), args)
+    args = [(arg, ) for arg in args]
     doqueries(db, [["DELETE FROM presos WHERE path = ?", args]])
 
 def doqueries(db, sql):

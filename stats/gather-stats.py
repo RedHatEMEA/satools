@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import calendar
 import gzip
@@ -16,7 +16,7 @@ fields = ("ip", "ident", "user", "date", "request", "code", "size")
 
 def match(line):
     m = rx.match(line)
-    if not m: print line
+    if not m: print(line)
     d = dict(zip(fields, m.groups()))
     d["day"] = calendar.timegm(time.strptime(d["date"].split("/", 1)[1].split(":", 1)[0], "%b/%Y"))
     d["date"] = time.strptime(d["date"].split(" ")[0], "%d/%b/%Y:%H:%M:%S")
@@ -46,10 +46,10 @@ class Base(object):
     def report():
         k = set()
         for b in Base.aggs: k = k | set(b.d.keys())
-        print '"date" ' + " ".join(['"' + b.name + '"' for b in Base.aggs])
+        print('"date" ' + " ".join(['"' + b.name + '"' for b in Base.aggs]))
         for d in sorted(k):
             date = time.strftime('"%m/%Y" ', time.gmtime(d))
-            print date + " ".join([str(b.count(d)) for b in Base.aggs])
+            print(date + " ".join([str(b.count(d)) for b in Base.aggs]))
             
 class TID(Base):
     name = "total unique IPs"

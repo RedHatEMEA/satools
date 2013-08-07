@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from satools import common
 from satools import mailindex
@@ -8,7 +8,7 @@ import json
 import os
 import re
 import time
-import urlparse
+import urllib.parse
 import web
 
 class Favicon:
@@ -28,7 +28,7 @@ class Search(object):
     def GET(self):
         web.header("Content-Type", "application/json")
 
-        q = dict(urlparse.parse_qsl(str(web.ctx.query[1:])))
+        q = dict(urllib.parse.parse_qsl(str(web.ctx.query[1:])))
 
         data = { "success": "true",
                  "total": 0,
@@ -50,7 +50,7 @@ class Search(object):
                 for row in web.ctx.maildb.search(q["q"], offset = q["start"],
                                                  limit = q["limit"]):
                     data["rows"].append(escape(result(row)))
-            except mailindex.search.SearchException, e:
+            except mailindex.search.SearchException as e:
                 data["success"] = False
                 data["error"] = str(e)
 
@@ -63,7 +63,7 @@ class Attachment(object):
                   "index": re.compile("^[0-9]+$") }
 
     def GET(self):
-        q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
+        q = dict(urllib.parse.parse_qsl(web.ctx.query[1:]))
 
         if not validate(q, self.validator):
             raise Exception("invalid input")
@@ -89,9 +89,9 @@ class Help(object):
         except OSError:
             keys["update"] = "The index has not yet been populated."
 
-        lists = sorted(map(lambda x: x.split(" ")[0], config["lists-sync"]))
+        lists = sorted([l.split(" ")[0] for l in config["lists-sync"]])
         keys["lists"] = \
-            "<br/>".join(map(lambda x: "<a href=\"%s\">%s</a>" % (x, x), lists))
+            "<br/>".join(["<a href=\"%s\">%s</a>" % (l, l) for l in lists])
         keys["lists-start-year"] = config["lists-start-year"]
 
         f = open("templates/help.html")
@@ -111,7 +111,7 @@ class Message(object):
     def GET(self):
         web.header("Content-Type", "application/json")
        
-        q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
+        q = dict(urllib.parse.parse_qsl(web.ctx.query[1:]))
 
         if not validate(q, self.validator):
             raise Exception("invalid input")
@@ -127,9 +127,9 @@ def attachment(path, offset, _len, index):
     f.close()
 
     gen = em.walk()
-    part = gen.next()
+    part = next(gen)
     while index:
-        part = gen.next()
+        part = next(gen)
         index -= 1
 
     return (part.get_content_type(), part.get_filename(),
@@ -185,7 +185,7 @@ def escape(data):
     for key in data:
         if not isinstance(data[key], list):
             try:
-                data[key] = cgi.escape(unicode(data[key]))
+                data[key] = cgi.escape(str(data[key]))
             except UnicodeDecodeError:
                 data[key] = cgi.escape(data[key].decode("utf-8",
                                                         errors = "ignore"))

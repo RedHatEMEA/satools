@@ -1,4 +1,4 @@
-#!/usr/bin/python -ttu
+#!/usr/bin/python3 -u
 
 import argparse
 import common

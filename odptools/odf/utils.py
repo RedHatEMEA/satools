@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-import __init__
+from . import Odp
 import codecs
 import re
 import sys
@@ -12,7 +12,7 @@ def iter_pages(srcstrs, callback, progress = True, noparse = False, **kwargs):
         m = re.search("^(.*)(\[.*\])$", srcstr)
         if m: (srcstr, rangestr) = (m.group(1), m.group(2))
 
-        src = __init__.Odp()
+        src = Odp()
         src.load(srcstr, noparse = noparse)
         pages = src.content._body()._presentation()._pages()
         ranges = parserangestr(rangestr, len(pages))
@@ -21,19 +21,19 @@ def iter_pages(srcstrs, callback, progress = True, noparse = False, **kwargs):
         if len(srcstr_p) > 65: srcstr_p = "..." + srcstr_p[-62:]
 
         i = 1
-        i_max = sum(map(lambda r: r[1] - r[0], ranges))
+        i_max = sum([r[1] - r[0] for r in ranges])
 
         for r in ranges:
             for p in range(r[0], r[1]):
                 if progress:
-                    print >>sys.stderr, "\r[%s] %s: %d/%d" % \
-                        (spinner(i), srcstr_p, i, i_max),
+                    print("\r[%s] %s: %d/%d" % \
+                        (spinner(i), srcstr_p, i, i_max), end=' ', file = sys.stderr)
                 
                 callback(src, p, **kwargs)
 
                 i += 1
 
-        print >>sys.stderr, "\r   "
+        print("\r   ", file = sys.stderr)
 
 def parserangestr(rangestr, maxlen):
     """
