@@ -19,7 +19,7 @@ preprep-satools-juno: rpm-base
 	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools-juno.tar.gz" contrib/extjs-4.1.1 Makefile README.rst rpm/satools-juno.spec juno
 
 preprep-satools-odptools: rpm-base
-	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools.tar.gz" Makefile README.rst rpm/satools-odptools.spec odptools
+	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools-odptools.tar.gz" Makefile README.rst rpm/satools-odptools.spec odptools
 
 preprep-satools-search: rpm-base
 	tar --exclude=.git --owner=root --group=root -czf "$(TOPDIR)/SOURCES/satools-search.tar.gz" contrib/extjs-4.1.1 Makefile README.rst rpm/satools-search.spec satools search

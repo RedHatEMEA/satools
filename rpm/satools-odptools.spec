@@ -4,7 +4,7 @@ Release:	1
 Summary:	Red Hat EMEA SA tools ODP tools
 License:	GPL
 URL:		https://github.com/RedHatEMEA/satools
-Source:		satools.tar.gz
+Source:		satools-odptools.tar.gz
 BuildArch:	noarch
 Requires:	libreoffice-graphicfilter, libreoffice-headless, libreoffice-impress, libreoffice-pyuno, satools = %{version}-%{release}
 BuildRequires:	redhat-rpm-config
