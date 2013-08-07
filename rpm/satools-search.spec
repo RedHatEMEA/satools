@@ -1,18 +1,18 @@
 Name:		satools-search
-Version:	0.4
-Release:	7
-Summary:	Red Hat UK&I SA tools list search engine
+Version:	0.5
+Release:	1
+Summary:	Red Hat EMEA SA tools list search engine
 License:	GPL
 URL:		https://github.com/RedHatEMEA/satools
 Source:		satools-search.tar.gz
 BuildArch:	noarch
-Requires:	httpd, mod_wsgi, python-webpy, satools = %{version}-%{release}
+Requires:	httpd, mod_wsgi, satools = %{version}-%{release}
 BuildRequires:	redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
 
 %description
-Red Hat UK&I SA tools list search engine
+Red Hat EMEA SA tools list search engine
 
 %prep
 %setup -qc
@@ -51,6 +51,8 @@ rm -rf %{buildroot}
 %config(noreplace) /etc/httpd/conf.d/satools-search.conf
 
 %changelog
+
+* Wed Aug 07 2013 Jim Minter <jminter@redhat.com> 0.5
 
 * Mon Sep 03 2012 Jim Minter <jminter@redhat.com> 0.4
 

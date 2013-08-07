@@ -1,18 +1,18 @@
 Name:		satools-juno
-Version:	0.4
-Release:	7
-Summary:	Red Hat UK&I SA tools presentation search engine
+Version:	0.5
+Release:	1
+Summary:	Red Hat EMEA SA tools presentation search engine
 License:	GPL
 URL:		https://github.com/RedHatEMEA/satools
 Source:		satools-juno.tar.gz
 BuildArch:	noarch
-Requires:	httpd, mod_wsgi, python-imaging, python-webpy, satools-odptools = %{version}-%{release}
+Requires:	httpd, mod_wsgi, python3-pillow, satools-odptools = %{version}-%{release}
 BuildRequires:	redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
 
 %description
-Red Hat UK&I SA tools presentation search engine
+Red Hat EMEA SA tools presentation search engine
 
 %prep
 %setup -qc
@@ -54,6 +54,8 @@ rm -rf %{buildroot}
 %config(noreplace) /etc/httpd/conf.d/satools-juno.conf
 
 %changelog
+
+* Wed Aug 07 2013 Jim Minter <jminter@redhat.com> 0.5
 
 * Mon Sep 03 2012 Jim Minter <jminter@redhat.com> 0.4
 

@@ -4,7 +4,7 @@ from satools import common
 import codecs
 import http.cookiejar
 import copy
-import lxml.html.soupparser
+import lxml.html
 import os
 import queue
 import sys
@@ -61,7 +61,7 @@ def download_item_page(item, tries = 1):
                  (item.pageurl, item.number, item.title, item.type_, e))
         return
 
-    xml = lxml.html.soupparser.fromstring(html)
+    xml = lxml.html.fromstring(html)
 
     try:
         if item.type_ == "Videos":
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     indexurl = "http://www.redhat.com/resourcelibrary/results?portal:componentId=bf73926d-2aa3-4b8b-bf8d-a1f6f56b8469&portal:type=action&actionType=orderBy&orderBy=Date-Desc&resultPerPage=100"
     while True:
         html = common.retrieve_m(indexurl, tries = tries)
-        xml = lxml.html.soupparser.fromstring(html)
+        xml = lxml.html.fromstring(html)
 
         for indexitem in xml.xpath("//div[@id='sidebar-left-events']"):
             indexitem = copy.deepcopy(indexitem)

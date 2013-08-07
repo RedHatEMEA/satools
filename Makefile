@@ -28,7 +28,7 @@ rpm-base: clean
 	mkdir -p "$(TOPDIR)/SOURCES"
 
 clean:
-	find -name '*.pyc' -print0 | xargs -i -0 rm -f '{}'
+	find \( -name '*.pyc' -o -name __pycache__ \) -print0 | xargs -i -0 rm -rf '{}'
 	rm -f juno/app/static/app-all.js juno/app/static/all-classes.js
 	rm -f juno/app/parsetab.py satools/parsetab.py search/app/parsetab.py
 	rm -f search/app/static/app-all.js search/app/static/all-classes.js
