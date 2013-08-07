@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
-import common
+from satools import common
+from satools import mailindex
 import mailbox
-import mailindex
 import sys
 import os
 

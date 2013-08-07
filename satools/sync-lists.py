@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 
+from satools import attachments
+from satools import common
+from satools import mailindex
+from satools import thunderbird
 import argparse
-import attachments
-import common
 import gzip
 import lxml.html
-import mailindex
 import sys
-import thunderbird
 import time
 import os
 import urllib.error

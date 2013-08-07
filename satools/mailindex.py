@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
+from satools import common
+from satools import search
 import argparse
 import email.utils
-import common
 import mailbox
 import os
 import re
-import search
 import sqlite3
 import sys
 

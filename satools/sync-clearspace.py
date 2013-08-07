@@ -1,6 +1,6 @@
 #!/usr/bin/python3 -u
 
-import common
+from satools import common
 import itertools
 import lxml.etree
 import os

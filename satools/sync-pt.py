@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import common
+from satools import common
 import http.cookiejar
 import lxml.html
 import os

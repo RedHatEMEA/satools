@@ -1,7 +1,7 @@
 #!/usr/bin/python3 -u
 
+from satools import common
 import argparse
-import common
 import http.client
 import lxml.html
 import os

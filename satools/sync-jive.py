@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
+from satools import common
 import argparse
-import common
 import json
 import lxml.html
 import os

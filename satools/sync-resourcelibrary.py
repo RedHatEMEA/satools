@@ -1,7 +1,7 @@
 #!/usr/bin/python3 -u
 
+from satools import common
 import codecs
-import common
 import http.cookiejar
 import copy
 import lxml.html.soupparser

@@ -1,8 +1,8 @@
 #!/usr/bin/python3 -u
 
+from satools import common
 import base64
 import calendar
-import common
 import errno
 import http.client
 import lxml.builder

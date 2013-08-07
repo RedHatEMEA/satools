@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
+from satools import common
 import argparse
 import calendar
-import common
 import hashlib
 import lxml.html
 import os

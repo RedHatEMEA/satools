@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
+from satools import common
 import argparse
-import common
 import http.cookiejar
 import getpass
 import lxml.etree

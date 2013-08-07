@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
+from satools import common
+from satools import mailindex
 import argparse
-import common
-import mailindex
 import os
 import sys
 
