@@ -17,7 +17,7 @@ class MailDB(object):
     def __init__(self, dbpath):
         self.db = sqlite3.connect(dbpath)
         self.db.row_factory = sqlite3.Row
-        self.db.text_factory = str
+        self.db.text_factory = bytes
         self._create_tables()
 
     def _create_tables(self):
