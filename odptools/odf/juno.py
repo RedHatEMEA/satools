@@ -25,7 +25,7 @@ class juno:
                                       "--accept=pipe,name=%s;urp;StarOffice.ServiceManager" % junopipename,
                                       "--headless",
                                       "-env:UserInstallation=%s" % juno.mkpath(self.tempdir)),
-                                     stderr = file("/dev/null", "w"),
+                                     stderr = open("/dev/null", "w"),
                                      preexec_fn = os.setpgrp,
                                      close_fds = True)
 
@@ -58,7 +58,7 @@ class juno:
     def masterSocketName(self):
         md5 = hashlib.md5()
         md5.update(juno.mkpath(self.tempdir).encode("utf_16_le"))
-        _hash = "".join(["%x" % ord(x) for x in md5.digest()])
+        _hash = "".join(["%x" % x for x in md5.digest()])
         return juno.socketName("SingleOfficeIPC_%s" % _hash)
 
     def waitConnect(self, name, timeout):
