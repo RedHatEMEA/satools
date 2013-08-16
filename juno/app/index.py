@@ -324,19 +324,19 @@ def check_fs(db):
 def check_db(db):
     args = set()
     for row in db.execute("SELECT path FROM presos"):
-        srcp = common.Mapper.d2s(row["path"])
-        rootp = os.path.join("root", row["path"])
+        srcp = common.Mapper.d2s(row["path"].decode("utf-8"))
+        rootp = os.path.join("root", row["path"].decode("utf-8"))
         if not os.path.exists(srcp) or not os.path.exists(rootp):
-            args.add(row["path"])
+            args.add(row["path"].decode("utf-8"))
 
     for row in db.execute("SELECT preso, slide FROM slides"):
-        if row["preso"] in args: continue
-        slidesp = os.path.join("slides", row["preso"],
+        if row["preso"].decode("utf-8") in args: continue
+        slidesp = os.path.join("slides", row["preso"].decode("utf-8"),
                                "%03u.png" % row["slide"])
-        thumbsp = os.path.join("thumbs", row["preso"],
+        thumbsp = os.path.join("thumbs", row["preso"].decode("utf-8"),
                                "%03u.jpg" % row["slide"])
         if not os.path.exists(slidesp) or not os.path.exists(thumbsp):
-            args.add(row["preso"])
+            args.add(row["preso"].decode("utf-8"))
 
     args = [(arg, ) for arg in args]
     doqueries(db, [["DELETE FROM presos WHERE path = ?", args]])
