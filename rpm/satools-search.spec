@@ -6,7 +6,7 @@ License:	GPL
 URL:		https://github.com/RedHatEMEA/satools
 Source:		satools-search.tar.gz
 BuildArch:	noarch
-Requires:	httpd, mod_wsgi_python3, satools = %{version}-%{release}
+Requires:	httpd, mod_wsgi-python3, satools = %{version}-%{release}
 BuildRequires:	redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
