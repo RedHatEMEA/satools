@@ -52,7 +52,7 @@ def extract(path):
                         if not os.path.exists(p):
                             temppath = common.mktemppath(p)
                         
-                            f = open(temppath, "w")
+                            f = open(temppath, "wb")
                             f.write(part.get_payload(decode = True))
 
                             f.flush()
