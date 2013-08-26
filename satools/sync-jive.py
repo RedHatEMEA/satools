@@ -185,9 +185,5 @@ def main(username, password):
 
 
 if __name__ == "__main__":
-  # https://github.com/kennethreitz/requests/issues/1379
-  import http.cookiejar
-  http.cookiejar.is_third_party = lambda request: False
-
   args = parse_args()
   main(args.username, args.password)

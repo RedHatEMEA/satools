@@ -155,10 +155,6 @@ def worker():
                 break
 
 if __name__ == "__main__":
-    # https://github.com/kennethreitz/requests/issues/1379
-    import http.cookiejar
-    http.cookiejar.is_third_party = lambda request: False
-
     config = common.load_config()
     args = parse_args()
 
