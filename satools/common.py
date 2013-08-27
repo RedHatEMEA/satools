@@ -287,9 +287,7 @@ def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
                     raise
 
         if "Last-Modified" in srcf.info() and "Content-Length" in srcf.info():
-            mtime = calendar.timegm(time.strptime(srcf.info()["Last-Modified"],
-                                                  "%a, %d %b %Y %H:%M:%S %Z"))
-
+            mtime = parse_last_modified(srcf.info()["Last-Modified"])
             st = os.stat(path)
 
             if mtime == st.st_mtime and int(srcf.info()["Content-Length"]) == st.st_size:
@@ -309,9 +307,11 @@ def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
             srcf.close()
 
     if "Last-Modified" in srcf.info():
-        mtime = calendar.timegm(time.strptime(srcf.info()["Last-Modified"],
-                                              "%a, %d %b %Y %H:%M:%S %Z"))
+        mtime = parse_last_modified(srcf.info()["Last-Modified"])
         os.utime(path, (mtime, mtime))
+
+def parse_last_modified(lm):
+    return calendar.timegm(time.strptime(lm, "%a, %d %b %Y %H:%M:%S %Z"))
 
 def retrieve_tmpfile(url, data = None):
     dstf = os.tmpfile()
