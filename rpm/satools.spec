@@ -6,7 +6,7 @@ License:	GPL
 URL:		https://github.com/RedHatEMEA/satools
 Source:		satools.tar.gz
 BuildArch:	noarch
-Requires:	mimehandler(application/x-java-jnlp-file), python3-lxml, python3-ply, python3-requests >= 1.2.3, python3-urllib3 >= 1.7
+Requires:	mimehandler(application/x-java-jnlp-file), python3-lxml, python3-ply, python3-requests >= 1.2.3
 BuildRequires:	redhat-rpm-config, python3-devel, python3-ply
 
 %define _srcdefattr (-,root,root)
