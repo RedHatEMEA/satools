@@ -96,7 +96,7 @@ if __name__ == "__main__":
                         g = gzip.GzipFile(fileobj = f, mode = "r")
                         common.sendfile_disk(g, path)
                         g.close()
-                    except IOError, e:
+                    except Exception, e:
                         print >>sys.stderr, "WARNING: %s, continuing..." % e
                         warnings += 1
                         continue
