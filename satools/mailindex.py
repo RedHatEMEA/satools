@@ -28,14 +28,9 @@ class MailDB(object):
                         " length INTEGER NOT NULL)")
 
         try:
-            if version(*sqlite3.sqlite_version_info) >= version(3, 7, 4):
-                self.db.execute("CREATE VIRTUAL TABLE messages_fts USING fts4"
-                                "(from TEXT NOT NULL, subject TEXT NOT NULL,"
-                                " body TEXT NOT NULL)")
-            else:
-                self.db.execute("CREATE VIRTUAL TABLE messages_fts USING fts3"
-                                "(from TEXT NOT NULL, subject TEXT NOT NULL,"
-                                " body TEXT NOT NULL)")
+            self.db.execute("CREATE VIRTUAL TABLE messages_fts USING fts4"
+                            "(from TEXT NOT NULL, subject TEXT NOT NULL,"
+                            " body TEXT NOT NULL)")
 
         except sqlite3.OperationalError:
             pass
