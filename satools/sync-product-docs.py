@@ -197,15 +197,13 @@ def get_books(path):
             d = d.replace("_", " ")
             dest = os.path.join(d, f)
 
-        if not match_filter(filters, dest):
-            continue
-
         q.put((download, "https://access.redhat.com" + href, dest))
 
 def get_products(path):
     xml = get(path)
     for href in xml.xpath("//a[starts-with(@href,'/site/documentation/')]/@href"):
-        q.put((get_books, href + "?locale=" + args["locale"]))
+        if match_filter(filters, href):
+            q.put((get_books, href + "?locale=" + args["locale"]))
 
 def get(path):
     msg(path)
@@ -241,8 +239,12 @@ if __name__ == "__main__":
     common.mkdirs(config["product-docs-base"])
     os.chdir(config["product-docs-base"])
 
-    filters = args["filters"]
-    filters.extend(config["product-docs-filter"])
+    filters = config["product-docs-filter"]
+    filters.extend(args["filters"])
+    # if last filter is include, add an exclude everything filter, to do the
+    # expected
+    if filters and filters[-1][0] == "i":
+        filters.append("x/.*/")
 
     lock = common.Lock(".lock")
 
