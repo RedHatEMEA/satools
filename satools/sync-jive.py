@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import codecs
 import common
 import json
 import lxml.html
@@ -30,7 +31,7 @@ def parse_args():
 
 def path(url):
   r = tls.s.get(url)
-  r = lxml.html.fromstring(r.text)
+  r = lxml.html.fromstring(r.content)
 
   path = r.xpath("//div[@id = 'jive-breadcrumb']//a")
   if path[1].get("href").startswith("/groups/"):
@@ -98,7 +99,7 @@ def contents():
   while True:
     log(url)
     r = tls.s.get(url)
-    r = json.loads(r.text[r.text.find("\n") + 1:])
+    r = json.loads(r.content[r.content.find("\n") + 1:])
     for c in r["list"]:
       yield c
 
@@ -140,18 +141,18 @@ def log(s):
 def login(username, password):
   url = config["jive-root"]
   r = tls.s.get(url)
-  r = lxml.html.fromstring(r.text)
+  r = lxml.html.fromstring(r.content)
 
   url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   r = tls.s.post(url, form)
-  r = lxml.html.fromstring(r.text)
+  r = lxml.html.fromstring(r.content)
 
   url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   form.update({ "j_username": username, "j_password": password })
   r = tls.s.post(url, form)
-  r = lxml.html.fromstring(r.text)
+  r = lxml.html.fromstring(r.content)
 
   url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
@@ -185,5 +186,8 @@ def main(username, password):
 
 
 if __name__ == "__main__":
+  if sys.stderr.encoding == None:
+    sys.stderr = codecs.getwriter("UTF-8")(sys.stderr)
+
   args = parse_args()
   main(args.username, args.password)
