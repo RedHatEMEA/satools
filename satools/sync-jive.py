@@ -94,13 +94,30 @@ def iter_content(c):
 
 
 def contents():
-  url = config["jive-root"] + "/api/core/v3/contents?sort=dateCreatedAsc&fields=attachments%2CbinaryURL%2CcontentType%2Cname%2Csize%2Ctype%2Cupdated&count=100&startIndex=0"
+  for p in people():
+    url = config["jive-root"] + "/api/core/v3/contents?sort=dateCreatedAsc&fields=attachments%2CbinaryURL%2CcontentType%2Cname%2Csize%2Ctype%2Cupdated&filter=author%28" + urllib.parse.quote(p) + "%29&count=100&startIndex=0"
+
+    while True:
+      log(url)
+      r = tls.s.get(url)
+      r = json.loads(r.content[r.content.find("\n") + 1:])
+      for c in r["list"]:
+        yield c
+
+      if "next" not in r.get("links", {}):
+        break
+
+      url = r["links"]["next"]
+
+
+def people():
+  url = config["jive-root"] + "/api/core/v3/people?sort=dateJoinedAsc&fields=resources&count=100&startIndex=0"
   while True:
     log(url)
     r = tls.s.get(url)
     r = json.loads(r.content[r.content.find("\n") + 1:])
-    for c in r["list"]:
-      yield c
+    for p in r["list"]:
+      yield p["resources"]["self"]["ref"]
 
     if "next" not in r["links"]:
       break
