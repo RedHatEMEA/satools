@@ -2,11 +2,12 @@
 
 import argparse
 import common
-import httplib
+import lxml.etree
 import lxml.html
 import os
 import Queue
 import re
+import requests
 import sys
 import threading
 import urllib2
@@ -38,7 +39,6 @@ class FilterAction(argparse.Action):
         setattr(namespace, self.dest, filters)
 
 q = Queue.Queue()
-tls = threading.local()
 warnings = 0
 fileset = LockedSet()
 
@@ -54,8 +54,6 @@ def warn(s):
         print >>sys.stderr, s
 
 def worker(host):
-    tls.conn = httplib.HTTPSConnection(host)
-
     for item in iter(q.get, "STOP"):
         item[0](*item[1:])
         q.task_done()
@@ -114,6 +112,9 @@ def match_filter(filters, path):
     return True
 
 def download(url, dest):
+    if url.startswith("data:"):
+        return
+
     if fileset.tas(dest):
         return
 
@@ -148,7 +149,7 @@ def get_deps_css(url, dest):
     with open(dest) as f:
         css = f.read()
 
-    rx = re.compile('url\("?([^)]+?)"?\)')
+    rx = re.compile('url\([\'"]*([^)]+?)[\'"]*\)')
     for m in rx.finditer(css):
         _url = urlparse.urljoin(url, m.group(1))
         urlp = urlparse.urlparse(_url)
@@ -184,38 +185,30 @@ def get_deps_html(url, dest):
 
     html.write(dest)
             
-def get_books(path):
-    xml = get(path)
-    for href in xml.xpath("//a[text()='%(type)s']/@href" % args):
-        dest = href[1:]
+def get_sitemap(path):
+    xml = lxml.etree.fromstring(requests.get(path).content)
+
+    for loc in xml.xpath("//sitemap:loc/text()", namespaces = { "sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9" }):
+        if not loc.startswith("/site/documentation/%s/" % args["locale"]):
+            continue
+        if args["type"] != "html-single" and not loc.endswith(".%s" % args["type"]):
+            continue
+        if args["type"] == "html-single" and not re.search("/html-single/.*\.html$", loc):
+            continue
+        if not match_filter(filters, loc):
+            continue
+
+        dest = loc[1:]
 
         if args["type"] != "html-single":
-            # don't munge html-single paths as it breaks HTML relative paths
+            # don't munge html paths as it breaks HTML relative paths
             (d, f) = os.path.split(dest)
             d = d.split("/", 3)[3]  # remove ^site/documentation/<locale>
             d = d.rsplit("/", 2)[0] # remove <type>/<book name>$
             d = d.replace("_", " ")
             dest = os.path.join(d, f)
 
-        q.put((download, "https://access.redhat.com" + href, dest))
-
-def get_products(path):
-    xml = get(path)
-    for href in xml.xpath("//a[starts-with(@href,'/site/documentation/')]/@href"):
-        if match_filter(filters, href):
-            q.put((get_books, href + "?locale=" + args["locale"]))
-
-def get(path):
-    msg(path)
-    tls.conn.request("GET", path)
-    response = tls.conn.getresponse()
-    data = response.read()
-
-    if response.status != 200:
-        warn("WARNING: get %s: HTTP response %u" % (path, response.status))
-        data = "<html/>"
-
-    return lxml.html.fromstring(data)
+        q.put((download, "https://access.redhat.com" + loc, dest))
 
 def cleanup():
     for dirpath, dirnames, filenames in os.walk("."):
@@ -255,7 +248,7 @@ if __name__ == "__main__":
     threads = threads_create(int(config["product-docs-threads"]),
                              ("access.redhat.com", ))
 
-    q.put((get_products, "/site/documentation/"))
+    get_sitemap("https://access.redhat.com/site/documentation/Sitemap")
     q.join()
 
     threads_destroy(threads)
