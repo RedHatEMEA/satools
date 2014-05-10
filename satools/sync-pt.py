@@ -89,7 +89,7 @@ def read_events(url):
             q.put((download, urlparse.urljoin(url, _url), dest))
 
 def read_project_list():
-    url = config["pt-root"] + "projects-emea/"
+    url = config["pt-root"] + "projects-emea/?technology=&scope=&quarter=&contract_type=&revenue_recognition=&pt_status=&pa_status=&stage=&manager="
     html = lxml.html.fromstring(tls.s.get(url).text)
 
     for _url in html.xpath("//a[starts-with(@href, 'project-events?')]/@href"):
