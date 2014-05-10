@@ -11,8 +11,8 @@ import search
 import sqlite3
 import sys
 
-def version(x, y, z):
-    return x * 10000 + y * 100 + z
+def version(w, x, y, z = 0):
+    return w * 1000000 + x * 10000 + y * 100 + z
 
 class MailDB(object):
     def __init__(self, dbpath):
