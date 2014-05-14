@@ -7,7 +7,7 @@ URL:		https://github.com/RedHatEMEA/satools
 Source:		satools-odptools.tar.gz
 BuildArch:	noarch
 Requires:	libreoffice-graphicfilter, libreoffice-headless, libreoffice-impress, libreoffice-pyuno, satools = %{version}-%{release}
-BuildRequires:	redhat-rpm-config
+BuildRequires:	python3-devel, redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
 
@@ -18,9 +18,9 @@ Red Hat UK&I SA tools ODP tools
 %setup -qc
 
 %install
-mkdir -p %{buildroot}/%{python_sitelib}
-cp -a odptools %{buildroot}/%{python_sitelib}
-rm -rf  %{buildroot}/%{python_sitelib}/test
+mkdir -p %{buildroot}/%{python3_sitelib}
+cp -a odptools %{buildroot}/%{python3_sitelib}
+rm -rf  %{buildroot}/%{python3_sitelib}/test
 
 %clean
 rm -rf %{buildroot}
@@ -28,7 +28,7 @@ rm -rf %{buildroot}
 %posttrans
 for i in odp_cat odp_explode odp_lsfonts odp_render odt_to_text odp_to_text
 do
-  ln -sf %{python_sitelib}/odptools/$i.py %{_bindir}/$i
+  ln -sf %{python3_sitelib}/odptools/$i.py %{_bindir}/$i
 done
 
 %postun
@@ -39,7 +39,7 @@ done
 
 %files
 %defattr(-,root,root,-)
-%{python_sitelib}/odptools
+%{python3_sitelib}/odptools
 %doc README.rst
 
 %changelog

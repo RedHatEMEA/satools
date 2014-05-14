@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import attachments
@@ -10,8 +10,8 @@ import sys
 import thunderbird
 import time
 import os
-import urllib
-import urllib2
+import urllib.error
+import urllib.request
 
 # TODO: single list update
 
@@ -27,7 +27,7 @@ def isgzip(f):
     bytes = f.read(2)
     f.seek(0)
 
-    return bytes == "\x1F\x8B"
+    return bytes == b"\x1F\x8B"
 
 if __name__ == "__main__":
     warnings = 0
@@ -40,7 +40,7 @@ if __name__ == "__main__":
         common.progress_finish = lambda: None
 
     if not config["lists-sync"]:
-        print >>sys.stderr, "Please configure lists in $HOME/.satools before running %s." % sys.argv[0]
+        print("Please configure lists in $HOME/.satools before running %s." % sys.argv[0], file = sys.stderr)
         sys.exit(1)
 
     common.mkdirs(config["lists-base"])
@@ -65,8 +65,8 @@ if __name__ == "__main__":
 
         credentials = None
         if len(line) == 3:
-            credentials = urllib.urlencode(dict(zip(("username", "password"),
-                                                    line[1:3])))
+            credentials = urllib.parse.urlencode(dict(zip(("username", "password"),
+                                                          line[1:3]))).encode("utf-8")
 
         index = common.retrieve_m(url, credentials)
         index_xml = lxml.html.parse(index).getroot()
@@ -81,12 +81,12 @@ if __name__ == "__main__":
 
             if not path in db or not os.path.isfile(path):
                 common.mkdirs(os.path.split(path)[0])
-                req = urllib2.Request(url + "/" + href, credentials, {"Accept-Encoding": "gzip"})
+                req = urllib.request.Request(url + "/" + href, credentials, {"Accept-Encoding": "gzip"})
                 try:
                     f = common.retrieve_tmpfile(req)
-                except urllib2.HTTPError, e:
+                except urllib.error.HTTPError as e:
                     if e.code == 403:
-                        print >>sys.stderr, "WARNING: %s, continuing..." % e
+                        print("WARNING: %s, continuing..." % e, file = sys.stderr)
                         warnings += 1
                         continue
                     raise
@@ -96,8 +96,8 @@ if __name__ == "__main__":
                         g = gzip.GzipFile(fileobj = f, mode = "r")
                         common.sendfile_disk(g, path)
                         g.close()
-                    except Exception, e:
-                        print >>sys.stderr, "WARNING: %s, continuing..." % e
+                    except Exception as e:
+                        print("WARNING: %s, continuing..." % e, file = sys.stderr)
                         warnings += 1
                         continue
                 else:
@@ -117,4 +117,4 @@ if __name__ == "__main__":
         pass
 
     if warnings:
-        print >>sys.stderr, "WARNING: %u warnings occurred." % warnings
+        print("WARNING: %u warnings occurred." % warnings, file = sys.stderr)

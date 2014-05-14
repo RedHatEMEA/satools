@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import codecs
@@ -7,19 +7,18 @@ import itertools
 import json
 import lxml.html
 import os
-import Queue
+import queue
 import requests
 import sys
 import threading
 import time
 import traceback
-import urllib
-import urlparse
+import urllib.parse
 
 
 files = set()
 lock = threading.Lock()
-q = Queue.Queue(200)
+q = queue.Queue(200)
 tls = threading.local()
 max_index = 0
 index = 0
@@ -116,12 +115,12 @@ def iter_content(c):
 
 def contents():
   for p in people():
-    url = config["jive-root"] + "/api/core/v3/contents?sort=dateCreatedAsc&fields=attachments%2CbinaryURL%2CcontentType%2Cname%2Csize%2Ctype%2Cupdated&filter=author%28" + urllib.quote(p) + "%29&count=100&startIndex=0"
+    url = config["jive-root"] + "/api/core/v3/contents?sort=dateCreatedAsc&filter=author%28" + urllib.parse.quote(p) + "%29&abridged=true&count=100&startIndex=0"
 
     while True:
       log(url)
       r = get(url)
-      r = json.loads(r.content[r.content.find("\n") + 1:])
+      r = json.loads(r.text[r.text.find("\n") + 1:])
       for c in r["list"]:
         yield c
 
@@ -139,7 +138,7 @@ def people():
 
     log(url)
     r = get(url)
-    r = json.loads(r.content[r.content.find("\n") + 1:])
+    r = json.loads(r.text[r.text.find("\n") + 1:])
 
     if not r["list"]:
       break
@@ -178,7 +177,7 @@ def cleanup():
 
 def log(s):
   with lock:
-    print >>sys.stderr, s
+    print(s, file = sys.stderr)
 
 
 def login(username, password):
@@ -186,18 +185,18 @@ def login(username, password):
   r = get(url)
   r = lxml.html.fromstring(r.content)
 
-  url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
+  url = urllib.parse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   r = tls.s.post(url, form)
   r = lxml.html.fromstring(r.content)
 
-  url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
+  url = urllib.parse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   form.update({ "j_username": username, "j_password": password })
   r = tls.s.post(url, form)
   r = lxml.html.fromstring(r.content)
 
-  url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
+  url = urllib.parse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   r = tls.s.post(url, form)
 
@@ -236,7 +235,7 @@ def main(username, password):
 
   global index
   with open(".max-index", "w") as f:
-    print >>f, index
+    print(index, file = f)
 
 if __name__ == "__main__":
   if sys.stderr.encoding == None:

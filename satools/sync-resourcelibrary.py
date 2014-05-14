@@ -1,25 +1,27 @@
-#!/usr/bin/python -ttu
+#!/usr/bin/python3 -ttu
 
 import codecs
 import common
-import cookielib
 import copy
-import lxml.html.soupparser
+import http.cookiejar
+import lxml.html
 import os
-import Queue
+import queue
 import sys
 import threading
 import time
-import urllib2
+import urllib.error
+import urllib.request
 
-q = Queue.Queue()
+q = queue.Queue()
 threadlock = threading.Lock()
 warnings = 0
 
 class Item:
     def ignore_url(self, url):
         if url.startswith("https://engage.redhat.com/") or \
-                url.startswith("http://engage.jboss.com/"):
+                url.startswith("http://engage.jboss.com/") or \
+                url == "#redBox":
             return True
         elif url[0] != "/":
             # link to another site
@@ -45,22 +47,22 @@ def download_item(item, extension, tries = 1):
 
     common.mkdirs(item.type_)
     try:
-        print >>sys.stderr, "\r[%u]" % item.number,
+        print("\r[%u]" % item.number, end = "", file = sys.stderr)
         common.retrieve(item.dlurl, dstfile, tries = tries)
         common.mkro(dstfile)
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
         warn("can't download item at %s (#%u, %s, %s) (%s), continuing..." % \
                  (item.dlurl, item.number, item.title, item.type_, e))
 
 def download_item_page(item, tries = 1):
     try:
         html = common.retrieve_m(item.pageurl, tries = tries)
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
         warn("can't load item page %s (#%u, %s, %s) (%s), continuing..." % \
                  (item.pageurl, item.number, item.title, item.type_, e))
         return
 
-    xml = lxml.html.soupparser.fromstring(html)
+    xml = lxml.html.parse(html)
 
     try:
         if item.type_ == "Videos":
@@ -81,7 +83,7 @@ def warn(s):
     global warnings
 
     threadlock.acquire()
-    print >>sys.stderr, "%s: WARNING: %s" % (threading.current_thread().name, s)
+    print("%s: WARNING: %s" % (threading.current_thread().name, s), file = sys.stderr)
     warnings += 1
     threadlock.release()
 
@@ -103,9 +105,9 @@ if __name__ == "__main__":
     lock = common.Lock(".lock")
 
     # http://www.redhat.com/resourcelibrary relies on tracking cookies
-    cj = cookielib.CookieJar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-    urllib2.install_opener(opener)
+    cj = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+    urllib.request.install_opener(opener)
 
     # Permit write of UTF-8 characters to stderr (required when piping output)
     if sys.stderr.encoding == None:
@@ -126,7 +128,7 @@ if __name__ == "__main__":
     indexurl = "http://www.redhat.com/resourcelibrary/results?portal:componentId=bf73926d-2aa3-4b8b-bf8d-a1f6f56b8469&portal:type=action&actionType=orderBy&orderBy=Date-Desc&resultPerPage=100"
     while True:
         html = common.retrieve_m(indexurl, tries = tries)
-        xml = lxml.html.soupparser.fromstring(html)
+        xml = lxml.html.parse(html)
 
         for indexitem in xml.xpath("//div[@id='sidebar-left-events']"):
             indexitem = copy.deepcopy(indexitem)
@@ -139,7 +141,7 @@ if __name__ == "__main__":
             item.title = indexitem.xpath("//a/text()")[0]
 
             if item.type_ in ("Demos and software tours", "On-demand webinar",
-                              "Online tools", "Sales guides"):
+                              "Online tools", "Sales guides", "Upcoming"):
                 continue
 
             if not item.set_pageurl(indexitem.xpath("//a/@href")[0]):
@@ -167,7 +169,7 @@ if __name__ == "__main__":
         except IndexError:
             break
 
-    print >>sys.stderr, "INFO: %u items parsed." % i
+    print("INFO: %u items parsed." % i, file = sys.stderr)
 
     for i in range(threads):
         t = threading.Thread(target = worker, name = i)

@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 
 import argparse
 import odf.utils
@@ -34,4 +34,4 @@ if __name__ == "__main__":
             fonts.add(cap(ff.strip("' ")))
     
     for f in sorted(fonts):
-        print f
+        print(f)

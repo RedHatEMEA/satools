@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys
 import time
@@ -33,15 +33,15 @@ if __name__ == "__main__":
     else:
         iface = detect()
 
-    print "Interface %s:" % iface
+    print("Interface %s:" % iface)
     (oldrxp, oldtxp, oldrxb, oldtxb) = get(iface)
     while True:
         time.sleep(2)
         (rxp, txp, rxb, txb) = get(iface)
-        print "RX: %0.2f Mbps (%d pps)  TX: %0.2f Mbps (%d pps)" % \
-            ((rxb - oldrxb) / 250000.0,
-             (rxp - oldrxp) / 2.0,
-             (txb - oldtxb) / 250000.0,
-             (txp - oldtxp) / 2.0)
+        print("RX: %0.2f Mbps (%d pps)  TX: %0.2f Mbps (%d pps)" % \
+              ((rxb - oldrxb) / 250000.0,
+               (rxp - oldrxp) / 2.0,
+               (txb - oldtxb) / 250000.0,
+               (txp - oldtxp) / 2.0))
 
         (oldrxp, oldtxp, oldrxb, oldtxb) = (rxp, txp, rxb, txb)

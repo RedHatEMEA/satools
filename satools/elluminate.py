@@ -1,16 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import common
-import cookielib
 import getpass
+import http.cookiejar
 import lxml.etree
 import os
 import re
 import sys
-import urllib
-import urllib2
-import urlparse
+import urllib.parse
+import urllib.request
 
 JARS = "jars"
 
@@ -47,11 +46,11 @@ def fetchjars(xml):
 
 def getjnlpurl(url):
     f = common.retrieve_m(url)
-    m = re.search("LaunchURL = \"(.*?)\"", f.read())
+    m = re.search("LaunchURL = \"(.*?)\"", f.read().decode("utf-8"))
     f.close()
 
-    t = urllib.splittype(url)
-    return t[0] + "://" + urllib.splithost(t[1])[0] + m.group(1)
+    t = urllib.parse.splittype(url)
+    return t[0] + "://" + urllib.parse.splithost(t[1])[0] + m.group(1)
 
 def quiet():
     f = open("/dev/null", "w")
@@ -60,8 +59,8 @@ def quiet():
     f.close()
 
 def ls(args):
-    print "\n".join(sorted(filter(lambda x: x != JARS and
-                                  not x.endswith(".vcr"), os.listdir("."))))
+    print("\n".join(sorted(filter(lambda x: x != JARS and
+                                  not x.endswith(".vcr"), os.listdir(".")))))
 
 def mv(args):
     os.rename(args.oldjnlpfile, args.newjnlpfile)
@@ -85,14 +84,14 @@ def rm(args):
 
 def login(args):
     if args.username is None:
-        print "%s: error: --username argument required" % ap.prog
+        print("%s: error: --username argument required" % ap.prog)
         sys.exit(1)
 
     password = getpass.getpass()
 
-    urllib2.urlopen("https://sas.elluminate.com/site/internal/home",
-                    urllib.urlencode({ "username": args.username,
-                                       "password": password })).close()
+    urllib.request.urlopen("https://sas.elluminate.com/site/internal/home",
+                           urllib.parse.urlencode({ "username": args.username,
+                                                    "password": password })).close()
 
 def save(args):
     jnlpurl = args.url
@@ -103,7 +102,7 @@ def save(args):
     if re.search("/(mr|p).jnlp\?", jnlpurl):
         jnlpurl = getjnlpurl(jnlpurl)
 
-    vcrfile = urlparse.parse_qs(jnlpurl[jnlpurl.index("?") + 1:])["psid"][0]
+    vcrfile = urllib.parse.parse_qs(jnlpurl[jnlpurl.index("?") + 1:])["psid"][0]
     jnlpfile = vcrfile + ".jnlp"
 
     common.retrieve(jnlpurl, jnlpfile, force = True)
@@ -112,7 +111,7 @@ def save(args):
         xml = lxml.etree.parse(jnlpfile).getroot()
     except lxml.etree.XMLSyntaxError:
         os.unlink(jnlpfile)
-        print "%s: couldn't retrieve jnlp: credentials incorrect?" % ap.prog
+        print("%s: couldn't retrieve jnlp: credentials incorrect?" % ap.prog)
         sys.exit(1)
         
     xmlargs = xml.xpath("//argument")
@@ -126,22 +125,26 @@ def save(args):
 
     xml.set("codebase", "file://" + config["elluminate-base"] + "/" + JARS)
 
-    f = open(jnlpfile, "w")
+    f = open(jnlpfile, "wb")
     f.write(lxml.etree.tostring(xml, xml_declaration = True))
     f.close()
 
-    print jnlpfile
+    print(jnlpfile)
 
 if __name__ == "__main__":
     global config
     config = common.load_config()
     args = parse_args()
 
+    if not "func" in args:
+        ap.print_help()
+        sys.exit(1)
+
     common.mkdirs(config["elluminate-base"] + "/" + JARS)
     os.chdir(config["elluminate-base"])
 
-    cj = cookielib.CookieJar()
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-    urllib2.install_opener(opener)
+    cj = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+    urllib.request.install_opener(opener)
 
     args.func(args)

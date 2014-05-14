@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 
 import argparse
 import odf.utils
@@ -24,4 +24,4 @@ if __name__ == "__main__":
                 t += e.text
             if e.tail:
                 t += e.tail
-        print t
+        print(t)

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import common
 import mailbox
@@ -21,7 +21,7 @@ def extract(path):
     if config["attachments-enabled"] != "1":
         return
 
-    print >>sys.stderr, "Extracting attachments from %s..." % path
+    print("Extracting attachments from %s..." % path, file = sys.stderr)
 
     mbox = mailbox.mbox(config["lists-base"] + "/" + path)
 
@@ -52,7 +52,7 @@ def extract(path):
                         if not os.path.exists(p):
                             temppath = common.mktemppath(p)
                         
-                            f = open(temppath, "w")
+                            f = open(temppath, "wb")
                             f.write(part.get_payload(decode = True))
 
                             f.flush()

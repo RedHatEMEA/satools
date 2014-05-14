@@ -1,4 +1,4 @@
-#!/usr/bin/python -tt
+#!/usr/bin/python3 -tt
 
 import argparse
 import calendar
@@ -50,7 +50,7 @@ class Iso(object):
         return False
 
     def download(self):
-        f = open(self.tempname, "a")
+        f = open(self.tempname, "ab")
         size = os.fstat(f.fileno())[stat.ST_SIZE]
         response = requests.get(self.href, stream = True,
                                 headers = {"Range": "bytes=%u-" % size})
@@ -100,7 +100,7 @@ fileset = LockedSet()
 consolelock = threading.Lock()
 def msg(s):
     with consolelock:
-        print >>sys.stderr, s
+        print(s, file = sys.stderr)
 
 def parse_args():
     ap = argparse.ArgumentParser()
@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
     if args["list"]:
         for iso in get_isos():
-            print "[%c] %s" % ([" ", "*"][iso.match()], iso.name)
+            print("[%c] %s" % ([" ", "*"][iso.match()], iso.name))
         sys.exit(0)
 
     common.mkdirs(config["rhn-dumps-base"])

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import re
 import time
@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
         disks = sorted([d for d in set(old) & set(new) if rx.match(d)])
         for d in disks:
-            print "%s: R: %6.2f Mbps  W: %6.2f Mbps" % \
-                (d, (new[d][0] - old[d][0]) * 0.002048,
-                 (new[d][1] - old[d][1]) * 0.002048)
+            print("%s: R: %6.2f Mbps  W: %6.2f Mbps" % \
+                  (d, (new[d][0] - old[d][0]) * 0.002048,
+                   (new[d][1] - old[d][1]) * 0.002048))
         old = new

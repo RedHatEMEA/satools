@@ -1,26 +1,25 @@
-#!/usr/bin/python -u
+#!/usr/bin/python3 -u
 
 import codecs
 import common
 import lxml.html
 import os
-import Queue
+import queue
 import requests
 import sys
 import threading
 import time
 import traceback
-import urllib
-import urlparse
+import urllib.parse
 
 files = set()
 lock = threading.Lock()
-q = Queue.Queue()
+q = queue.Queue()
 tls = threading.local()
 
 def log(s):
     with lock:
-        print >>sys.stderr, s
+        print(s, file = sys.stderr)
 
 def worker(cookies):
     tls.s = requests.Session()
@@ -82,18 +81,18 @@ def read_events(url):
     
     path = html.xpath("//div[@id='breadcrumbs']//li[last()]//text()")[0].strip()
     for _url in html.xpath("//a[starts-with(@href, 'download/attachments/')]/@href"):
-        dest = urllib.unquote(_url).decode("utf-8")
+        dest = urllib.parse.unquote(_url)
         dest = path + "/" + "-".join(dest.rsplit("/", 2)[1:])
 
         if want(dest):
-            q.put((download, urlparse.urljoin(url, _url), dest))
+            q.put((download, urllib.parse.urljoin(url, _url), dest))
 
 def read_project_list():
     url = config["pt-root"] + "projects-emea/?technology=&scope=&quarter=&contract_type=&revenue_recognition=&pt_status=&pa_status=&stage=&manager="
     html = lxml.html.fromstring(tls.s.get(url).text)
 
     for _url in html.xpath("//a[starts-with(@href, 'project-events?')]/@href"):
-        q.put((read_events, urlparse.urljoin(url, _url)))
+        q.put((read_events, urllib.parse.urljoin(url, _url)))
 
 def login():
     url = config["pt-root"] + "register/"

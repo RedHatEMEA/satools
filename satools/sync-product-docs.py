@@ -1,17 +1,17 @@
-#!/usr/bin/python -ttu
+#!/usr/bin/python3 -ttu
 
 import argparse
 import common
 import lxml.etree
 import lxml.html
 import os
-import Queue
+import queue
 import re
 import requests
 import sys
 import threading
-import urllib2
-import urlparse
+import urllib.error
+import urllib.parse
 
 class LockedSet(object):
     def __init__(self):
@@ -38,20 +38,20 @@ class FilterAction(argparse.Action):
         filters.append("%c/%s/" % (option_string[1], values))
         setattr(namespace, self.dest, filters)
 
-q = Queue.Queue()
+q = queue.Queue()
 warnings = 0
 fileset = LockedSet()
 
 consolelock = threading.Lock()
 def msg(s):
     with consolelock:
-        print >>sys.stderr, s
+        print(s, file = sys.stderr)
 
 def warn(s):
     global warnings
     with consolelock:
         warnings += 1
-        print >>sys.stderr, s
+        print(s, file = sys.stderr)
 
 def worker(host):
     for item in iter(q.get, "STOP"):
@@ -131,14 +131,14 @@ def download(url, dest):
 
         common.mkro(dest)
        
-    except urllib2.HTTPError, e:
+    except urllib.error.HTTPError as e:
         if e.code == 403 or e.code == 404:
             warn("WARNING: %s on %s, continuing..." % (e, url))
         else:
             raise
 
 def update_url(url, home):
-    urlp = urlparse.urlparse(url)
+    urlp = urllib.parse.urlparse(url)
     if not urlp.path or urlp.path[0] != "/": return url
     return os.path.relpath(urlp.path[1:], home)
 
@@ -151,8 +151,8 @@ def get_deps_css(url, dest):
 
     rx = re.compile('url\([\'"]*([^)]+?)[\'"]*\)')
     for m in rx.finditer(css):
-        _url = urlparse.urljoin(url, m.group(1))
-        urlp = urlparse.urlparse(_url)
+        _url = urllib.parse.urljoin(url, m.group(1))
+        urlp = urllib.parse.urlparse(_url)
         if urlp.netloc and urlp.netloc != "access.redhat.com": continue
 
         q.put((download, _url, os.path.normpath(urlp.path[1:])))
@@ -175,8 +175,8 @@ def update_url_html(url, home):
 def get_deps_html(url, dest):
     html = lxml.html.parse(dest)
     for u in html.xpath("//img/@src | //input/@src | //link/@href | //object/@data | //script/@src"):
-        _url = urlparse.urljoin(url, u)
-        urlp = urlparse.urlparse(_url)
+        _url = urllib.parse.urljoin(url, u)
+        urlp = urllib.parse.urlparse(_url)
         if urlp.netloc and urlp.netloc != "access.redhat.com": continue
 
         q.put((download, _url, os.path.normpath(urlp.path[1:])))

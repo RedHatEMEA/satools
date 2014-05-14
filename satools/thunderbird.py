@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import common
 import os
@@ -13,8 +13,7 @@ def init():
         return
 
     if isrunning():
-        print >>sys.stderr, \
-            "thunderbird.py: thunderbird is running, disabling plugin"
+        print("thunderbird.py: thunderbird is running, disabling plugin", file = sys.stderr)
         config["thunderbird-base"] = None
         return
 

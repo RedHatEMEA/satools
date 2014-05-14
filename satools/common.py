@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import calendar
 import codecs
@@ -7,14 +7,15 @@ import fcntl
 import os
 import shutil
 import sys
+import tempfile
 import time
-import urllib2
+import urllib.error
+import urllib.request
 
 configfile = os.environ["HOME"] + "/.satools"
 
 class DB(object):
     def __init__(self, path):
-        self.cmpfn = None
         self.readdb(path)
 
     def readdb(self, path):
@@ -36,11 +37,11 @@ class DB(object):
         temppath = mktemppath(self.path)
     
         with codecs.open(temppath, "w", "utf-8") as f:
-            for key in sorted(self.entries.keys(), self.cmpfn):
+            for key in sorted(self.entries.keys()):
                 if self.entries[key]:
-                    print >>f, "%s=%s" % (key, self.get(key))
+                    print("%s=%s" % (key, self.get(key)), file = f)
                 else:
-                    print >>f, key
+                    print(key, file = f)
             f.flush()
             os.fsync(f.fileno())
 
@@ -57,7 +58,7 @@ class DB(object):
     def __contains__(self, key):
         return key in self.entries
 
-class HeadRequest(urllib2.Request):
+class HeadRequest(urllib.request.Request):
     def get_method(self):
         return "HEAD"
 
@@ -110,12 +111,6 @@ def load_config():
                "attachments-base": os.environ["HOME"] + "/content/attachments",
                "attachments-enabled": "0",
                "attachments-odponly": "1",
-               "clearspace-base": os.environ["HOME"] + "/content/clearspace",
-               "clearspace-root": None,
-               "clearspace-username": None,
-               "clearspace-password": None,
-               "clearspace-threads": "4",
-               "clearspace-odponly": "1",
                "jive-base": os.environ["HOME"] + "/content/jive",
                "jive-root": None,
                "jive-threads": "4",
@@ -142,7 +137,7 @@ def load_config():
 
     if not os.path.exists(configfile):
         with open(configfile, "w") as f:
-            print >>f, \
+            print(
 """# Specify the lists to synchronise here by adding multiple lines of the
 #   format lists-sync=URL.  If the list archives are password protected, use
 #   format lists-sync=URL USERNAME PASSWORD
@@ -162,8 +157,8 @@ def load_config():
 # with r/./ will reject.
 # product-docs-filter=r/jboss/
 # product-docs-filter=a/.*/
-"""
-        os.chmod(configfile, 0600)
+""", file = f)
+        os.chmod(configfile, 0o600)
 
     with open(configfile) as f:
         for line in f:
@@ -183,13 +178,13 @@ def load_config():
 def mkdirs(path):
     try:
         os.makedirs(path)
-    except OSError, e:
+    except OSError as e:
         if e.errno != errno.EEXIST:
             raise
 
 def mkro(path):
     st = os.stat(path)
-    os.chmod(path, st.st_mode & ~0222)
+    os.chmod(path, st.st_mode & ~0o222)
 
 def mktemppath(path):
     parts = os.path.split(path)
@@ -197,11 +192,11 @@ def mktemppath(path):
 
 def progress(current, total):
     percent = 100 * current / total
-    print >>sys.stderr, "\r  [%s%s] %u%% (%u) " % \
-        ("*" * (percent / 2), " " * (50 - (percent / 2)), percent, current),
+    print("\r  [%s%s] %u%% (%u) " % \
+        ("*" * (percent / 2), " " * (50 - (percent / 2)), percent, current), end = "", file = sys.stderr)
 
 def progress_finish():
-    print >>sys.stderr
+    print("", file = sys.stderr)
 
 def rename(srcpath, dstpath):
     unlink(dstpath)
@@ -240,7 +235,7 @@ def sendfile(srcf, dstf):
 def sendfile_disk(srcf, path):
     temppath = mktemppath(path)
 
-    dstf = open(temppath, "w")
+    dstf = open(temppath, "wb")
     sendfile(srcf, dstf)
 
     dstf.flush()
@@ -255,33 +250,33 @@ def retrieve_m(url, data = None, tries = 1, opener = None):
         myurl = url.get_full_url()
     except:
         pass
-    print >>sys.stderr, "Retrieving %s..." % myurl
-    for i in xrange(tries):
+    print("Retrieving %s..." % myurl, file = sys.stderr)
+    for i in range(tries):
         try:
             if opener:
                 return opener.open(url, data)
             else:
-                return urllib2.urlopen(url, data)
+                return urllib.request.urlopen(url, data)
             
-        except urllib2.URLError, e:
+        except urllib.error.URLError as e:
             if getattr(e, "code", 0) != 404 and i < tries - 1:
-                print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
+                print("URLError: %s on %s, sleeping and retrying..." % (e, url), file = sys.stderr)
                 time.sleep(10)
             else:
                 raise
 
 def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
     if os.path.exists(path) and not force:
-        for i in xrange(tries):
+        for i in range(tries):
             try:
                 if opener:
                     srcf = opener.open(HeadRequest(url))
                 else:
-                    srcf = urllib2.urlopen(HeadRequest(url))
+                    srcf = urllib.request.urlopen(HeadRequest(url))
                 break
-            except urllib2.URLError, e:
+            except urllib.error.URLError as e:
                 if getattr(e, "code", 0) != 404 and i < tries - 1:
-                    print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
+                    print("URLError: %s on %s, sleeping and retrying..." % (e, url), file = sys.stderr)
                     time.sleep(10)
                 else:
                     raise
@@ -293,14 +288,14 @@ def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
             if mtime == st.st_mtime and int(srcf.info()["Content-Length"]) == st.st_size:
                 return
 
-    for i in xrange(tries):
+    for i in range(tries):
         srcf = retrieve_m(url, data, tries, opener = opener)
         try:
             sendfile_disk(srcf, path)
             break
-        except ShortReadException, e:
+        except ShortReadException as e:
             if i < tries - 1:
-                print >>sys.stderr, "Short read, retrying..."
+                print("Short read, retrying...", file = sys.stderr)
             else:
                 raise
         finally:
@@ -314,7 +309,7 @@ def parse_last_modified(lm):
     return calendar.timegm(time.strptime(lm, "%a, %d %b %Y %H:%M:%S %Z"))
 
 def retrieve_tmpfile(url, data = None):
-    dstf = os.tmpfile()
+    dstf = tempfile.TemporaryFile()
 
     srcf = retrieve_m(url, data)
     sendfile(srcf, dstf)

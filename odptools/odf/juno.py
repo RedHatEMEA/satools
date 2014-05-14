@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from satools import common
 import hashlib
@@ -10,7 +10,7 @@ import subprocess
 import tempfile
 import time
 import uno
-import urllib
+import urllib.parse
 
 class juno:
     def __init__(self):
@@ -25,7 +25,7 @@ class juno:
                                       "--accept=pipe,name=%s;urp;StarOffice.ServiceManager" % junopipename,
                                       "--headless",
                                       "-env:UserInstallation=%s" % juno.mkpath(self.tempdir)),
-                                     stderr = file("/dev/null", "w"),
+                                     stderr = open("/dev/null", "w"),
                                      preexec_fn = os.setpgrp,
                                      close_fds = True)
 
@@ -53,20 +53,20 @@ class juno:
             service = config.getByName(servicename)
             service.PreferredImplementations = \
                 tuple(filter(lambda x: "cairo" not in x.lower(),
-                             map(unicode.strip, service.PreferredImplementations)))
+                             map(str.strip, service.PreferredImplementations)))
         config.commitChanges()
 
     def masterSocketName(self):
         md5 = hashlib.md5()
         md5.update(juno.mkpath(self.tempdir).encode("utf_16_le"))
-        _hash = "".join(map(lambda x: "%x" % ord(x), md5.digest()))
+        _hash = "".join(map(lambda x: "%x" % x, md5.digest()))
         return juno.socketName("SingleOfficeIPC_%s" % _hash)
 
     def waitConnect(self, name, timeout):
         s = socket.socket(socket.AF_UNIX)
 
         rv = False
-        for i in xrange(timeout * 10):
+        for i in range(timeout * 10):
             try:
                 s.connect(name)
                 rv = True
@@ -81,7 +81,7 @@ class juno:
         s = socket.socket(socket.AF_UNIX)
 
         rv = False
-        for i in xrange(timeout * 10):
+        for i in range(timeout * 10):
             try:
                 s.bind(name)
                 rv = True
@@ -108,7 +108,7 @@ class juno:
 
     @staticmethod
     def mkpath(x):
-        return "file://" + urllib.quote(os.path.abspath(x))
+        return "file://" + urllib.parse.quote(os.path.abspath(x))
 
     @staticmethod
     def Any(_type, value):

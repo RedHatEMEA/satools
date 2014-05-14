@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import argparse
 import odf.juno
@@ -16,12 +16,12 @@ def parse_args():
 def iterate_pages(fonts, pages, prefix = ""):
     pagect = pages.getCount()
     for i in range(0, pagect):
-        print "%spage %d/%d" % (prefix, i + 1, pagect)
+        print("%spage %d/%d" % (prefix, i + 1, pagect))
         page = pages.getByIndex(i)
 
         shapect = page.getCount()
         for j in range(0, shapect):
-            print "  shape %d/%d" % (j + 1, shapect)
+            print("  shape %d/%d" % (j + 1, shapect))
             shape = page.getByIndex(j)
 
             if shape.supportsService("com.sun.star.drawing.Text"):
@@ -31,8 +31,8 @@ def iterate_pages(fonts, pages, prefix = ""):
                     portions = para.createEnumeration()
                     while portions.hasMoreElements():
                         portion = portions.nextElement()
-                        print "    [%-15.15s] %s" % (portion.CharFontName,
-                                                     portion.getString())
+                        print("    [%-15.15s] %s" % (portion.CharFontName,
+                                                     portion.getString()))
                         fonts.add(portion.CharFontName)
 
 def deinit():
@@ -65,6 +65,6 @@ if __name__ == "__main__":
 
     deinit()
 
-    print "===="
+    print("====")
     for font in sorted(fonts):
-        print font
+        print(font)
