@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 
+from satools import common
+from satools import search
 import argparse
 import email.utils
-import common
 import mailbox
 import os
 import os.path
 import re
-import search
 import sqlite3
 import sys
 
@@ -18,7 +18,6 @@ class MailDB(object):
     def __init__(self, dbpath):
         self.db = sqlite3.connect(dbpath)
         self.db.row_factory = sqlite3.Row
-        self.db.text_factory = str
         self._create_tables()
 
     def _create_tables(self):
@@ -105,11 +104,22 @@ def parse_args():
 
 def _decode(a):
     a = list(a)
+
     if a[1] is None:
         # http://bugs.python.org/issue21492
         if type(a[0]) == bytes:
             a[0] = a[0].decode("utf-8")
         return a[0]
+
+    if a[1] == "unknown-8bit":
+        try:
+            return a[0].decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                return a[0].decode("cp1252")
+            except:
+                raise
+
     # It appears that Chinese e-mails commonly erroneously mark their charset as
     # gb2312, when in fact they are in gb18030.  The former is a strict subset
     # of the latter.
@@ -127,7 +137,8 @@ def __decode(data):
 
 def decode(data):
     if data is None: return data
-    data = decoderegex.sub(__decode, data)
+    if not isinstance(data, email.header.Header):
+        data = decoderegex.sub(__decode, data)
     return " ".join(map(_decode, email.header.decode_header(data)))
 
 def index(base, _list, path):
@@ -161,6 +172,7 @@ def index(base, _list, path):
                                  subject, body)
         except LookupError:
             # We found a charset Python doesn't know about.  Too bad.
+            # TODO: log this
             pass
 
     maildb.close()

@@ -185,6 +185,7 @@ def sync_dir(url, path, username, password, odponly, alfresco):
         return
 
     fileset.add_dir(urllib.parse.unquote(path)[1:])
+    common.mkdirs(urllib.parse.unquote(path)[1:])
 
     for d in dirs:
         q.put((sync_dir, url, d["path"], username, password, odponly, alfresco))

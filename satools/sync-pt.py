@@ -109,7 +109,7 @@ def cleanup():
     for dirpath, dirnames, filenames in os.walk(".", topdown = False):
         for f in filenames:
             path = os.path.normpath(os.path.join(dirpath, f))
-            if path.decode("utf-8") not in files and path[0] != ".":
+            if path not in files and path[0] != ".":
                 os.unlink(path)
 
         if not os.listdir(dirpath):

@@ -31,7 +31,7 @@ def extract(path):
             fn = part.get_filename()
             typ = part.get_content_type()
             if fn is not None \
-                    and not part.get("Content-Disposition", "inline").startswith("inline") \
+                    and not mailindex.decode(part.get("Content-Disposition", "inline")).startswith("inline") \
                     and typ not in \
                     ('application/pgp-signature', 'application/pkcs7-signature',
                      'application/x-pkcs7-signature', 'image/x-icon',

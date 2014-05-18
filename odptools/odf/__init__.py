@@ -201,10 +201,10 @@ class Odf(object):
         return True
 
 class Odt(Odf):
-    mimetype = "application/vnd.oasis.opendocument.text"
+    mimetype = b"application/vnd.oasis.opendocument.text"
 
 class Odp(Odf):
-    mimetype = "application/vnd.oasis.opendocument.presentation"
+    mimetype = b"application/vnd.oasis.opendocument.presentation"
 
     def __init__(self, filename = None):
         self._mpstyles = {}
@@ -222,7 +222,7 @@ class Odp(Odf):
         except zipfile.BadZipfile: return False
 
         try: mimetype = z.read("mimetype")
-        except KeyError: mimetype = ""
+        except KeyError: mimetype = b""
 
         z.close()
 

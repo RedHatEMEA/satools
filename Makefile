@@ -28,21 +28,21 @@ rpm-base: clean
 	mkdir -p "$(TOPDIR)/SOURCES"
 
 clean:
-	find -name '*.pyc' -print0 | xargs -i -0 rm -f '{}'
+	rm -rf satools/__pycache__ search/app/__pycache__
 	rm -f juno/app/static/app-all.js juno/app/static/all-classes.js
 	rm -f juno/app/parsetab.py satools/parsetab.py search/app/parsetab.py
 	rm -f search/app/static/app-all.js search/app/static/all-classes.js
 
 juno:
-	cd juno/app && python search.py
+	cd juno/app && python3 search.py
 	cd juno/app/static && sencha build -p app.jsb3 -d .
 
 satools:
-	cd satools && python search.py
+	cd satools && python3 search.py
 
 search:
 	cd search/app/static && sencha build -p app.jsb3 -d .
-	cd search/app && python -c 'import app'
+	cd search/app && PYTHONPATH=../..:../../satools python3 -c 'import app'
 
 juno-lint:
 	cd juno/app/static && jsl -nologo -nofilelisting -conf ../jsl.conf -process app.js -process 'controller/*.js' -process 'store/*.js' -process 'view/*.js'
