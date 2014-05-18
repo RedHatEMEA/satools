@@ -28,7 +28,7 @@
     <h2><a name="about" id="about">About SA tools list
     search</a></h2>
 
-    <p>This is the help page for SA tools list search 0.4, written
+    <p>This is the help page for SA tools list search 0.5, written
     by Jim Minter. SA tools list search and all its command line
     tooling are open-sourced at <a href=
     "https://github.com/RedHatEMEA/satools">https://github.com/RedHatEMEA/satools</a>.
@@ -229,13 +229,13 @@
     server</a></h2>
 
     <p>This server hosts allows searching of messages sent since
-    01/01/$lists-start-year to the following lists:</p>
+    01/01/{{lists_start_year}} to the following lists:</p>
 
     <div style="margin-left: 2em">
-      $lists
+      {{!lists}}
     </div>
 
-    <p>$update</p>
+    <p>{{update}}</p>
   </div>
 </body>
 </html>

@@ -6,8 +6,8 @@ License:	GPL
 URL:		https://github.com/RedHatEMEA/satools
 Source:		satools-search.tar.gz
 BuildArch:	noarch
-Requires:	httpd, mod_wsgi, python-webpy, satools = %{version}-%{release}
-BuildRequires:	redhat-rpm-config
+Requires:	httpd, python3-bottle, python3-mod_wsgi, satools = %{version}-%{release}
+BuildRequires:	python3-devel, redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
 
@@ -41,6 +41,7 @@ rm -rf %{buildroot}
 
 %post
 /sbin/service httpd reload
+/sbin/setsebool -P httpd_read_user_content=on
 
 %postun
 /sbin/service httpd reload
