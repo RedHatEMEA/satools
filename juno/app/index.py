@@ -1,4 +1,4 @@
-#!/usr/bin/python -ttu
+#!/usr/bin/python3 -ttu
 
 from db import DB
 from satools import common
@@ -6,7 +6,7 @@ import argparse
 import calendar
 import hashlib
 import multiprocessing
-import odptools
+import odptools.odf
 import os
 import PIL.Image
 import re
@@ -42,7 +42,7 @@ def extend(png, target):
     (currentx, currenty) = srcim.size
     (targetx, targety) = target
 
-    dstim.paste(srcim, ((targetx - currentx) / 2, (targety - currenty) / 2))
+    dstim.paste(srcim, (int((targetx - currentx) / 2), int((targety - currenty) / 2)))
     dstim.save(png)
     return dstim
 
@@ -114,7 +114,7 @@ def createthumbs(juno, dstp, preso):
         im = extend(slidep, slidesize)
         resize(im, thumbp, thumbsize)
 
-        with open(slidep) as f:
+        with open(slidep, "rb") as f:
             png = f.read()
 
         args.append((dstp, i, hashlib.sha1(png).hexdigest()))
@@ -211,7 +211,7 @@ def worker(me, q):
     for (srcp, dstp) in iter(q.get, "STOP"):
         try:
             add_preso(db, srcp, dstp)
-        except Exception, e:
+        except Exception as e:
             log("WARNING: add_preso failed (%s), skipping..." %
                 str(e).replace("\n", ""))
             del_preso(db, srcp, dstp)
@@ -292,7 +292,7 @@ def check_fs_2(db, fs, slideregexp = None):
             os.rmdir(dirpath)
 
 def check_fs_1(db, fs, slideregexp = None):
-    (dirpath, dirnames, filenames) = os.walk(fs).next()
+    (dirpath, dirnames, filenames) = next(os.walk(fs))
 
     for d in dirnames:
         if os.path.islink(d) or d not in common.Mapper._d2s:
@@ -307,7 +307,7 @@ def check_fs_1(db, fs, slideregexp = None):
 
 
 def check_fs(db):
-    (dirpath, dirnames, filenames) = os.walk(".").next()
+    (dirpath, dirnames, filenames) = next(os.walk("."))
 
     for d in dirnames:
         if os.path.islink(d) or d not in ("root", "slides", "thumbs"):

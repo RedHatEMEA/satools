@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 import argparse
-import odf
-import odf.utils
+from odptools import odf
+from odptools.odf import utils
 
 def parse_args():
     ap = argparse.ArgumentParser()

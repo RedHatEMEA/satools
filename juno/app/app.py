@@ -1,19 +1,42 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from satools import common
 from db import DB
+import bottle
 import json
-import odptools
+import odptools.odp_cat
 import os
 import search
 import shutil
 import tempfile
-import urlparse
-import web
+import urllib.parse
 
-def error(message):
-    web.ctx.status = "400 Bad Request"
-    return message
+def db(callback):
+    def wrapper(*args, **kwargs):  
+        kwargs["db"] = DB(os.path.join(config["juno-base"], ".db"))
+
+        try:
+            return callback(*args, **kwargs)
+        finally:
+            kwargs["db"].close()
+
+    return wrapper
+
+@bottle.get("/")
+def callback():
+    return bottle.static_file("index.html", root = "static")
+
+@bottle.get("/favicon.ico")
+def callback():
+    return bottle.static_file("favicon.ico", root = "static")
+
+@bottle.get("/help")
+def callback():
+    return bottle.static_file("help.html", root = "static")
+
+@bottle.get("/static/<path:path>")
+def callback(path):
+    return bottle.static_file(path, root = "static")
 
 def safepath(path):
     path = os.path.normpath(path.lstrip(os.sep))
@@ -31,7 +54,7 @@ def tell(path):
 
     path = os.path.join(base, safepath(path))
 
-    dirpath, dirnames, filenames = os.walk(path).next()
+    dirpath, dirnames, filenames = next(os.walk(path))
     for i in sorted(dirnames):
         subpath = "/" + os.path.relpath(os.path.join(path, i), base)
         entries.append({ "text": i,
@@ -46,97 +69,63 @@ def tell(path):
 
     return json.dumps(entries)
 
-class Download:
-    def GET(self, path):
-        path = common.Mapper.d2s(safepath(path))
+@bottle.get("/dl/<path:path>")
+def callback(path):
+    path = common.Mapper.d2s(safepath(path))
 
-        web.header("Content-Type", "application/vnd.oasis.opendocument.presentation")
-        web.header("Content-disposition", "attachment; filename=\"%s\"" % path.rsplit("/", 1)[1])
+    bottle.response.content_type = "application/vnd.oasis.opendocument.presentation"
+    bottle.response.set_header("Content-disposition", "attachment; filename=\"%s\"" % path.rsplit("/", 1)[1])
         
-        return open(path.encode("utf-8"))
+    return bottle.static_file(path, root = "/")
 
-class Favicon:
-    def GET(self):
-        web.header("Content-Type", "image/vnd.microsoft.icon")
-        return open("static/favicon.ico")
+@bottle.get("/nodes")
+def callback():
+    bottle.response.content_type = "application/json"
+    return tell(bottle.request.query.node)
 
-class Help:
-    def GET(self):
-        web.header("Content-Type", "text/html")
-        return open("static/help.html")
+@bottle.post("/odp")
+def callback():
+    tmp = tempfile.mkdtemp()
 
-class Index:
-    def GET(self):
-        web.header("Content-Type", "text/html")
-        return open("static/index.html")
+    # TODO: security, single slide not in array, make odp_cat work...
+    odptools.odp_cat.cat([config["juno-base"] + "/root" + x for x in bottle.request.forms.getall("slides")], tmp + "/mypreso.odp")
 
-class Nodes:
-    def GET(self):
-        web.header("Content-Type", "application/json")
-        q = dict(urlparse.parse_qsl(str(web.ctx.query[1:])))
-        return tell(q["node"])
-
-class Odp:
-    def POST(self):
-        tmp = tempfile.mkdtemp()
-
-        dct = urlparse.parse_qs(web.data())
-        # TODO: security, single slide not in array, make odp_cat work...
-        odptools.odp_cat.cat(map(lambda x: config["juno-base"] + "/root" + x, dct["slides"]), tmp + "/mypreso.odp")
-
-        web.header("Content-Type", "application/vnd.oasis.opendocument.presentation")
-        web.header("Content-disposition", "attachment; filename=mypreso.odp")
+    bottle.response.content_type = "application/vnd.oasis.opendocument.presentation"
+    bottle.response.set_header("Content-disposition", "attachment; filename=\"mypreso.odp\"")
         
-        f = open(tmp + "/mypreso.odp")
-        shutil.rmtree(tmp)
-        return f
+    f = open(tmp + "/mypreso.odp", "rb")
+    shutil.rmtree(tmp)
+    return f
 
-class Search:
-    def GET(self, query):
-        try:
-            w = search.build_where(query)
-        except search.SearchException, e:
-            return error(e)
+@bottle.get("/s/<query:path>")
+@db
+def callback(query, db):
+    try:
+        w = search.build_where(query)
+    except search.SearchException as e:
+        return bottle.HTTPError(400, e)
 
-        if w.merge:
-            w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s GROUP BY checksum ORDER BY presomtime DESC, preso, slide LIMIT 500" % w.sql
-        else:
-            w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s ORDER BY presomtime DESC, preso, slide" % w.sql
-        c = web.ctx.db.execute(w.sql, w.args)
+    if w.merge:
+        w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s GROUP BY checksum ORDER BY presomtime DESC, preso, slide LIMIT 500" % w.sql
+    else:
+        w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s ORDER BY presomtime DESC, preso, slide" % w.sql
+    c = db.execute(w.sql, w.args)
 
-        entries = []
-        for row in c:
-            p = row["preso"].replace("\t", "%09").replace('"', "%22").replace("#", "%23").replace('?', "%3F")
-            entries.append({"src": "static/thumbs/%s/%03u.jpg" % (p, row["slide"]),
-                            "preso": "/" + row["preso"],
-                            "slide": row["slide"],
-                            "png": "static/slides/%s/%03u.png" % (p, row["slide"])
-                            })
+    entries = []
+    for row in c:
+        p = row["preso"].replace("\t", "%09").replace('"', "%22").replace("#", "%23").replace('?', "%3F")
+        entries.append({"src": "static/thumbs/%s/%03u.jpg" % (p, row["slide"]),
+                        "preso": "/" + row["preso"],
+                        "slide": row["slide"],
+                        "png": "static/slides/%s/%03u.png" % (p, row["slide"])
+                    })
+        
+    bottle.response.content_type = "application/json"
+    return json.dumps(entries)
 
-        web.header("Content-Type", "application/json")
-        return json.dumps(entries)
-
-urls = ("/", "Index",
-        "/favicon.ico", "Favicon",
-        "/dl/(.*)", "Download",
-        "/help", "Help",
-        "/nodes", "Nodes",
-        "/odp", "Odp",
-        "/s/(.*)", "Search",
-        )
-
-def db_load_hook():
-    web.ctx.db = DB(os.path.join(config["juno-base"], ".db"))
-
-def db_unload_hook():
-    web.ctx.db.close()
-
-web.config.debug = False
-app = web.application(urls, globals())
-app.add_processor(web.loadhook(db_load_hook))
-app.add_processor(web.unloadhook(db_unload_hook))
-application = app.wsgifunc()
+bottle.debug(False)
+application = bottle.default_app()
 config = common.load_config()
 
 if __name__ == "__main__":
-    app.run()
+    bottle.run()

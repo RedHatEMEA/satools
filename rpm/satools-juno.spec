@@ -6,8 +6,8 @@ License:	GPL
 URL:		https://github.com/RedHatEMEA/satools
 Source:		satools-juno.tar.gz
 BuildArch:	noarch
-Requires:	httpd, mod_wsgi, python-imaging, python-webpy, satools-odptools = %{version}-%{release}
-BuildRequires:	redhat-rpm-config
+Requires:	httpd, python3-bottle, python3-mod_wsgi, python3-pillow, satools-odptools = %{version}-%{release}
+BuildRequires:	python3-devel, redhat-rpm-config
 
 %define _srcdefattr (-,root,root)
 
@@ -43,6 +43,7 @@ rm -rf %{buildroot}
 /bin/ln -s /home/satools/content/juno/slides /opt/satools/juno/static 2>/dev/null
 /bin/ln -s /home/satools/content/juno/thumbs /opt/satools/juno/static 2>/dev/null
 /sbin/service httpd reload
+/sbin/setsebool -P httpd_read_user_content=on
 
 %postun
 /sbin/service httpd reload
