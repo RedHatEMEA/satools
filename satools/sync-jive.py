@@ -181,7 +181,7 @@ def log(s):
 
 
 def login(username, password):
-  url = config["jive-root"]
+  url = config["jive-root"] + "/login.jspa?jiveSSOUserLogin=true"
   r = get(url)
   r = lxml.html.fromstring(r.content)
 
