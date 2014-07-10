@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from spacewalk.server import rhnLib, rhnSQL
+import os
 import re
 import wsgiref.util
 
@@ -32,14 +33,16 @@ def app(environ, start_response):
     m = re.match("^/([-_a-z0-9]+)/repodata/([-_.a-z0-9]+)$",
                  environ["PATH_INFO"])
     if m:
-        start_response("200 OK", [])
-        return open("/var/cache/rhn/repodata/%s/%s" % (m.group(1), m.group(2)))
+        path = "/var/cache/rhn/repodata/%s/%s" % (m.group(1), m.group(2))
+        start_response("200 OK", [("Content-Length", os.stat(path).st_size)])
+        return open(path)
 
     m = re.match("^/([-_a-z0-9]+)/getPackage/([-+_.a-z0-9]+)$",
                  environ["PATH_INFO"])
     if m:
-        start_response("200 OK", [])
-        return open("/var/satellite/" + get_path(m.group(1), m.group(2)))
+        path = "/var/satellite/" + get_path(m.group(1), m.group(2))
+        start_response("200 OK", [("Content-Length", os.stat(path).st_size)])
+        return open(path)
 
     start_response("404 Not Found", [])
     return []
