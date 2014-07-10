@@ -34,14 +34,16 @@ def app(environ, start_response):
                  environ["PATH_INFO"])
     if m:
         path = "/var/cache/rhn/repodata/%s/%s" % (m.group(1), m.group(2))
-        start_response("200 OK", [("Content-Length", os.stat(path).st_size)])
+        start_response("200 OK", [("Content-Length",
+                                   str(os.stat(path).st_size))])
         return open(path)
 
     m = re.match("^/([-_a-z0-9]+)/getPackage/([-+_.a-z0-9]+)$",
                  environ["PATH_INFO"])
     if m:
         path = "/var/satellite/" + get_path(m.group(1), m.group(2))
-        start_response("200 OK", [("Content-Length", os.stat(path).st_size)])
+        start_response("200 OK", [("Content-Length",
+                                   str(os.stat(path).st_size))])
         return open(path)
 
     start_response("404 Not Found", [])
