@@ -44,7 +44,7 @@ def app(environ, start_response):
     start_response("404 Not Found", [])
     return []
 
-def main(ip = "0.0.0.0", port = "8080"):
+def main(ip = "0.0.0.0", port = "8085"):
     import BaseHTTPServer
     import wsgiref.simple_server
 
