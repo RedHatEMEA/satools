@@ -46,6 +46,21 @@ def app(environ, start_response):
                                    str(os.stat(path).st_size))])
         return open(path)
 
+    m = re.match("^/([-_a-z0-9]+)\.repo$", environ["PATH_INFO"])
+    if m:
+        start_response("200 OK", [("Content-Type", "text/plain")])
+        return ["""[%(channel)s]
+name=%(channel)s
+baseurl=http://%(host)s/%(channel)s
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+""" % { "channel": m.group(1), "host": environ["HTTP_HOST"] }]
+
+    if environ["PATH_INFO"] == "/":
+        start_response("200 OK", [("Content-Type", "text/html")])
+        return ["<a href=\"%s.repo\">%s</a><br>\n" % (d, d) for d in sorted(os.listdir("/var/cache/rhn/repodata"))]
+
     start_response("404 Not Found", [])
     return []
 
