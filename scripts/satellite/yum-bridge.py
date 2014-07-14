@@ -46,7 +46,7 @@ def app(environ, start_response):
                                    str(os.stat(path).st_size))])
         return open(path)
 
-    m = re.match("^/([-_a-z0-9]+)\.repo$", environ["PATH_INFO"])
+    m = re.match("^/([-+_.a-z0-9]+)\.repo$", environ["PATH_INFO"])
     if m:
         start_response("200 OK", [("Content-Type", "text/plain")])
         return ["""[%(channel)s]
