@@ -30,23 +30,26 @@ def get_path(channel, filename):
     return c.fetchone_dict()["path"]
 
 def app(environ, start_response):
-    m = re.match("^/([-_a-z0-9]+)/repodata/([-_.a-z0-9]+)$",
+    m = re.match("^/([^/]+)/repodata/([^/]+)$",
                  environ["PATH_INFO"])
     if m:
+        if m.group(1) in [".", ".."] or m.group(2) in [".", ".."]:
+            raise Exception
         path = "/var/cache/rhn/repodata/%s/%s" % (m.group(1), m.group(2))
         start_response("200 OK", [("Content-Length",
                                    str(os.stat(path).st_size))])
         return open(path)
 
-    m = re.match("^/([-_a-z0-9]+)/getPackage/([-+_.a-z0-9]+)$",
-                 environ["PATH_INFO"])
+    m = re.match("^/([^/]+)/getPackage/([^/]+)$", environ["PATH_INFO"])
     if m:
+        if m.group(1) in [".", ".."] or m.group(2) in [".", ".."]:
+            raise Exception
         path = "/var/satellite/" + get_path(m.group(1), m.group(2))
         start_response("200 OK", [("Content-Length",
                                    str(os.stat(path).st_size))])
         return open(path)
 
-    m = re.match("^/([-+_.a-z0-9]+)\.repo$", environ["PATH_INFO"])
+    m = re.match("^/([^/]+)\.repo$", environ["PATH_INFO"])
     if m:
         start_response("200 OK", [("Content-Type", "text/plain")])
         return ["""[%(channel)s]
@@ -57,7 +60,8 @@ gpgcheck=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
 """ % { "channel": m.group(1), "host": environ["HTTP_HOST"] }]
 
-    if environ["PATH_INFO"] == "/":
+    m = re.match("^/$", environ["PATH_INFO"])
+    if m:
         start_response("200 OK", [("Content-Type", "text/html")])
         return ["<a href=\"%s.repo\">%s</a><br>\n" % (d, d) for d in sorted(os.listdir("/var/cache/rhn/repodata"))]
 
