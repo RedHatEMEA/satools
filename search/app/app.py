@@ -63,7 +63,7 @@ class Search(object):
 
 
 class Attachment(object):
-    validator = { "path": re.compile("^[a-zA-Z-]+/[0-9]{4}/[0-9]{2}$"),
+    validator = { "path": re.compile("^[a-zA-Z0-9-]+/[0-9]{4}/[0-9]{2}$"),
                   "offset": re.compile("^[0-9]+$"),
                   "len": re.compile("^[0-9]+$"),
                   "index": re.compile("^[0-9]+$") }
@@ -112,7 +112,7 @@ class Help(object):
 
 
 class Message(object):
-    validator = { "path": re.compile("^[a-zA-Z-]+/[0-9]{4}/[0-9]{2}$"),
+    validator = { "path": re.compile("^[a-zA-Z0-9-]+/[0-9]{4}/[0-9]{2}$"),
                   "offset": re.compile("^[0-9]+$"),
                   "len": re.compile("^[0-9]+$") }
 
