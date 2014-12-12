@@ -55,6 +55,9 @@ if __name__ == "__main__":
 
     now = time.gmtime()
 
+    opener = urllib.request.build_opener(urllib.request.HTTPHandler())
+    opener.addheaders = [("User-Agent", "Mozilla/5.0")]
+
     for line in config["lists-sync"]:
         line = line.split(" ")
         
@@ -69,7 +72,7 @@ if __name__ == "__main__":
             credentials = urllib.parse.urlencode(dict(zip(("username", "password"),
                                                           line[1:3]))).encode("utf-8")
 
-        index = common.retrieve_m(url, credentials)
+        index = common.retrieve_m(url, credentials, opener = opener)
         index_xml = lxml.html.parse(index).getroot()
         index.close()
 
@@ -82,7 +85,7 @@ if __name__ == "__main__":
 
             if not path in db or not os.path.isfile(path):
                 common.mkdirs(os.path.split(path)[0])
-                req = urllib.request.Request(url + "/" + href, credentials, {"Accept-Encoding": "gzip"})
+                req = urllib.request.Request(url + "/" + href, credentials, {"Accept-Encoding": "gzip", "User-Agent": "Mozilla/5.0"})
                 try:
                     f = common.retrieve_tmpfile(req)
                 except urllib.error.HTTPError as e:
