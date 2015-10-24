@@ -95,7 +95,7 @@ def iter_content(c):
 
 def contents():
   for p in people():
-    url = config["jive-root"] + "/api/core/v3/contents?sort=dateCreatedAsc&fields=attachments%2CbinaryURL%2CcontentType%2Cname%2Csize%2Ctype%2Cupdated&filter=author%28" + urllib.parse.quote(p) + "%29&count=100&startIndex=0"
+    url = config["jive-root"] + "/api/core/v3/contents?sort=dateCreatedAsc&filter=author%28" + urllib.parse.quote(p) + "%29&count=100&startIndex=0"
 
     while True:
       log(url)
@@ -155,7 +155,7 @@ def log(s):
 
 
 def login(username, password):
-  url = config["jive-root"]
+  url = config["jive-root"] + "/login.jspa?ssologin=true"
   r = tls.s.get(url)
   r = lxml.html.fromstring(r.content)
 
