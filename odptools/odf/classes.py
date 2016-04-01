@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
-from . import ns
 import lxml.etree
+import ns
 
 def elem(name):
     return parser.makeelement(name, nsmap = ns.nsmap)
@@ -46,10 +46,14 @@ class DRAW_page(lxml.etree.ElementBase):
         if rv[-2:] != "cm": raise Exception("unexpected units")
         return float(rv[:-2])
 
+    @staticmethod
+    def _child_cmp(a, b):
+        return cmp(DRAW_page._read_dim(a, "y"), DRAW_page._read_dim(b, "y")) \
+            or cmp(DRAW_page._read_dim(a, "x"), DRAW_page._read_dim(b, "x"))
+
     def as_text(self):
         children = [c for c in self.iterchildren()]
-        children = sorted(children, key = lambda c: DRAW_page._read_dim(c, "x"))
-        children = sorted(children, key = lambda c: DRAW_page._read_dim(c, "y"))
+        children = sorted(children, cmp = DRAW_page._child_cmp)
 
         t = []
         for c in children:
@@ -90,10 +94,10 @@ class MANIFEST_manifest(lxml.etree.ElementBase):
 
 class OFFICE_body(lxml.etree.ElementBase):
     def _text(self):
-        return next(self.iterchildren(ns.OFFICE_text))
+        return self.iterchildren(ns.OFFICE_text).next()
 
     def _presentation(self):
-        return next(self.iterchildren(ns.OFFICE_presentation))
+        return self.iterchildren(ns.OFFICE_presentation).next()
 
 class OFFICE_document_content(lxml.etree.ElementBase):
     @staticmethod
@@ -108,10 +112,10 @@ class OFFICE_document_content(lxml.etree.ElementBase):
         return x
 
     def _automatic_styles(self):
-        return next(self.iterchildren(ns.OFFICE_automatic_styles))
+        return self.iterchildren(ns.OFFICE_automatic_styles).next()
 
     def _body(self):
-        return next(self.iterchildren(ns.OFFICE_body))
+        return self.iterchildren(ns.OFFICE_body).next()
 
 class OFFICE_document_meta(lxml.etree.ElementBase):
     @staticmethod
@@ -124,7 +128,7 @@ class OFFICE_document_meta(lxml.etree.ElementBase):
         return x
 
     def _meta(self):
-        return next(self.iterchildren(ns.OFFICE_meta))
+        return self.iterchildren(ns.OFFICE_meta).next()
 
 class OFFICE_document_settings(lxml.etree.ElementBase):
     @staticmethod
@@ -139,7 +143,7 @@ class OFFICE_document_settings(lxml.etree.ElementBase):
         return x
 
     def _settings(self):
-        return next(self.iterchildren(ns.OFFICE_settings))
+        return self.iterchildren(ns.OFFICE_settings).next()
 
 class OFFICE_document_styles(lxml.etree.ElementBase):
     @staticmethod
@@ -154,20 +158,20 @@ class OFFICE_document_styles(lxml.etree.ElementBase):
         return x
 
     def _automatic_styles(self):
-        return next(self.iterchildren(ns.OFFICE_automatic_styles))
+        return self.iterchildren(ns.OFFICE_automatic_styles).next()
 
     def _master_styles(self):
-        return next(self.iterchildren(ns.OFFICE_master_styles))
+        return self.iterchildren(ns.OFFICE_master_styles).next()
 
     def _styles(self):
-        return next(self.iterchildren(ns.OFFICE_styles))
+        return self.iterchildren(ns.OFFICE_styles).next()
 
 class OFFICE_meta(lxml.etree.ElementBase):
     def _generator(self):
-        return next(self.iterchildren(ns.META_generator))
+        return self.iterchildren(ns.META_generator).next()
 
     def _date(self):
-        return next(self.iterchildren(ns.DC_date))
+        return self.iterchildren(ns.DC_date).next()
 
 class OFFICE_presentation(lxml.etree.ElementBase):
     @staticmethod
@@ -185,7 +189,7 @@ class OFFICE_settings(lxml.etree.ElementBase):
 
 class STYLE_style(lxml.etree.ElementBase):
     def _paragraph_properties(self):
-        return next(self.iterchildren(ns.STYLE_paragraph_properties))
+        return self.iterchildren(ns.STYLE_paragraph_properties).next()
 
 def __init__():
     global parser

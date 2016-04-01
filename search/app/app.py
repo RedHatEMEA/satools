@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 from satools import common
 from satools import mailindex
@@ -7,32 +7,33 @@ import email
 import json
 import os
 import re
-import threading
 import time
-import urllib.parse
-import wsgiref.simple_server
-
+import urlparse
+import web
 
 class Favicon:
-    def GET(self, env, h):
-        h["Content-Type"] = "image/vnd.microsoft.icon"
-        return open("static/favicon.ico", "rb")
-
+    def GET(self):
+        web.header("Content-Type", "image/vnd.microsoft.icon")
+        return open("static/favicon.ico")
 
 class Index(object):
-    def GET(self, env, h):
-        h["Content-Type"] = "text/html"
-        return open("static/index.html", "rb")
-
+    def GET(self):
+        web.header("Content-Type", "text/html")
+        return open("static/index.html")
 
 class Search(object):
     validator = { "start": re.compile("^[0-9]*$"),
                   "limit": re.compile("^[0-9]*$") }
 
-    def GET(self, env, h):
-        h["Content-Type"] = "application/json"
+    def GET(self):
+        web.header("Content-Type", "application/json")
 
-        q = dict(urllib.parse.parse_qsl(env["QUERY_STRING"]))
+        q = dict(urlparse.parse_qsl(str(web.ctx.query[1:])))
+
+        data = { "success": "true",
+                 "total": 0,
+                 "rows": [],
+                 "error": "" }
 
         if not validate(q, self.validator):
             raise Exception("invalid input")
@@ -41,26 +42,19 @@ class Search(object):
         q["limit"] = min(int(q.get("limit", 50)), 1000 - q["start"])
         q["q"] = q.get("q", "")
 
-        data = { "success": "true",
-                 "total": 0,
-                 "rows": [],
-                 "error": "" }
-
         if q["q"]:
             try:
                 # TODO: we're currently running 2 SQL queries here...
-                data["total"] = min(tls.maildb.count(q["q"]), 1000)
+                data["total"] = min(web.ctx.maildb.count(q["q"]), 1000)
                 
-                for row in tls.maildb.search(q["q"], offset = q["start"],
-                                             limit = q["limit"]):
+                for row in web.ctx.maildb.search(q["q"], offset = q["start"],
+                                                 limit = q["limit"]):
                     data["rows"].append(escape(result(row)))
-
-            except mailindex.search.SearchException as e:
+            except mailindex.search.SearchException, e:
                 data["success"] = False
                 data["error"] = str(e)
 
-        return [json.dumps(data).encode("utf-8")]
-
+        return json.dumps(data)
 
 class Attachment(object):
     validator = { "path": re.compile("^[a-zA-Z0-9-]+/[0-9]{4}/[0-9]{2}$"),
@@ -68,8 +62,8 @@ class Attachment(object):
                   "len": re.compile("^[0-9]+$"),
                   "index": re.compile("^[0-9]+$") }
 
-    def GET(self, env, h):
-        q = dict(urllib.parse.parse_qsl(env["QUERY_STRING"]))
+    def GET(self):
+        q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
 
         if not validate(q, self.validator):
             raise Exception("invalid input")
@@ -78,14 +72,13 @@ class Attachment(object):
             attachment(q["path"], int(q["offset"]),
                        int(q["len"]), int(q["index"]))
 
-        h["Content-Type"] = content_type
-        h["Content-disposition"] = "attachment; filename=\"%s\"" % filename
-        return [payload]
-
+        web.header("Content-Type", content_type)
+        web.header("Content-disposition", "attachment; filename=\"%s\"" % filename)
+        return payload
 
 class Help(object):
-    def GET(self, env, h):
-        h["Content-Type"] = "text/html"
+    def GET(self):
+        web.header("Content-Type", "text/html")
 
         keys = {}
 
@@ -96,9 +89,9 @@ class Help(object):
         except OSError:
             keys["update"] = "The index has not yet been populated."
 
-        lists = sorted([l.split(" ")[0] for l in config["lists-sync"]])
+        lists = sorted(map(lambda x: x.split(" ")[0], config["lists-sync"]))
         keys["lists"] = \
-            "<br/>".join(["<a href=\"%s\">%s</a>" % (l, l) for l in lists])
+            "<br/>".join(map(lambda x: "<a href=\"%s\">%s</a>" % (x, x), lists))
         keys["lists-start-year"] = config["lists-start-year"]
 
         f = open("templates/help.html")
@@ -108,52 +101,24 @@ class Help(object):
         for k in keys:
             data = data.replace("$" + k, keys[k])
 
-        return [data.encode("utf-8")]
-
+        return data
 
 class Message(object):
     validator = { "path": re.compile("^[a-zA-Z0-9-]+/[0-9]{4}/[0-9]{2}$"),
                   "offset": re.compile("^[0-9]+$"),
                   "len": re.compile("^[0-9]+$") }
 
-    def GET(self, env, h):
-        h["Content-Type"] = "application/json"
+    def GET(self):
+        web.header("Content-Type", "application/json")
        
-        q = dict(urllib.parse.parse_qsl(env["QUERY_STRING"]))
+        q = dict(urlparse.parse_qsl(web.ctx.query[1:]))
 
         if not validate(q, self.validator):
             raise Exception("invalid input")
  
         data = escape(message(q["path"], int(q["offset"]), int(q["len"])))
 
-        return [json.dumps(data).encode("utf-8")]
-
-
-class Application(object):
-    urls = { "/": Index,
-             "/favicon.ico": Favicon,
-             "/s": Search,
-             "/a": Attachment,
-             "/m": Message,
-             "/help": Help }
-
-    def __call__(self, env, start):
-        if not hasattr(tls, "maildb"):
-            tls.maildb = mailindex.MailDB(config["lists-base"] + "/.index")
-
-        h = {}
-
-        pth = os.path.normpath(env["PATH_INFO"])
-        if pth.startswith("/static/"):
-            rv = open(pth[1:], "rb")
-
-        else:
-            handler = self.urls[pth]()
-            rv = getattr(handler, env["REQUEST_METHOD"])(env, h)
-
-        start("200 OK", [(k, v) for (k, v) in h.items()])
-        return rv
-
+        return json.dumps(data)
 
 def attachment(path, offset, _len, index):
     f = open(config["lists-base"] + "/" + path)
@@ -162,23 +127,21 @@ def attachment(path, offset, _len, index):
     f.close()
 
     gen = em.walk()
-    part = next(gen)
+    part = gen.next()
     while index:
-        part = next(gen)
+        part = gen.next()
         index -= 1
 
     return (part.get_content_type(), part.get_filename(),
             part.get_payload(decode = True))
 
-
 def result(row):
     return { "subject": row["subject"].decode("utf-8", errors = "ignore"),
              "from": row["from"].decode("utf-8", errors = "ignore"),
              "date": row["date"],
-             "path": row["path"].decode("utf-8"),
+             "path": row["path"],
              "offset": row["offset"],
              "len": row["length"] }
-
 
 def message(path, offset, _len):
     f = open(config["lists-base"] + "/" + path)
@@ -217,29 +180,25 @@ def message(path, offset, _len):
              "subject": mailindex.decode(em["Subject"]),
              "attachments": attachments }
 
-
 def escape(data):
     data = dict(data)
     for key in data:
         if not isinstance(data[key], list):
             try:
-                data[key] = cgi.escape(str(data[key]))
+                data[key] = cgi.escape(unicode(data[key]))
             except UnicodeDecodeError:
                 data[key] = cgi.escape(data[key].decode("utf-8",
                                                         errors = "ignore"))
         
     return data
 
-
 def is_attachment(part):
     return part.get_filename() is not None and \
         not part.get("Content-Disposition", "inline").startswith("inline")
 
-
 def is_body(part):
     return part.get_content_type() == "text/plain" and \
         part.get("Content-Disposition", "inline").startswith("inline")
-
 
 def validate(q, regexps):
     for key in regexps:
@@ -247,11 +206,26 @@ def validate(q, regexps):
             return False
     return True
 
+urls = ("/", "Index",
+        "/favicon.ico", "Favicon",
+        "/s", "Search",
+        "/a", "Attachment",
+        "/m", "Message",
+        "/help", "Help"
+        )
 
-tls = threading.local()
+def db_load_hook():
+    web.ctx.maildb = mailindex.MailDB(config["lists-base"] + "/.index")
+
+def db_unload_hook():
+    web.ctx.maildb.close()
+
+web.config.debug = False
+app = web.application(urls, globals())
+app.add_processor(web.loadhook(db_load_hook))
+app.add_processor(web.unloadhook(db_unload_hook))
+application = app.wsgifunc()
 config = common.load_config()
-application = Application()
-
 
 if __name__ == "__main__":
-    wsgiref.simple_server.make_server('', 8080, application).serve_forever()
+    app.run()

@@ -1,23 +1,19 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 from satools import common
 from db import DB
 import json
 import odptools
-import odptools.odp_cat
 import os
 import search
 import shutil
 import tempfile
-import threading
-import urllib.parse
-import wsgiref.simple_server
+import urlparse
+import web
 
-
-class Error(object):
-    def __init__(self, message):
-        self.message = message
-
+def error(message):
+    web.ctx.status = "400 Bad Request"
+    return message
 
 def safepath(path):
     path = os.path.normpath(path.lstrip(os.sep))
@@ -28,7 +24,6 @@ def safepath(path):
 
     return path
 
-
 def tell(path):
     entries = []
 
@@ -36,7 +31,7 @@ def tell(path):
 
     path = os.path.join(base, safepath(path))
 
-    dirpath, dirnames, filenames = next(os.walk(path))
+    dirpath, dirnames, filenames = os.walk(path).next()
     for i in sorted(dirnames):
         subpath = "/" + os.path.relpath(os.path.join(path, i), base)
         entries.append({ "text": i,
@@ -51,125 +46,97 @@ def tell(path):
 
     return json.dumps(entries)
 
-
 class Download:
-    def GET(self, env, h, path):
+    def GET(self, path):
         path = common.Mapper.d2s(safepath(path))
 
-        h["Content-Type"] = "application/vnd.oasis.opendocument.presentation"
-        h["Content-disposition"] = "attachment; filename=\"%s\"" % path.rsplit("/", 1)[1]
+        web.header("Content-Type", "application/vnd.oasis.opendocument.presentation")
+        web.header("Content-disposition", "attachment; filename=\"%s\"" % path.rsplit("/", 1)[1])
         
-        return open(path.encode("utf-8"), "rb")
-
+        return open(path.encode("utf-8"))
 
 class Favicon:
-    def GET(self, env, h):
-        h["Content-Type"] = "image/vnd.microsoft.icon"
-        return open("static/favicon.ico", "rb")
-
+    def GET(self):
+        web.header("Content-Type", "image/vnd.microsoft.icon")
+        return open("static/favicon.ico")
 
 class Help:
-    def GET(self, env, h):
-        h["Content-Type"] = "text/html"
-        return open("static/help.html", "rb")
-
+    def GET(self):
+        web.header("Content-Type", "text/html")
+        return open("static/help.html")
 
 class Index:
-    def GET(self, env, h):
-        h["Content-Type"] = "text/html"
-        return open("static/index.html", "rb")
-
+    def GET(self):
+        web.header("Content-Type", "text/html")
+        return open("static/index.html")
 
 class Nodes:
-    def GET(self, env, h):
-        h["Content-Type"] = "application/json"
-        q = dict(urllib.parse.parse_qsl(env["QUERY_STRING"]))
-        return [tell(q["node"]).encode("utf-8")]
-
+    def GET(self):
+        web.header("Content-Type", "application/json")
+        q = dict(urlparse.parse_qsl(str(web.ctx.query[1:])))
+        return tell(q["node"])
 
 class Odp:
-    def POST(self, env, h):
+    def POST(self):
         tmp = tempfile.mkdtemp()
 
-        dct = urllib.parse.parse_qs(env["wsgi.input"].read(int(env["CONTENT_LENGTH"])).decode("utf-8"))
+        dct = urlparse.parse_qs(web.data())
         # TODO: security, single slide not in array, make odp_cat work...
-        odptools.odp_cat.cat([config["juno-base"] + "/root" + s for s in dct["slides"]], tmp + "/mypreso.odp")
+        odptools.odp_cat.cat(map(lambda x: config["juno-base"] + "/root" + x, dct["slides"]), tmp + "/mypreso.odp")
 
-        h["Content-Type"] = "application/vnd.oasis.opendocument.presentation"
-        h["Content-disposition"] = "attachment; filename=mypreso.odp"
+        web.header("Content-Type", "application/vnd.oasis.opendocument.presentation")
+        web.header("Content-disposition", "attachment; filename=mypreso.odp")
         
-        f = open(tmp + "/mypreso.odp", "rb")
+        f = open(tmp + "/mypreso.odp")
         shutil.rmtree(tmp)
         return f
 
-
 class Search:
-    def GET(self, env, h, query):
+    def GET(self, query):
         try:
             w = search.build_where(query)
-        except search.SearchException as e:
-            return Error(str(e))
+        except search.SearchException, e:
+            return error(e)
 
         if w.merge:
             w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s GROUP BY checksum ORDER BY presomtime DESC, preso, slide LIMIT 500" % w.sql
         else:
             w.sql = "SELECT preso, slide FROM presos, slides WHERE (presos.path = slides.preso) AND %s ORDER BY presomtime DESC, preso, slide" % w.sql
-        c = tls.db.execute(w.sql, w.args)
+        c = web.ctx.db.execute(w.sql, w.args)
 
         entries = []
         for row in c:
-            p = row["preso"].decode("utf-8").replace("\t", "%09").replace('"', "%22").replace("#", "%23").replace('?', "%3F")
+            p = row["preso"].replace("\t", "%09").replace('"', "%22").replace("#", "%23").replace('?', "%3F")
             entries.append({"src": "static/thumbs/%s/%03u.jpg" % (p, row["slide"]),
-                            "preso": "/" + row["preso"].decode("utf-8"),
+                            "preso": "/" + row["preso"],
                             "slide": row["slide"],
                             "png": "static/slides/%s/%03u.png" % (p, row["slide"])
                             })
 
-        h["Content-Type"] = "application/json"
-        return [json.dumps(entries).encode("utf-8")]
+        web.header("Content-Type", "application/json")
+        return json.dumps(entries)
 
+urls = ("/", "Index",
+        "/favicon.ico", "Favicon",
+        "/dl/(.*)", "Download",
+        "/help", "Help",
+        "/nodes", "Nodes",
+        "/odp", "Odp",
+        "/s/(.*)", "Search",
+        )
 
-class Application(object):
-    urls = { "/": Index,
-             "/favicon.ico": Favicon,
-             "/help": Help,
-             "/nodes": Nodes,
-             "/odp": Odp }
+def db_load_hook():
+    web.ctx.db = DB(os.path.join(config["juno-base"], ".db"))
 
-    def __call__(self, env, start):
-        if not hasattr(tls, "db"):
-            tls.db = DB(os.path.join(config["juno-base"], ".db"))
+def db_unload_hook():
+    web.ctx.db.close()
 
-        h = {}
-
-        pth = os.path.normpath(env["PATH_INFO"])
-        if pth.startswith("/static/"):
-            rv = open(pth[1:], "rb")
-
-        elif pth.startswith("/s/"):
-            handler = Search()
-            rv = getattr(handler, env["REQUEST_METHOD"])(env, h, pth[3:])
-
-        elif pth.startswith("/dl/"):
-            handler = Download()
-            rv = getattr(handler, env["REQUEST_METHOD"])(env, h, pth[4:])
-
-        else:
-            handler = self.urls[pth]()
-            rv = getattr(handler, env["REQUEST_METHOD"])(env, h)
-
-        if isinstance(rv, Error):
-            start("400 Bad Request", [])
-            return [rv.message.encode("utf-8")]
-
-        start("200 OK", [(k, v) for (k, v) in h.items()])
-        return rv
-
-
-tls = threading.local()
+web.config.debug = False
+app = web.application(urls, globals())
+app.add_processor(web.loadhook(db_load_hook))
+app.add_processor(web.unloadhook(db_unload_hook))
+application = app.wsgifunc()
 config = common.load_config()
-application = Application()
-
 
 if __name__ == "__main__":
-    wsgiref.simple_server.make_server('', 8080, application).serve_forever()
+    app.run()

@@ -1,7 +1,7 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/python -ttu
 
-from satools import common
 import argparse
+import common
 import lxml.etree
 import os
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/python -ttu
 
 from db import DB
 from satools import common
@@ -211,7 +211,7 @@ def worker(me, q):
     for (srcp, dstp) in iter(q.get, "STOP"):
         try:
             add_preso(db, srcp, dstp)
-        except Exception as e:
+        except Exception, e:
             log("WARNING: add_preso failed (%s), skipping..." %
                 str(e).replace("\n", ""))
             del_preso(db, srcp, dstp)
@@ -292,7 +292,7 @@ def check_fs_2(db, fs, slideregexp = None):
             os.rmdir(dirpath)
 
 def check_fs_1(db, fs, slideregexp = None):
-    (dirpath, dirnames, filenames) = next(os.walk(fs))
+    (dirpath, dirnames, filenames) = os.walk(fs).next()
 
     for d in dirnames:
         if os.path.islink(d) or d not in common.Mapper._d2s:
@@ -307,7 +307,7 @@ def check_fs_1(db, fs, slideregexp = None):
 
 
 def check_fs(db):
-    (dirpath, dirnames, filenames) = next(os.walk("."))
+    (dirpath, dirnames, filenames) = os.walk(".").next()
 
     for d in dirnames:
         if os.path.islink(d) or d not in ("root", "slides", "thumbs"):
@@ -324,21 +324,21 @@ def check_fs(db):
 def check_db(db):
     args = set()
     for row in db.execute("SELECT path FROM presos"):
-        srcp = common.Mapper.d2s(row["path"].decode("utf-8"))
-        rootp = os.path.join("root", row["path"].decode("utf-8"))
+        srcp = common.Mapper.d2s(row["path"])
+        rootp = os.path.join("root", row["path"])
         if not os.path.exists(srcp) or not os.path.exists(rootp):
-            args.add(row["path"].decode("utf-8"))
+            args.add(row["path"])
 
     for row in db.execute("SELECT preso, slide FROM slides"):
-        if row["preso"].decode("utf-8") in args: continue
-        slidesp = os.path.join("slides", row["preso"].decode("utf-8"),
+        if row["preso"] in args: continue
+        slidesp = os.path.join("slides", row["preso"],
                                "%03u.png" % row["slide"])
-        thumbsp = os.path.join("thumbs", row["preso"].decode("utf-8"),
+        thumbsp = os.path.join("thumbs", row["preso"],
                                "%03u.jpg" % row["slide"])
         if not os.path.exists(slidesp) or not os.path.exists(thumbsp):
-            args.add(row["preso"].decode("utf-8"))
+            args.add(row["preso"])
 
-    args = [(arg, ) for arg in args]
+    args = map(lambda x:(x, ), args)
     doqueries(db, [["DELETE FROM presos WHERE path = ?", args]])
 
 def doqueries(db, sql):

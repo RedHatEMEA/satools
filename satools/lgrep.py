@@ -1,8 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
-from satools import common
-from satools import mailindex
 import argparse
+import common
+import mailindex
 import os
 import sys
 
@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     execpath = config["lgrep-exec"]
     if execpath is None:
-        print("Please configure your MUA in $HOME/.satools before running %s." % sys.argv[0], file = sys.stderr)
+        print >>sys.stderr, "Please configure your MUA in $HOME/.satools before running %s." % sys.argv[0]
         sys.exit(1)
 
     query = " ".join(args["querystring"])
@@ -30,10 +30,10 @@ if __name__ == "__main__":
 
     common.mkdirs(os.path.split(config["lgrep-mailbox"])[0])
     common.unlink(config["lgrep-mailbox"])
-    mbox = open(config["lgrep-mailbox"], "wb")
+    mbox = open(config["lgrep-mailbox"], "w")
 
     for row in maildb.search(query):
-        f = open(os.sep.join((args["base"], row["path"].decode("utf-8"))), "rb")
+        f = open(os.sep.join((args["base"], row["path"])))
         f.seek(row["offset"])
         mbox.write(f.read(row["length"]))
         f.close()
@@ -51,5 +51,5 @@ if __name__ == "__main__":
         os.execvp(execpath[0], execpath)
 
     except OSError:
-        print("Failed to exec \"%s\", please edit $HOME/.satools." % path, file = sys.stderr)
+        print >>sys.stderr, "Failed to exec \"%s\", please edit $HOME/.satools." % path
         sys.exit(1)

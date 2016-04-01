@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 nsmap = { "anim": "urn:oasis:names:tc:opendocument:xmlns:animation:1.0",
           "chart": "urn:oasis:names:tc:opendocument:xmlns:chart:1.0",

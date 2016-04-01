@@ -1,39 +1,20 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/python -ttu
 
-from satools import common
 import codecs
-import http.cookiejar
+import common
+import cookielib
 import copy
-import lxml.html
+import lxml.html.soupparser
 import os
-import queue
+import Queue
 import sys
 import threading
 import time
-import urllib.error
-import urllib.request
+import urllib2
 
-q = queue.Queue()
+q = Queue.Queue()
 threadlock = threading.Lock()
 warnings = 0
-
-class LockedSet(object):
-    def __init__(self):
-        self.lock = threading.Lock()
-        self.s = set()
-
-    def tas(self, x):
-        with self.lock:
-            if x in self.s:
-                return False
-            self.s.add(x)
-            return True
-
-    def remove(self, x):
-        with self.lock:
-            self.s.remove(x)
-
-fileset = LockedSet()
 
 class Item:
     def ignore_url(self, url):
@@ -62,27 +43,24 @@ class Item:
 def download_item(item, extension, tries = 1):
     dstfile = os.path.join(item.type_, item.pageurl.split("/")[-1]) + extension
 
-    if not fileset.tas(dstfile):
-        return
-
     common.mkdirs(item.type_)
     try:
-        print("\r[%u]" % item.number, end=' ', file = sys.stderr)
+        print >>sys.stderr, "\r[%u]" % item.number,
         common.retrieve(item.dlurl, dstfile, tries = tries)
         common.mkro(dstfile)
-    except urllib.error.HTTPError as e:
+    except urllib2.HTTPError, e:
         warn("can't download item at %s (#%u, %s, %s) (%s), continuing..." % \
                  (item.dlurl, item.number, item.title, item.type_, e))
 
 def download_item_page(item, tries = 1):
     try:
         html = common.retrieve_m(item.pageurl, tries = tries)
-    except urllib.error.HTTPError as e:
+    except urllib2.HTTPError, e:
         warn("can't load item page %s (#%u, %s, %s) (%s), continuing..." % \
                  (item.pageurl, item.number, item.title, item.type_, e))
         return
 
-    xml = lxml.html.fromstring(html.read())
+    xml = lxml.html.soupparser.fromstring(html)
 
     try:
         if item.type_ == "Videos":
@@ -103,7 +81,7 @@ def warn(s):
     global warnings
 
     threadlock.acquire()
-    print("%s: WARNING: %s" % (threading.current_thread().name, s), file = sys.stderr)
+    print >>sys.stderr, "%s: WARNING: %s" % (threading.current_thread().name, s)
     warnings += 1
     threadlock.release()
 
@@ -125,9 +103,9 @@ if __name__ == "__main__":
     lock = common.Lock(".lock")
 
     # http://www.redhat.com/resourcelibrary relies on tracking cookies
-    cj = http.cookiejar.CookieJar()
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-    urllib.request.install_opener(opener)
+    cj = cookielib.CookieJar()
+    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    urllib2.install_opener(opener)
 
     # Permit write of UTF-8 characters to stderr (required when piping output)
     if sys.stderr.encoding == None:
@@ -148,7 +126,7 @@ if __name__ == "__main__":
     indexurl = "http://www.redhat.com/resourcelibrary/results?portal:componentId=bf73926d-2aa3-4b8b-bf8d-a1f6f56b8469&portal:type=action&actionType=orderBy&orderBy=Date-Desc&resultPerPage=100"
     while True:
         html = common.retrieve_m(indexurl, tries = tries)
-        xml = lxml.html.fromstring(html.read())
+        xml = lxml.html.soupparser.fromstring(html)
 
         for indexitem in xml.xpath("//div[@id='sidebar-left-events']"):
             indexitem = copy.deepcopy(indexitem)
@@ -189,7 +167,7 @@ if __name__ == "__main__":
         except IndexError:
             break
 
-    print("INFO: %u items parsed." % i, file = sys.stderr)
+    print >>sys.stderr, "INFO: %u items parsed." % i
 
     for i in range(threads):
         t = threading.Thread(target = worker, name = i)

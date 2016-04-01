@@ -1,20 +1,21 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/python -ttu
 
-from satools import common
 import base64
 import calendar
+import common
 import errno
-import http.client
+import httplib
 import lxml.builder
 import lxml.etree
 import lxml.html
 import os
-import queue
+import Queue
 import sys
 import threading
 import time
-import urllib.parse
-import urllib.request
+import urllib
+import urllib2
+import urlparse
 
 class FileSet(object):
     def __init__(self, root):
@@ -60,7 +61,7 @@ DAV = lxml.builder.ElementMaker(namespace = "DAV:", nsmap = {"D": "DAV:"})
 consolelock = threading.Lock()
 def msg(s):
     with consolelock:
-        print(s, file = sys.stderr)
+        print >>sys.stderr, s
 
 def ls(path, conn):
     msg("ls %s" % path)
@@ -79,7 +80,7 @@ def ls(path, conn):
 
     try:
         xml = lxml.etree.fromstring(data)
-    except lxml.etree.XMLSyntaxError as e:
+    except lxml.etree.XMLSyntaxError, e:
         msg("ERROR: ls %s: XMLSyntaxError %s" % (path, e))
         raise ListFailure()
 
@@ -117,7 +118,7 @@ def ls_alfresco(path, conn):
 
     try:
         xml = lxml.html.fromstring(data)
-    except lxml.etree.XMLSyntaxError as e:
+    except lxml.etree.XMLSyntaxError, e:
         msg("ERROR: ls_alfresco %s: XMLSyntaxError %s" % (path, e))
         raise ListFailure()
 
@@ -142,17 +143,17 @@ def ls_alfresco(path, conn):
     return (dirs, files)
 
 def download(url, dest, username, password):
-    pm = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+    pm = urllib2.HTTPPasswordMgrWithDefaultRealm()
     pm.add_password(None, url, username, password)
-    opener = urllib.request.build_opener(urllib.request.HTTPBasicAuthHandler(pm))
+    opener = urllib2.build_opener(urllib2.HTTPBasicAuthHandler(pm))
 
     common.mkdirs(os.path.split(dest)[0])
     common.retrieve(url, dest, opener = opener, tries = 10, force = True)
     common.mkro(dest)
 
 def worker(host, username, password):
-    tls.conn = http.client.HTTPSConnection(host)
-    tls.conn.auth = "Basic " + base64.b64encode(("%s:%s" % (username, password)).encode("utf-8")).decode("utf-8")
+    tls.conn = httplib.HTTPSConnection(host)
+    tls.conn.auth = "Basic " + base64.b64encode("%s:%s" % (username, password))
 
     for item in iter(q.get, "STOP"):
         item[0](*item[1:])
@@ -165,7 +166,7 @@ def needs_download(dest, f):
                 ("size" not in f or st.st_size == f["size"]):
             return False
 
-    except OSError as e:
+    except OSError, e:
         if e.errno == errno.ENAMETOOLONG:
             msg("ERROR: sync_webdav %s: IOError %s" % (dest, e))
             return False
@@ -181,10 +182,10 @@ def sync_dir(url, path, username, password, odponly, alfresco):
         else:
             (dirs, files) = ls(path, tls.conn)
     except ListFailure:
-        fileset.ignore_dir(urllib.parse.unquote(path)[1:])
+        fileset.ignore_dir(urllib.unquote(path)[1:])
         return
 
-    fileset.add_dir(urllib.parse.unquote(path)[1:])
+    fileset.add_dir(urllib.unquote(path)[1:])
 
     for d in dirs:
         q.put((sync_dir, url, d["path"], username, password, odponly, alfresco))
@@ -193,11 +194,11 @@ def sync_dir(url, path, username, password, odponly, alfresco):
         if odponly == 1 and not f["path"].endswith(".odp"):
             continue
 
-        dest = urllib.parse.unquote(f["path"])[1:]
+        dest = urllib.unquote(f["path"])[1:]
         fileset.add_file(dest)
 
         if needs_download(dest, f):
-            downloadq.append((download, urllib.parse.urljoin(url, f["path"]), dest,
+            downloadq.append((download, urlparse.urljoin(url, f["path"]), dest,
                               username, password))
 
 def threads_create(numthreads, args):
@@ -240,7 +241,7 @@ def sync_webdav(url, dest, username, password, odponly, alfresco):
 
     lock = common.Lock(".lock")
 
-    urlp = urllib.parse.urlparse(url)
+    urlp = urlparse.urlparse(url)
 
     global fileset
     fileset = FileSet(urlp.path[1:])
@@ -249,7 +250,7 @@ def sync_webdav(url, dest, username, password, odponly, alfresco):
     downloadq = LockedList()
 
     global q
-    q = queue.Queue()
+    q = Queue.Queue()
 
     threads = threads_create(int(config["webdav-threads"]),
                              (urlp.netloc, username, password))

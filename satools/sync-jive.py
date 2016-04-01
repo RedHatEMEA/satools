@@ -1,23 +1,44 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
-from satools import common
 import argparse
+import codecs
+import common
+import itertools
 import json
 import lxml.html
 import os
-import queue
+import Queue
 import requests
 import sys
 import threading
 import time
 import traceback
-import urllib.parse
+import urllib
+import urlparse
 
 
 files = set()
 lock = threading.Lock()
-q = queue.Queue(200)
+q = Queue.Queue(200)
 tls = threading.local()
+max_index = 0
+index = 0
+
+
+def get(url, *args, **kwargs):
+  for i in range(10):
+    try:
+      r = tls.s.get(url, *args, **kwargs)
+      if r.status_code == 200:
+        return r
+
+      log("WARNING: %u on %s, retry %u" % (r.status_code, url, i))
+    except Exception as e:
+      log("WARNING: exception %s on %s, retry %u" % (e, url, i))
+
+    time.sleep(10)
+
+  raise Exception("ERROR: gave up on %s: %s" % (url, r.text))
 
 
 def parse_args():
@@ -29,7 +50,7 @@ def parse_args():
 
 
 def path(url):
-  r = tls.s.get(url)
+  r = get(url)
   r = lxml.html.fromstring(r.content)
 
   path = r.xpath("//div[@id = 'jive-breadcrumb']//a")
@@ -59,7 +80,7 @@ def download(url, path, mtime):
   common.mkdirs(os.path.dirname(path))
 
   log(url + " -> " + path)
-  r = tls.s.get(url, stream = True)
+  r = get(url, stream = True)
 
   p = os.path.split(path)
   temppath = os.path.join(p[0], "." + p[1])
@@ -95,11 +116,11 @@ def iter_content(c):
 
 def contents():
   for p in people():
-    url = config["jive-root"] + "/api/core/v3/contents?sort=dateCreatedAsc&filter=author%28" + urllib.parse.quote(p) + "%29&count=100&startIndex=0"
+    url = config["jive-root"] + "/api/core/v3/contents?sort=dateCreatedAsc&filter=author%28" + urllib.quote(p) + "%29&count=100&startIndex=0"
 
     while True:
       log(url)
-      r = tls.s.get(url)
+      r = get(url)
       r = json.loads(r.content[r.content.find("\n") + 1:])
       for c in r["list"]:
         yield c
@@ -111,18 +132,20 @@ def contents():
 
 
 def people():
-  url = config["jive-root"] + "/api/core/v3/people?sort=dateJoinedAsc&fields=resources&count=100&startIndex=0"
-  while True:
-    log(url)
-    r = tls.s.get(url)
-    r = json.loads(r.content[r.content.find("\n") + 1:])
-    for p in r["list"]:
-      yield p["resources"]["self"]["ref"]
+  global index
 
-    if "next" not in r["links"]:
+  for index in itertools.count(step = 100):
+    url = config["jive-root"] + "/api/core/v3/people?sort=dateJoinedAsc&fields=resources&count=100&startIndex=%u" % index
+
+    log(url)
+    r = get(url)
+    r = json.loads(r.content[r.content.find("\n") + 1:])
+
+    if not r["list"]:
       break
 
-    url = r["links"]["next"]
+    for p in r["list"]:
+      yield p["resources"]["self"]["ref"]
 
 
 def worker(cookies):
@@ -139,10 +162,14 @@ def worker(cookies):
 
 
 def cleanup():
+  if index < max_index:
+    log("cleanup(): index < max_index: returning")
+    return
+
   for dirpath, dirnames, filenames in os.walk(".", topdown = False):
     for f in filenames:
       path = os.path.normpath(os.path.join(dirpath, f))
-      if path not in files and path[0] != ".":
+      if path.decode("utf-8") not in files and path[0] != ".":
         os.unlink(path)
 
     if not os.listdir(dirpath):
@@ -151,26 +178,26 @@ def cleanup():
 
 def log(s):
   with lock:
-    print(s, file = sys.stderr)
+    print >>sys.stderr, s
 
 
 def login(username, password):
-  url = config["jive-root"] + "/login.jspa?ssologin=true"
-  r = tls.s.get(url)
+  url = config["jive-root"] + "/login.jspa?ssologin=true" #jiveSSOUserLogin=true"
+  r = get(url)
   r = lxml.html.fromstring(r.content)
 
-  url = urllib.parse.urljoin(url, r.xpath("//form/@action")[0])
+  url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   r = tls.s.post(url, form)
   r = lxml.html.fromstring(r.content)
 
-  url = urllib.parse.urljoin(url, r.xpath("//form/@action")[0])
+  url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   form.update({ "j_username": username, "j_password": password })
   r = tls.s.post(url, form)
   r = lxml.html.fromstring(r.content)
 
-  url = urllib.parse.urljoin(url, r.xpath("//form/@action")[0])
+  url = urlparse.urljoin(url, r.xpath("//form/@action")[0])
   form = { i.name: i.value for i in r.xpath("//form//input[@name]") }
   r = tls.s.post(url, form)
 
@@ -183,6 +210,13 @@ def main(username, password):
   os.chdir(config["jive-base"])
 
   l = common.Lock(".lock")
+
+  global max_index
+  try:
+    with open(".max-index") as f:
+      max_index = int(f.read())
+  except IOError:
+    pass
 
   tls.s = requests.Session()
   login(username, password)
@@ -200,7 +234,13 @@ def main(username, password):
   cleanup()
   common.write_sync_done()
 
+  global index
+  with open(".max-index", "w") as f:
+    print >>f, index
 
 if __name__ == "__main__":
+  if sys.stderr.encoding == None:
+    sys.stderr = codecs.getwriter("UTF-8")(sys.stderr)
+
   args = parse_args()
   main(args.username, args.password)

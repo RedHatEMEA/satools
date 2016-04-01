@@ -1,12 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 import argparse
-try:
-    import odf
-    import odf.utils
-except ImportError:
-    from . import odf
-    from .odf import utils
+import odf
+import odf.utils
 
 def parse_args():
     ap = argparse.ArgumentParser()

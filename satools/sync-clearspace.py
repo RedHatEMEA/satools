@@ -1,22 +1,22 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/python -u
 
-from satools import common
+import common
 import itertools
 import lxml.etree
 import os
-import queue
+import Queue
 import re
 import requests
 import sys
 import threading
 import time
 import traceback
-import urllib.parse
+import urllib
 
 
 retries = 10
 step = 50
-q = queue.Queue(step * 5)
+q = Queue.Queue(step * 5)
 lock = threading.Lock()
 docs = set()
 files = set()
@@ -57,7 +57,7 @@ class Document(HTML):
     super(Document, self).__init__(data)
 
     details = self.xml.xpath("//div[@class='jive-content-header-details']")[0]
-    text = lxml.etree.tostring(details, method = "text", encoding = "unicode")
+    text = lxml.etree.tostring(details, method = "text", encoding = "UTF-8")
     r = re.search("Last Modified:.*?\n(.*?)\nby", text, re.S)
     self.mtime = time.mktime(time.strptime(r.group(1), "%b %d, %Y %I:%M %p"))
 
@@ -76,7 +76,7 @@ class Document(HTML):
     # handle potential binary document
     hrefs = self.xml.xpath("//span[@class='jive-wiki-body-file-info']/a/@href")
     if len(hrefs):
-      dlpath = self.path + [urllib.parse.unquote(hrefs[0].split("/")[-1])]
+      dlpath = self.path + [urllib.unquote(hrefs[0].split("/")[-1]).decode("utf-8")]
       if hrefs[0][0] == "/":
         self.downloads.append(Download(hrefs[0], "/".join(dlpath)))
 
@@ -86,7 +86,7 @@ class Document(HTML):
 
     hrefs = self.xml.xpath("//div[@class='jive-attachments']//a/@href")
     for href in hrefs:
-      dlpath = self.path + [urllib.parse.unquote(href.split("/")[-1])]
+      dlpath = self.path + [urllib.unquote(href.split("/")[-1]).decode("utf-8")]
       if href[0] == "/":
         self.downloads.append(Download(href, "/".join(dlpath)))
 
@@ -191,7 +191,7 @@ def cleanup():
 
 def log(s):
   with lock:
-    print(s, file = sys.stderr)
+    print >>sys.stderr, s
 
 def main():
   global config

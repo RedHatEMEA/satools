@@ -1,18 +1,17 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
-from satools import attachments
-from satools import common
-from satools import mailindex
-from satools import thunderbird
 import argparse
+import attachments
+import common
 import gzip
 import lxml.html
+import mailindex
 import sys
+import thunderbird
 import time
 import os
-import urllib.error
-import urllib.parse
-import urllib.request
+import urllib
+import urllib2
 
 # TODO: single list update
 
@@ -28,7 +27,7 @@ def isgzip(f):
     bytes = f.read(2)
     f.seek(0)
 
-    return bytes == b"\x1F\x8B"
+    return bytes == "\x1F\x8B"
 
 if __name__ == "__main__":
     warnings = 0
@@ -41,7 +40,7 @@ if __name__ == "__main__":
         common.progress_finish = lambda: None
 
     if not config["lists-sync"]:
-        print("Please configure lists in $HOME/.satools before running %s." % sys.argv[0], file = sys.stderr)
+        print >>sys.stderr, "Please configure lists in $HOME/.satools before running %s." % sys.argv[0]
         sys.exit(1)
 
     common.mkdirs(config["lists-base"])
@@ -55,8 +54,8 @@ if __name__ == "__main__":
 
     now = time.gmtime()
 
-    opener = urllib.request.build_opener(urllib.request.HTTPHandler())
-    opener.addheaders = [("User-Agent", "Mozilla/5.0")]
+    opener = urllib2.build_opener()
+    opener.addheaders = [('User-Agent', 'Mozilla/5.0')]
 
     for line in config["lists-sync"]:
         line = line.split(" ")
@@ -69,8 +68,8 @@ if __name__ == "__main__":
 
         credentials = None
         if len(line) == 3:
-            credentials = urllib.parse.urlencode(dict(zip(("username", "password"),
-                                                          line[1:3]))).encode("utf-8")
+            credentials = urllib.urlencode(dict(zip(("username", "password"),
+                                                    line[1:3])))
 
         index = common.retrieve_m(url, credentials, opener = opener)
         index_xml = lxml.html.parse(index).getroot()
@@ -85,12 +84,12 @@ if __name__ == "__main__":
 
             if not path in db or not os.path.isfile(path):
                 common.mkdirs(os.path.split(path)[0])
-                req = urllib.request.Request(url + "/" + href, credentials, {"Accept-Encoding": "gzip", "User-Agent": "Mozilla/5.0"})
+                req = urllib2.Request(url + "/" + href, credentials, {"Accept-Encoding": "gzip", "User-Agent": "Mozilla/5.0"})
                 try:
                     f = common.retrieve_tmpfile(req)
-                except urllib.error.HTTPError as e:
+                except urllib2.HTTPError, e:
                     if e.code == 403:
-                        print("WARNING: %s, continuing..." % e, file = sys.stderr)
+                        print >>sys.stderr, "WARNING: %s, continuing..." % e
                         warnings += 1
                         continue
                     raise
@@ -100,8 +99,8 @@ if __name__ == "__main__":
                         g = gzip.GzipFile(fileobj = f, mode = "r")
                         common.sendfile_disk(g, path)
                         g.close()
-                    except Exception as e:
-                        print("WARNING: %s, continuing..." % e, file = sys.stderr)
+                    except Exception, e:
+                        print >>sys.stderr, "WARNING: %s, continuing..." % e
                         warnings += 1
                         continue
                 else:
@@ -121,4 +120,4 @@ if __name__ == "__main__":
         pass
 
     if warnings:
-        print("WARNING: %u warnings occurred." % warnings, file = sys.stderr)
+        print >>sys.stderr, "WARNING: %u warnings occurred." % warnings

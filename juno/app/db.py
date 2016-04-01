@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 from satools import common
 import argparse
@@ -44,8 +44,8 @@ class DB(object):
               END
                 """ ]
 
-        for s in sql:
-            self.execute(textwrap.dedent(s).strip())
+        for s in map(lambda x: textwrap.dedent(x).strip(), sql):
+            self.execute(s)
 
         self.commit()
 
@@ -62,7 +62,7 @@ class DB(object):
 
         self.db = sqlite3.connect(self.name)
         self.db.row_factory = sqlite3.Row
-        self.db.text_factory = bytes
+        self.db.text_factory = str
         self.execute("PRAGMA foreign_keys = 1")
 
     def execute(self, sql, args = None):

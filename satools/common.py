@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 import calendar
 import codecs
@@ -7,15 +7,14 @@ import fcntl
 import os
 import shutil
 import sys
-import tempfile
 import time
-import urllib.error
-import urllib.request
+import urllib2
 
 configfile = os.environ["HOME"] + "/.satools"
 
 class DB(object):
     def __init__(self, path):
+        self.cmpfn = None
         self.readdb(path)
 
     def readdb(self, path):
@@ -28,7 +27,7 @@ class DB(object):
         with codecs.open(self.path, "r", "utf-8") as f:
             for line in f:
                 if "=" in line:
-                    (key, value) = [i.strip() for i in line.split("=", 1)]
+                    (key, value) = map(unicode.strip, line.split("=", 1))
                     self.entries[key] = value
                 else:
                     self.entries[line.strip()] = None
@@ -37,11 +36,11 @@ class DB(object):
         temppath = mktemppath(self.path)
     
         with codecs.open(temppath, "w", "utf-8") as f:
-            for key in sorted(self.entries.keys()):
+            for key in sorted(self.entries.keys(), self.cmpfn):
                 if self.entries[key]:
-                    print("%s=%s" % (key, self.get(key)), file = f)
+                    print >>f, "%s=%s" % (key, self.get(key))
                 else:
-                    print(key, file = f)
+                    print >>f, key
             f.flush()
             os.fsync(f.fileno())
 
@@ -58,7 +57,7 @@ class DB(object):
     def __contains__(self, key):
         return key in self.entries
 
-class HeadRequest(urllib.request.Request):
+class HeadRequest(urllib2.Request):
     def get_method(self):
         return "HEAD"
 
@@ -143,7 +142,8 @@ def load_config():
 
     if not os.path.exists(configfile):
         with open(configfile, "w") as f:
-            print("""# Specify the lists to synchronise here by adding multiple lines of the
+            print >>f, \
+"""# Specify the lists to synchronise here by adding multiple lines of the
 #   format lists-sync=URL.  If the list archives are password protected, use
 #   format lists-sync=URL USERNAME PASSWORD
 # lists-sync=http://lists.fedoraproject.org/pipermail/announce
@@ -162,15 +162,15 @@ def load_config():
 # with r/./ will reject.
 # product-docs-filter=r/jboss/
 # product-docs-filter=a/.*/
-""", file = f)
-        os.chmod(configfile, 0o600)
+"""
+        os.chmod(configfile, 0600)
 
     with open(configfile) as f:
         for line in f:
             line = line.strip()
             if line == "" or line[0] == "#": continue
 
-            (k, v) = [i.strip() for i in line.split("=", 1)]
+            (k, v) = map(str.strip, line.split("=", 1))
             if k in config and type(config[k]) == list:
                 config[k].append(v)
             else:
@@ -183,13 +183,13 @@ def load_config():
 def mkdirs(path):
     try:
         os.makedirs(path)
-    except OSError as e:
+    except OSError, e:
         if e.errno != errno.EEXIST:
             raise
 
 def mkro(path):
     st = os.stat(path)
-    os.chmod(path, st.st_mode & ~0o222)
+    os.chmod(path, st.st_mode & ~0222)
 
 def mktemppath(path):
     parts = os.path.split(path)
@@ -197,11 +197,11 @@ def mktemppath(path):
 
 def progress(current, total):
     percent = 100 * current / total
-    print("\r  [%s%s] %u%% (%u) " % \
-        ("*" * (percent / 2), " " * (50 - (percent / 2)), percent, current), end=' ', file = sys.stderr)
+    print >>sys.stderr, "\r  [%s%s] %u%% (%u) " % \
+        ("*" * (percent / 2), " " * (50 - (percent / 2)), percent, current),
 
 def progress_finish():
-    print(file = sys.stderr)
+    print >>sys.stderr
 
 def rename(srcpath, dstpath):
     unlink(dstpath)
@@ -228,7 +228,7 @@ def sendfile(srcf, dstf):
             progress(current, total)
 
         if not data: break
-
+        
         dstf.write(data)
 
     if total:
@@ -240,7 +240,7 @@ def sendfile(srcf, dstf):
 def sendfile_disk(srcf, path):
     temppath = mktemppath(path)
 
-    dstf = open(temppath, "wb")
+    dstf = open(temppath, "w")
     sendfile(srcf, dstf)
 
     dstf.flush()
@@ -255,33 +255,33 @@ def retrieve_m(url, data = None, tries = 1, opener = None):
         myurl = url.get_full_url()
     except:
         pass
-    print("Retrieving %s..." % myurl, file = sys.stderr)
-    for i in range(tries):
+    print >>sys.stderr, "Retrieving %s..." % myurl
+    for i in xrange(tries):
         try:
             if opener:
                 return opener.open(url, data)
             else:
-                return urllib.request.urlopen(url, data)
+                return urllib2.urlopen(url, data)
             
-        except urllib.error.URLError as e:
+        except urllib2.URLError, e:
             if getattr(e, "code", 0) != 404 and i < tries - 1:
-                print("URLError: %s on %s, sleeping and retrying..." % (e, url), file = sys.stderr)
+                print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
                 time.sleep(10)
             else:
                 raise
 
 def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
     if os.path.exists(path) and not force:
-        for i in range(tries):
+        for i in xrange(tries):
             try:
                 if opener:
                     srcf = opener.open(HeadRequest(url))
                 else:
-                    srcf = urllib.request.urlopen(HeadRequest(url))
+                    srcf = urllib2.urlopen(HeadRequest(url))
                 break
-            except urllib.error.URLError as e:
+            except urllib2.URLError, e:
                 if getattr(e, "code", 0) != 404 and i < tries - 1:
-                    print("URLError: %s on %s, sleeping and retrying..." % (e, url), file = sys.stderr)
+                    print >>sys.stderr, "URLError: %s on %s, sleeping and retrying..." % (e, url)
                     time.sleep(10)
                 else:
                     raise
@@ -293,14 +293,14 @@ def retrieve(url, path, data = None, force = False, tries = 1, opener = None):
             if mtime == st.st_mtime and int(srcf.info()["Content-Length"]) == st.st_size:
                 return
 
-    for i in range(tries):
+    for i in xrange(tries):
         srcf = retrieve_m(url, data, tries, opener = opener)
         try:
             sendfile_disk(srcf, path)
             break
-        except ShortReadException as e:
+        except ShortReadException, e:
             if i < tries - 1:
-                print("Short read, retrying...", file = sys.stderr)
+                print >>sys.stderr, "Short read, retrying..."
             else:
                 raise
         finally:
@@ -314,7 +314,7 @@ def parse_last_modified(lm):
     return calendar.timegm(time.strptime(lm, "%a, %d %b %Y %H:%M:%S %Z"))
 
 def retrieve_tmpfile(url, data = None):
-    dstf = tempfile.TemporaryFile()
+    dstf = os.tmpfile()
 
     srcf = retrieve_m(url, data)
     sendfile(srcf, dstf)

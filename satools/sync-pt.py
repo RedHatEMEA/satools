@@ -1,25 +1,26 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/python -u
 
-from satools import common
 import codecs
+import common
 import lxml.html
 import os
-import queue
+import Queue
 import requests
 import sys
 import threading
 import time
 import traceback
-import urllib.parse
+import urllib
+import urlparse
 
 files = set()
 lock = threading.Lock()
-q = queue.Queue()
+q = Queue.Queue()
 tls = threading.local()
 
 def log(s):
     with lock:
-        print(s, file = sys.stderr)
+        print >>sys.stderr, s
 
 def worker(cookies):
     tls.s = requests.Session()
@@ -81,18 +82,18 @@ def read_events(url):
     
     path = html.xpath("//div[@id='breadcrumbs']//li[last()]//text()")[0].strip()
     for _url in html.xpath("//a[starts-with(@href, 'download/attachments/')]/@href"):
-        dest = urllib.parse.unquote(_url)
+        dest = urllib.unquote(_url).decode("utf-8")
         dest = path + "/" + "-".join(dest.rsplit("/", 2)[1:])
 
         if want(dest):
-            q.put((download, urllib.parse.urljoin(url, _url), dest))
+            q.put((download, urlparse.urljoin(url, _url), dest))
 
 def read_project_list():
-    url = config["pt-root"] + "projects-emea/"
+    url = config["pt-root"] + "projects-emea/?technology=&scope=&quarter=&contract_type=&revenue_recognition=&pt_status=&pa_status=&stage=&manager="
     html = lxml.html.fromstring(tls.s.get(url).text)
 
     for _url in html.xpath("//a[starts-with(@href, 'project-events?')]/@href"):
-        q.put((read_events, urllib.parse.urljoin(url, _url)))
+        q.put((read_events, urlparse.urljoin(url, _url)))
 
 def login():
     url = config["pt-root"] + "register/"
@@ -109,7 +110,7 @@ def cleanup():
     for dirpath, dirnames, filenames in os.walk(".", topdown = False):
         for f in filenames:
             path = os.path.normpath(os.path.join(dirpath, f))
-            if path not in files and path[0] != ".":
+            if path.decode("utf-8") not in files and path[0] != ".":
                 os.unlink(path)
 
         if not os.listdir(dirpath):
@@ -121,7 +122,7 @@ def main():
 
     # Permit write of UTF-8 characters to stderr (required when piping output)
     if sys.stderr.encoding == None:
-        sys.stderr = codecs.getwriter("UTF-8")(sys.stderr.buffer)
+        sys.stderr = codecs.getwriter("UTF-8")(sys.stderr)
 
     common.mkdirs(config["pt-base"])
     os.chdir(config["pt-base"])

@@ -1,8 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
-from satools import common
-from satools import mailindex
+import common
 import mailbox
+import mailindex
 import sys
 import os
 
@@ -21,7 +21,7 @@ def extract(path):
     if config["attachments-enabled"] != "1":
         return
 
-    print("Extracting attachments from %s..." % path, file = sys.stderr)
+    print >>sys.stderr, "Extracting attachments from %s..." % path
 
     mbox = mailbox.mbox(config["lists-base"] + "/" + path)
 
@@ -52,7 +52,7 @@ def extract(path):
                         if not os.path.exists(p):
                             temppath = common.mktemppath(p)
                         
-                            f = open(temppath, "wb")
+                            f = open(temppath, "w")
                             f.write(part.get_payload(decode = True))
 
                             f.flush()

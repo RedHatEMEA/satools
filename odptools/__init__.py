@@ -1,3 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
-from . import odf
+import odf
+import odp_cat

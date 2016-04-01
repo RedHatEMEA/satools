@@ -1,12 +1,13 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
-from satools import common
-from satools import search
 import argparse
 import email.utils
+import common
 import mailbox
 import os
+import os.path
 import re
+import search
 import sqlite3
 import sys
 
@@ -17,7 +18,7 @@ class MailDB(object):
     def __init__(self, dbpath):
         self.db = sqlite3.connect(dbpath)
         self.db.row_factory = sqlite3.Row
-        self.db.text_factory = bytes
+        self.db.text_factory = str
         self._create_tables()
 
     def _create_tables(self):
@@ -28,9 +29,14 @@ class MailDB(object):
                         " length INTEGER NOT NULL)")
 
         try:
-            self.db.execute("CREATE VIRTUAL TABLE messages_fts USING fts4"
-                            "(from TEXT NOT NULL, subject TEXT NOT NULL,"
-                            " body TEXT NOT NULL)")
+            if version(*sqlite3.sqlite_version_info) >= version(3, 7, 4):
+                self.db.execute("CREATE VIRTUAL TABLE messages_fts USING fts4"
+                                "(from TEXT NOT NULL, subject TEXT NOT NULL,"
+                                " body TEXT NOT NULL)")
+            else:
+                self.db.execute("CREATE VIRTUAL TABLE messages_fts USING fts3"
+                                "(from TEXT NOT NULL, subject TEXT NOT NULL,"
+                                " body TEXT NOT NULL)")
 
         except sqlite3.OperationalError:
             pass
@@ -99,10 +105,7 @@ def parse_args():
 
 def _decode(a):
     a = list(a)
-    if a[1] is None:
-        if isinstance(a[0], bytes):
-            a[0] = a[0].decode("utf-8")
-        return a[0]
+    if a[1] is None: return a[0]
     # It appears that Chinese e-mails commonly erroneously mark their charset as
     # gb2312, when in fact they are in gb18030.  The former is a strict subset
     # of the latter.
@@ -121,10 +124,10 @@ def __decode(data):
 def decode(data):
     if data is None: return data
     data = decoderegex.sub(__decode, data)
-    return " ".join([_decode(h) for h in email.header.decode_header(data)])
+    return " ".join(map(_decode, email.header.decode_header(data)))
 
 def index(base, _list, path):
-    print("Indexing %s..." % path, file = sys.stderr)
+    print >>sys.stderr, "Indexing %s..." % path
 
     maildb = MailDB(base + "/.index")
 

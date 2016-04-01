@@ -1,4 +1,4 @@
-#!/usr/bin/python3 -u
+#!/usr/bin/python -u
 
 import argparse
 import odf.utils
@@ -13,8 +13,8 @@ def parse_args():
 def cb(src, p):
     pages = src.content._body()._presentation()._pages()
     t = pages[p].as_text()
-    print("page %u/%u" % (p + 1, len(pages)), file = sys.stderr)
-    print(t)
+    print >>sys.stderr, "page %u/%u" % (p + 1, len(pages))
+    print t
 
 odf.utils.set_encoding()
 args = parse_args()

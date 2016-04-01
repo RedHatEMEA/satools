@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 import ply.lex
 import ply.yacc
@@ -114,10 +114,10 @@ if __name__ == "__main__":
         while True:
             tok = lexer.token()
             if not tok: break
-            print(tok)
+            print tok
             
         try:
             w = build_where(sys.argv[1])
-            print(w.sql, w.args)
-        except SearchException as e:
-            print(e)
+            print (w.sql, w.args)
+        except SearchException, e:
+            print e
