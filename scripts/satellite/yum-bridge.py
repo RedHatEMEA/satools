@@ -67,14 +67,18 @@ def app(environ, start_response):
 
     m = re.match("^/([^/]+)\.repo$", environ["PATH_INFO"])
     if m:
+        gpgkey = "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+        if m.group(1).endswith("-beta") or "-beta-" in m.group(1):
+            gpgkey = "/etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta"
+
         start_response("200 OK", [("Content-Type", "text/plain")])
         return ["""[%(channel)s]
 name=%(channel)s
 baseurl=http://%(host)s/%(channel)s
 enabled=1
 gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
-""" % {"channel": m.group(1), "host": environ["HTTP_HOST"]}]
+gpgkey=file://%(gpgkey)s
+""" % {"channel": m.group(1), "host": environ["HTTP_HOST"], "gpgkey": gpgkey}]
 
     m = re.match("^/$", environ["PATH_INFO"])
     if m:
