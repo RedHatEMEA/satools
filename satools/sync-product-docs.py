@@ -1,262 +1,93 @@
-#!/usr/bin/python3 -ttu
+#!/usr/bin/python3
 
-import argparse
 import common
-import lxml.etree
-import lxml.html
 import os
-import queue
-import re
+import lxml.etree
+import multiprocessing
 import requests
 import sys
-import threading
-import urllib.error
-import urllib.parse
+import tempfile
 
-class LockedSet(object):
-    def __init__(self):
-        self.lock = threading.Lock()
-        self.s = set()
 
-    def add(self, x):
-        with self.lock:
-            self.s.add(x)
-
-    def tas(self, x):
-        with self.lock:
-            if x in self.s:
-                return True
-            self.s.add(x)
-            return False
-
-class FilterAction(argparse.Action):
-    """Adds -i or -x filters to the list of filter regexes"""
-    def __call__(self, parser, namespace, values, option_string = None):
-        filters = getattr(namespace, self.dest)
-        if filters == None:
-            filters = []
-        filters.append("%c/%s/" % (option_string[1], values))
-        setattr(namespace, self.dest, filters)
-
-q = queue.Queue()
-warnings = 0
-fileset = LockedSet()
-
-consolelock = threading.Lock()
-def msg(s):
-    with consolelock:
-        print(s, file = sys.stderr)
-
-def warn(s):
-    global warnings
-    with consolelock:
-        warnings += 1
-        print(s, file = sys.stderr)
-
-def worker(host):
-    for item in iter(q.get, "STOP"):
-        item[0](*item[1:])
-        q.task_done()
-
-def threads_create(numthreads, args):
-    threads = []
-    for i in range(numthreads):
-        t = threading.Thread(target = worker, args = args)
-        t.daemon = True
-        t.start()
-        threads.append(t)
-    return threads
-
-def threads_destroy(threads):
-    for t in threads:
-        q.put("STOP")
-
-    for t in threads:
-        t.join()
-
-def parse_args(config):
-    ap = argparse.ArgumentParser()
-    ap.set_defaults(filters = [])
-    ap.add_argument("-i", dest = "filters",
-                    action = FilterAction,
-                    metavar = "REGEX",
-                    help = "include documents that match this regex, can be ordered")
-    ap.add_argument("-c", action = "store_true", dest = "clean",
-                    help = "clean %s" % config["product-docs-base"])
-    ap.add_argument("-l", dest = "locale",
-                    default = config["product-docs-locale"],
-                    help = "locale for downloaded documentation, e.g. en-US")
-    ap.add_argument("-t", dest = "type", default = config["product-docs-type"],
-                    choices = ("epub", "html-single", "pdf"),
-                    help = "file type of documentation to download")
-    ap.add_argument("-x", dest = "filters",
-                    action = FilterAction,
-                    metavar = "REGEX",
-                    help = "exclude documents that match this regex, can be ordered")
-
-    return vars(ap.parse_args())
-
-def match_filter(filters, path):
-    """Matches path against a list of filters in the same way as lvm.conf"""
-    for ft in filters:
-        ftmatch = re.match(r"([airx])(.)(.*)\2$", ft)
-        if not ftmatch:
-            warn("WARNING: could not parse filter %s" % ft)
-            continue
-
-        if re.search(ftmatch.group(3), path, re.I):
-            if ftmatch.group(1) == "a" or ftmatch.group(1) == "i":
-                return True
-            else:
-                return False
-    return True
-
-def download(url, dest):
-    if url.startswith("data:"):
+def download(url, p, force=False):
+    if os.path.exists(p) and not force:
         return
 
-    if fileset.tas(dest):
+    print("%s -> %s" % (url, p), file=sys.stderr)
+
+    r = requests.get(url, stream=True)
+    if r.status_code / 100 != 2:
         return
 
-    common.mkdirs(os.path.split(dest)[0])
+    common.mkdirs(os.path.dirname(p))
 
-    try:
-        common.retrieve(url, dest)
+    with tempfile.NamedTemporaryFile(dir=os.path.dirname(p)) as f:
+        for chunk in r.iter_content(chunk_size=2**20):
+            f.write(chunk)
 
-        if args["type"] == "html-single" and dest.endswith(".html"):
-            get_deps_html(url, dest)
+        os.rename(f.name, p)
+        f._closer.delete = False
 
-        if args["type"] == "html-single" and dest.endswith(".css"):
-            get_deps_css(url, dest)
 
-        common.mkro(dest)
-       
-    except urllib.error.HTTPError as e:
-        if e.code == 403 or e.code == 404:
-            warn("WARNING: %s on %s, continuing..." % (e, url))
-        else:
-            raise
+def get_dump():
+    download("https://access.redhat.com/documentation/DUMP.xml",
+             "/tmp/DUMP.xml", True)
 
-def update_url(url, home):
-    urlp = urllib.parse.urlparse(url)
-    if not urlp.path or urlp.path[0] != "/": return url
-    return os.path.relpath(urlp.path[1:], home)
 
-def update_url_css(m, home):
-    return "url(\"%s\")" % update_url(m.group(1), home)
+def iter_dump():
+    xml = lxml.etree.parse("/tmp/DUMP.xml")
+    for rec in xml.xpath("/opt/record"):
+        d = {c.tag: c.text for c in rec.iterchildren()}
 
-def get_deps_css(url, dest):
-    with open(dest) as f:
-        css = f.read()
-
-    rx = re.compile('url\([\'"]*([^)]+?)[\'"]*\)')
-    for m in rx.finditer(css):
-        _url = urllib.parse.urljoin(url, m.group(1))
-        urlp = urllib.parse.urlparse(_url)
-        if urlp.netloc and urlp.netloc != "access.redhat.com": continue
-
-        q.put((download, _url, os.path.normpath(urlp.path[1:])))
-
-    with open(dest, "w") as f:
-        css = rx.sub(lambda url: update_url_css(url, os.path.split(dest)[0]),
-                     css)
-        f.write(css)
-
-def update_url_html(url, home):
-    newurl = update_url(url, home)
-    parent = url.getparent()
-    if parent.tag in ("img", "input", "script"):
-        parent.set("src", newurl)
-    elif parent.tag in ("link", ):
-        parent.set("href", newurl)
-    elif parent.tag in ("object", ):
-        parent.set("data", newurl)
-
-def get_deps_html(url, dest):
-    html = lxml.html.parse(dest)
-    for u in html.xpath("//img/@src | //input/@src | //link/@href | //object/@data | //script/@src"):
-        _url = urllib.parse.urljoin(url, u)
-        urlp = urllib.parse.urlparse(_url)
-        if urlp.netloc and urlp.netloc != "access.redhat.com": continue
-
-        q.put((download, _url, os.path.normpath(urlp.path[1:])))
-
-        update_url_html(u, os.path.split(dest)[0])
-
-    html.write(dest)
-            
-def get_sitemap(path):
-    xml = lxml.etree.fromstring(requests.get(path).content)
-
-    for loc in xml.xpath("//sitemap:loc/text()", namespaces = { "sitemap": "http://www.sitemaps.org/schemas/sitemap/0.9" }):
-        if not loc.startswith("/site/documentation/%s/" % args["locale"]):
-            continue
-        if args["type"] != "html-single" and not loc.endswith(".%s" % args["type"]):
-            continue
-        if args["type"] == "html-single" and not re.search("/html-single/.*\.html$", loc):
-            continue
-        if not match_filter(filters, loc):
+        if d["language"] != config["product-docs-locale"] or \
+           "pdf" not in d["formats"].split(","):
             continue
 
-        dest = loc[1:]
+        yield d
 
-        if args["type"] != "html-single":
-            # don't munge html paths as it breaks HTML relative paths
-            (d, f) = os.path.split(dest)
-            d = d.split("/", 3)[3]  # remove ^site/documentation/<locale>
-            d = d.rsplit("/", 2)[0] # remove <type>/<book name>$
-            d = d.replace("_", " ")
-            dest = os.path.join(d, f)
 
-        q.put((download, "https://access.redhat.com" + loc, dest))
-
-def cleanup():
-    for dirpath, dirnames, filenames in os.walk("."):
-        dp = os.path.relpath(dirpath, ".")
-
+def remove_invalid_files(valid_files):
+    for dirpath, dirnames, filenames in os.walk(".", topdown=False):
         for f in filenames:
-            path = os.path.join(dp, f)
-            if not path.startswith("./.") and path not in fileset.s:
-                os.unlink(path)
+            if os.path.join(dirpath[2:], f) not in valid_files:
+                os.unlink(os.path.join(dirpath, f))
 
-    for dirpath, dirnames, filenames in os.walk(".", topdown = False):
-        if dirpath != "." and not os.listdir(dirpath):
+        if not os.listdir(dirpath):
             os.rmdir(dirpath)
 
-if __name__ == "__main__":
-    config = common.load_config()
 
-    global args
-    args = parse_args(config)
+def main():
+    global config
+    config = common.load_config()
 
     common.mkdirs(config["product-docs-base"])
     os.chdir(config["product-docs-base"])
 
-    filters = config["product-docs-filter"]
-    filters.extend(args["filters"])
-    # if last filter is include, add an exclude everything filter, to do the
-    # expected
-    if filters and filters[-1][0] == "i":
-        filters.append("x/.*/")
+    l = common.Lock(".lock")
 
-    lock = common.Lock(".lock")
+    get_dump()
 
-    if int(config["product-docs-threads"]) > 1:
-        common.progress = lambda x, y: None
-        common.progress_finish = lambda: None
+    valid_files = set()
+    pool = multiprocessing.Pool(processes=int(config["product-docs-threads"]))
 
-    threads = threads_create(int(config["product-docs-threads"]),
-                             ("access.redhat.com", ))
+    for x in iter_dump():
+        x["product_"] = x["product"].replace("_", " ")
 
-    get_sitemap("https://access.redhat.com/site/documentation/Sitemap")
-    q.join()
+        url = "https://access.redhat.com/documentation/%(language)s/" \
+              "%(product)s/%(version)s/pdf/%(name)s/" \
+              "%(product)s-%(version)s-%(name)s-%(language)s.pdf" % x
+        f = "%(product_)s/%(version)s/" \
+            "%(product)s-%(version)s-%(name)s-%(language)s.pdf" % x
 
-    threads_destroy(threads)
+        pool.apply_async(download, (url, f))
+        valid_files.add(f)
 
-    if args["clean"]:
-        cleanup()
+    pool.close()
+    pool.join()
 
-    if warnings:
-        warn("WARNING: %u warnings occurred." % warnings)
-
+    remove_invalid_files(valid_files)
     common.write_sync_done()
+
+
+if __name__ == "__main__":
+    main()

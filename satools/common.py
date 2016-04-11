@@ -94,13 +94,8 @@ class ShortReadException(Exception):
 
 def load_config():
     config = { "product-docs-base": os.environ["HOME"] + "/content/product-docs",
-               "product-docs-filter": [],
                "product-docs-locale": "en-US",
-               "product-docs-type": "pdf",
                "product-docs-threads": "4",
-               "resourcelibrary-base": os.environ["HOME"] + "/content/resourcelibrary",
-               "resourcelibrary-threads": "4",
-               "elluminate-base": os.environ["HOME"] + "/content/elluminate",
                "lists-base": os.environ["HOME"] + "/content/lists",
                "lists-start-year": "2007",
                "lists-sync": [],
@@ -117,20 +112,12 @@ def load_config():
                "juno-base": os.environ["HOME"] + "/content/juno",
                "juno-sync": [],
                "juno-sync-ignore": [],
-               "gsa-base": os.environ["HOME"] + "/content/gsa",
-               "gsa-sync": [],
-               "gsa-url": "",
                "pt-base": os.environ["HOME"] + "/content/pt",
                "pt-root": None,
                "pt-username": None,
                "pt-password": None,
                "pt-threads": "4",
                "pt-odponly": "1",
-               "rhn-dumps-base": os.environ["HOME"] + "/content/rhn-dumps",
-               "rhn-dumps-match": [],
-               "rhn-dumps-threads": "4",
-               "rhn-username": None,
-               "rhn-password": None,
                "webdav-sync": [],
                "webdav-threads": "4",
                }
@@ -150,13 +137,6 @@ def load_config():
 # For lgrep to run alpine on its results mbox, uncomment the following line:
 # lgrep-exec=alpine -f %filename -n 1 -i
 # N.B. your MUA may also need additional configuration.
-
-# The product docs that will be synced can be restricted with filters.  These
-# work identically to LVM filters (man lvm.conf), where the first matching
-# filter in the list is used.  Filters in the form a/./ will accept, those
-# with r/./ will reject.
-# product-docs-filter=r/jboss/
-# product-docs-filter=a/.*/
 """, file = f)
         os.chmod(configfile, 0o600)
 
