@@ -17,11 +17,14 @@ def cleanfilename(fn):
     fn = fn.replace("/", "_")
     return fn
 
+def extracting(path):
+    print("Extracting attachments from %s..." % path, file=sys.stderr)
+
 def extract(path):
     if config["attachments-enabled"] != "1":
         return
 
-    print("Extracting attachments from %s..." % path, file = sys.stderr)
+    extracting(path)
 
     mbox = mailbox.mbox(config["lists-base"] + "/" + path)
 
@@ -51,14 +54,14 @@ def extract(path):
 
                         if not os.path.exists(p):
                             temppath = common.mktemppath(p)
-                        
+
                             f = open(temppath, "wb")
                             f.write(part.get_payload(decode = True))
 
                             f.flush()
                             os.fsync(f.fileno())
                             f.close()
-                
+
                             common.rename(temppath, p)
                             common.mkro(p)
 

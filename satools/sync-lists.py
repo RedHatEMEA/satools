@@ -40,6 +40,7 @@ if __name__ == "__main__":
         common.progress_finish = lambda: None
         common.retrieving = lambda x: None
         mailindex.indexing = lambda x: None
+        attachments.extracting = lambda x: None
 
     if not config["lists-sync"]:
         print("Please configure lists in $HOME/.satools before running %s." % sys.argv[0], file = sys.stderr)
