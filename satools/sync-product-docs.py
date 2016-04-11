@@ -25,6 +25,7 @@ def download(url, p, force=False):
         for chunk in r.iter_content(chunk_size=2**20):
             f.write(chunk)
 
+        os.chmod(f.name, 0o666 & ~umask)
         os.rename(f.name, p)
         f._closer.delete = False
 
@@ -90,4 +91,7 @@ def main():
 
 
 if __name__ == "__main__":
+    umask = os.umask(0)
+    os.umask(umask)
+
     main()
