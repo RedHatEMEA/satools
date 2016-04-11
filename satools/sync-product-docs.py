@@ -19,9 +19,10 @@ def download(url, p, force=False):
     if r.status_code / 100 != 2:
         return
 
-    common.mkdirs(os.path.dirname(p))
+    parent = os.path.dirname(p) or "."
+    common.mkdirs(parent)
 
-    with tempfile.NamedTemporaryFile(dir=os.path.dirname(p)) as f:
+    with tempfile.NamedTemporaryFile(dir=parent) as f:
         for chunk in r.iter_content(chunk_size=2**20):
             f.write(chunk)
 
