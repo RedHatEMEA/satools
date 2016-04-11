@@ -5,15 +5,12 @@ import os
 import lxml.etree
 import multiprocessing
 import requests
-import sys
 import tempfile
 
 
 def download(url, p, force=False):
     if os.path.exists(p) and not force:
         return
-
-    print("%s -> %s" % (url, p), file=sys.stderr)
 
     r = requests.get(url, stream=True)
     if r.status_code / 100 != 2:
