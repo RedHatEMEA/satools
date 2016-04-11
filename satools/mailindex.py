@@ -141,8 +141,11 @@ def decode(data):
         data = decoderegex.sub(__decode, data)
     return " ".join(map(_decode, email.header.decode_header(data)))
 
+def indexing(path):
+    print("Indexing %s..." % path, file=sys.stderr)
+
 def index(base, _list, path):
-    print("Indexing %s..." % path, file = sys.stderr)
+    indexing(path)
 
     maildb = MailDB(base + "/.index")
 
@@ -188,7 +191,7 @@ if __name__ == "__main__":
         for dirpath, dirnames, filenames in sorted(os.walk(args["base"])):
             for f in sorted(filenames):
                 if f[:1] == ".": continue
-                
+
                 path = os.path.relpath(dirpath, args["base"]) + "/" + f
                 index(args["base"], path.split("/")[0], path)
 

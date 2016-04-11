@@ -35,7 +35,7 @@ class DB(object):
 
     def writedb(self):
         temppath = mktemppath(self.path)
-    
+
         with codecs.open(temppath, "w", "utf-8") as f:
             for key in sorted(self.entries.keys()):
                 if self.entries[key]:
@@ -203,7 +203,7 @@ def sendfile(srcf, dstf):
             progress(current, total)
 
         if not data: break
-        
+
         dstf.write(data)
 
     if total:
@@ -224,20 +224,23 @@ def sendfile_disk(srcf, path):
 
     rename(temppath, path)
 
+def retrieving(myurl):
+    print("Retrieving %s..." % myurl, file=sys.stderr)
+
 def retrieve_m(url, data = None, tries = 1, opener = None):
     myurl = url
     try:
         myurl = url.get_full_url()
     except:
         pass
-    print("Retrieving %s..." % myurl, file = sys.stderr)
+    retrieving(myurl)
     for i in range(tries):
         try:
             if opener:
                 return opener.open(url, data)
             else:
                 return urllib.request.urlopen(url, data)
-            
+
         except urllib.error.URLError as e:
             if getattr(e, "code", 0) != 404 and i < tries - 1:
                 print("URLError: %s on %s, sleeping and retrying..." % (e, url), file = sys.stderr)

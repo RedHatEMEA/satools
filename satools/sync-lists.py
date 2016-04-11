@@ -38,6 +38,8 @@ if __name__ == "__main__":
     if args["quiet"]:
         common.progress = lambda x, y: None
         common.progress_finish = lambda: None
+        common.retrieving = lambda x: None
+        mailindex.indexing = lambda x: None
 
     if not config["lists-sync"]:
         print("Please configure lists in $HOME/.satools before running %s." % sys.argv[0], file = sys.stderr)
@@ -56,7 +58,7 @@ if __name__ == "__main__":
 
     for line in config["lists-sync"]:
         line = line.split(" ")
-        
+
         url = line[0].rstrip("/")
         _list = url.split("/")[-1]
 
@@ -90,7 +92,7 @@ if __name__ == "__main__":
                         warnings += 1
                         continue
                     raise
-                    
+
                 if isgzip(f):
                     try:
                         g = gzip.GzipFile(fileobj = f, mode = "r")
@@ -103,7 +105,7 @@ if __name__ == "__main__":
                 else:
                     common.sendfile_disk(f, path)
                 f.close()
-                
+
                 common.mkro(path)
                 mailindex.index(".", _list, path)
                 attachments.extract(path)
