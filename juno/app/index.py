@@ -202,7 +202,7 @@ def del_preso(db, srcp, dstp):
 
 def log(s):
     sys.stderr.write("%d: %s: %s\n" % (workerid, time.ctime(), s))
-    
+
 def worker(me, q):
     global workerid
     workerid = me
@@ -234,11 +234,12 @@ def add_trees():
                     os.path.split(dirpath)[1][0] == ".":
                 del dirnames[:]
                 continue
-            
+
             for f in sorted(filenames):
                 srcp = os.path.join(dirpath, f)
                 dstp = dstbase + srcp[len(srcbase):]
-                q.put((srcp, dstp))
+                if srcp not in config["juno-sync-ignore"]:
+                    q.put((srcp, dstp))
 
     for p in procs:
         q.put("STOP")
