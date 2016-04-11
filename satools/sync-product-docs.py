@@ -31,12 +31,12 @@ def download(url, p, force=False):
 
 
 def get_dump():
-    download("https://access.redhat.com/documentation/DUMP.xml",
-             "/tmp/DUMP.xml", True)
+    download("https://access.redhat.com/documentation/DUMP.xml", "DUMP.xml",
+             True)
 
 
 def iter_dump():
-    xml = lxml.etree.parse("/tmp/DUMP.xml")
+    xml = lxml.etree.parse("DUMP.xml")
     for rec in xml.xpath("/opt/record"):
         d = {c.tag: c.text for c in rec.iterchildren()}
 
@@ -68,7 +68,7 @@ def main():
 
     get_dump()
 
-    valid_files = set()
+    valid_files = set([".lock", ".sync-done"])
     pool = multiprocessing.Pool(processes=int(config["product-docs-threads"]))
 
     for x in iter_dump():
